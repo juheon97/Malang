@@ -16,7 +16,7 @@ function App() {
             <Route path="/community" element={<Community />} />
             <Route path="/community/write" element={<CommunityWrite />} />
             <Route path="/community/:id" element={<CommunityDetail />} />
-            <Route path="/counsel" element={<Counsel />} />
+            <Route path="/counsel-channel" element={<Counsel />} />
           </Routes>
         </Layout>
       </Router>
