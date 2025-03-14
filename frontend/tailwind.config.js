@@ -12,6 +12,7 @@ export default {
         },
         fontFamily: {
           sans: ['HancomSans', 'system-ui', 'sans-serif'],
+          malang: ['HancomMalangMalang-Regular', 'sans-serif'],
          
         }
       },
