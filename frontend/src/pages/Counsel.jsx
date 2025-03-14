@@ -14,7 +14,7 @@ const Counsel  = () => {
     },
     {
       id: 2,
-      name: '혜빈 상담사',
+      name: '해빈 상담사',
       title: '심리 상담 전문가',
       satisfaction: '98%',
       responseTime: '40분',
@@ -61,7 +61,7 @@ const Counsel  = () => {
                     e.target.src = "https://via.placeholder.com/100?text=상담사";
                   }} />
                 </div>
-                <h2 className="text-white text-xl font-bold">{counselor.name}</h2>
+                <h2 style={{fontFamily: "'HancomMalangMalang-Regular', sans-serif"}} className="text-white text-xl font-bold">{counselor.name}</h2>
                 <p className="text-white text-sm">{counselor.title}</p>
 
                 <div className="flex justify-center mt-3 space-x-2">
