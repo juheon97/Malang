@@ -5,21 +5,21 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   
-  return (
+ return (
     <nav className="bg-[#f5fdf5] shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-            <span style={{fontFamily: "'HancomMalangMalang-Regular', sans-serif"}} className="text-2xl text-[#00a173]">말랑</span>
+            <span style={{fontFamily: "'HancomMalangMalang-Regular', sans-serif"}} className="text-3xl text-[#00a173] font-bold">말랑</span>
             </Link>
           </div>
           
           {/* 컴퓨터터 메뉴 */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/sotongdam" className="text-gray-800 hover:text-[#00a173]">음성변환</Link>
-            <Link to="/sudabang" className="text-gray-800 hover:text-[#00a173]">음성채널</Link>
-            <Link to="/singdam" className="text-gray-800 hover:text-[#00a173]">상담채널</Link>
+            <Link to="/voice-change" className="text-gray-800 hover:text-[#00a173]">음성변환</Link>
+            <Link to="/voice-channel" className="text-gray-800 hover:text-[#00a173]">음성채널</Link>
+            <Link to="/counsel-channel" className="text-gray-800 hover:text-[#00a173]">상담채널</Link>
             
             <div className="relative">
               <button 
