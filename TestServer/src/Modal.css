@@ -1,0 +1,21 @@
+.fade-modal-enter {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  
+  .fade-modal-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 400ms, transform 400ms;
+  }
+  
+  .fade-modal-exit {
+    opacity: 1;
+  }
+  
+  .fade-modal-exit-active {
+    opacity: 0;
+    transform: translateY(-100%);
+    transition: opacity 1000ms, transform 1000ms;
+  }
+  

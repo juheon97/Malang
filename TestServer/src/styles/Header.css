@@ -1,0 +1,20 @@
+.header {
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(10px);
+    color: #333 !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  .header-scrolled {
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .logo {
+    font-weight: 700 !important;
+    background: linear-gradient(45deg, #6C63FF, #FF6584);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: all 0.3s ease;
+  }
+  
