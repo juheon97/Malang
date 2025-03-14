@@ -68,11 +68,11 @@ const Navbar = () => {
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link 
-              to="/sotongdam" 
+              to="/sotong" 
               className="block px-3 py-2 text-gray-800 hover:text-[#00a173]"
               onClick={() => setMenuOpen(false)}
             >
-              소통담
+              소통업
             </Link>
             <Link 
               to="/sudabang" 
@@ -82,11 +82,11 @@ const Navbar = () => {
               수다방
             </Link>
             <Link 
-              to="/singdam" 
+              to="/counsel" 
               className="block px-3 py-2 text-gray-800 hover:text-[#00a173]"
               onClick={() => setMenuOpen(false)}
             >
-              싱담방
+              상담방
             </Link>
             <div>
               <button 
