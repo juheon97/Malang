@@ -17,9 +17,9 @@ const Navbar = () => {
           
           {/* 컴퓨터터 메뉴 */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/sotongdam" className="text-gray-800 hover:text-[#00a173]">소통담</Link>
-            <Link to="/sudabang" className="text-gray-800 hover:text-[#00a173]">수다방</Link>
-            <Link to="/singdam" className="text-gray-800 hover:text-[#00a173]">싱담방</Link>
+            <Link to="/sotongdam" className="text-gray-800 hover:text-[#00a173]">음성변환</Link>
+            <Link to="/sudabang" className="text-gray-800 hover:text-[#00a173]">음성채널</Link>
+            <Link to="/singdam" className="text-gray-800 hover:text-[#00a173]">상담채널</Link>
             
             <div className="relative">
               <button 
