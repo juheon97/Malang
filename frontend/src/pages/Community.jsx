@@ -2,33 +2,50 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CommunityList from '../components/community/CommunityList';
+import { PostService } from '../api';
 import '../styles/Community.css';
 
 const Community = () => {
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // 게시글 데이터 불러오기 (실제로는 API 호출)
   useEffect(() => {
-    // 임시 데이터
-    const dummyPosts = [
-      { id: 1, category: '시작장애', title: '시작장애에 어떻게 여기서 글을 쓰지?', date: '25.03.12', likes: 56 },
-      { id: 2, category: '인정?', title: '우와 글쓰기~~~~!', date: '25.03.14', likes: 100 },
-    ];
-    setPosts(dummyPosts);
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const response = await PostService.getAllPosts();
+        setPosts(response.data);
+      } catch (err) {
+        setError('게시글을 불러오는 중 오류가 발생했습니다.');
+        console.error('게시글 로딩 오류:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
   }, []);
 
-  // 글쓰기 페이지로 이동
   const handleWriteClick = () => {
     navigate('/community/write');
   };
+
+  if (loading) return <div className="loading">로딩 중...</div>;
 
   return (
     <div className="community-container">
       <h1 className="community-title">커뮤니티</h1>
       
       <div className="community-content">
-        <CommunityList posts={posts} />
+        {error && <div className="error-message">{error}</div>}
+        
+        {posts.length > 0 ? (
+          <CommunityList posts={posts} />
+        ) : (
+          <div className="no-posts">등록된 게시글이 없습니다.</div>
+        )}
         
         <div className="community-footer">
           <button className="write-button" onClick={handleWriteClick}>글쓰기</button>
