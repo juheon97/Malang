@@ -68,25 +68,25 @@ const Navbar = () => {
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link 
-              to="/sotong" 
+              to="/voice-change" 
               className="block px-3 py-2 text-gray-800 hover:text-[#00a173]"
               onClick={() => setMenuOpen(false)}
             >
-              소통업
+              음성변환
             </Link>
             <Link 
-              to="/sudabang" 
+              to="/voice-channel" 
               className="block px-3 py-2 text-gray-800 hover:text-[#00a173]"
               onClick={() => setMenuOpen(false)}
             >
-              수다방
+              음성채널
             </Link>
             <Link 
-              to="/counsel" 
+              to="/counsel-channel" 
               className="block px-3 py-2 text-gray-800 hover:text-[#00a173]"
               onClick={() => setMenuOpen(false)}
             >
-              상담방
+              상담채널
             </Link>
             <div>
               <button 
