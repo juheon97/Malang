@@ -54,7 +54,7 @@ const Counsel  = () => {
           {counselors.map((counselor) => (
             <div key={counselor.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition duration-300">
               {/* 상담사 프로필 상단 */}
-              <div className="relative bg-gradient-to-r from-[#4DC0B5] to-[#3DA99F] p-6 text-center">
+              <div className="relative bg-gradient-to-r from-[#79E7B7] to-[#08976E] p-6 text-center">
                 <div className="mx-auto bg-[#f9d3c0] w-24 h-24 rounded-full mb-2 flex items-center justify-center overflow-hidden">
                   <img src={`/assets/counselor-${counselor.id}.png`} alt={counselor.name} className="w-full h-full object-cover" onError={(e) => {
                     e.target.onerror = null;
@@ -78,7 +78,7 @@ const Counsel  = () => {
 
               {/* 상담사 정보 하단 */}
               <div className="p-4">
-                <div className="flex items-center mb-3">
+                <div className="mb-3">
                   {counselor.isAvailable ? (
                     <div className="flex items-center text-green-500">
                       <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,14 +109,16 @@ const Counsel  = () => {
                   <p className="text-sm text-gray-600">어떤 상담 받으시나요? 궁금...</p>
                 </div>
 
-                <div className="flex items-center justify-center mb-4">
-                  <div className="flex items-center text-green-500">
-                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                    <span className="text-sm">현재 상담 가능 상태입니다.</span>
+                <div className="border-t border-gray-200 pt-4 mb-4">
+                  <div className="flex items-center justify-center">
+                    <div className="flex items-center text-green-500">
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                      <span className="text-sm">현재 상담 가능 상태입니다.</span>
+                    </div>
                   </div>
                 </div>
 
-                <button className="w-full bg-green-400 hover:bg-green-500 text-white py-2 rounded-full transition duration-200">
+                <button className="w-full bg-gradient-to-r from-[#79E7B7] to-[#08976E] hover:from-[#6AD3A6] hover:to-[#078263] text-white py-2 rounded-full transition duration-200">
                   상담 요청
                 </button>
               </div>
