@@ -1,38 +1,49 @@
-// src/components/community/CommunityWrite.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PostService } from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
 
 const CommunityWrite = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('시작장애');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 실제로는 API 호출하여 서버에 데이터 전송
-    const newPost = {
+    if (!title.trim() || !content.trim()) {
+      setError('제목과 내용을 모두 입력해주세요.');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setError('');
+    
+    try {
+      const postData = {
         title,
         content,
         category,
         authorId: currentUser.id,
         authorName: currentUser.username,
-        date: new Date().toLocaleDateString('ko-KR', {
-          year: '2-digit',
-          month: '2-digit',
-          day: '2-digit'
-        }).replace(/\. /g, '.').replace(/\.$/, ''),
         likes: 0
       };
       
-      console.log(newPost);
-    
-      // 작성 완료 후 목록으로 이동
+      await PostService.createPost(postData);
+      alert('게시글이 성공적으로 등록되었습니다.');
       navigate('/community');
+    } catch (err) {
+      setError('게시글 등록 중 오류가 발생했습니다. 다시 시도해주세요.');
+      console.error('게시글 등록 오류:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   return (
     <div className="community-container">
