@@ -6,6 +6,7 @@ import HomeMain from "./components/home/HomeMain";
 import Community from './pages/Community';
 import CommunityWrite from './components/community/CommunityWrite';
 import CommunityDetail from './components/community/CommunityDetail';
+import Signup from './components/home/Signup';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<HomeMain />} />
+            <Route path="/Signup" element={<Signup />} />
             <Route path="/community" element={<Community />} />
             <Route path="/community/write" element={<CommunityWrite />} />
             <Route path="/community/:id" element={<CommunityDetail />} />

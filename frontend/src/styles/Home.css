@@ -1,73 +1,274 @@
 /* src/styles/Home.css */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+/* 사용자 정의 폰트 import */
+@import './fonts.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
+  overflow-x: hidden;
+}
+
+/* 메인 컨테이너 */
 .home-container {
-    width: 100vw;
-    min-height: 200vh; /* 스크롤 가능하도록 설정 */
-    display: flex;
+  width: 100%;
+  min-height: 300vh; /* 세로 길이 대폭 증가 */
+  background: linear-gradient(to bottom, #f5fff5 0%, #ffffff 100%);
+  position: relative;
+  overflow: hidden;
+  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
+}
+
+/* 네비게이션 바 제거됨 */
+
+/* 히어로 섹션 */
+.hero-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 100px 80px;
+  position: relative;
+  min-height: 100vh; /* 첫 섹션을 화면 높이만큼 설정 */
+}
+
+.hero-content {
+  flex: 1;
+  max-width: 600px;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.hero-logo {
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+}
+
+.hero-title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #00a683;
+}
+
+.hero-subtitle {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #00a683;
+  margin-bottom: 15px;
+}
+
+.hero-desc {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.hero-features {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 25px;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.home-signup-btn, .login-btn {
+  padding: 10px 25px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
+}
+
+.home-signup-btn {
+  background-color: #00a683;
+  color: white;
+}
+
+.login-btn {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.home-signup-btn:hover, .login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.hero-image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.chat-bubble {
+  width: 180px;
+  height: 150px;
+  background-color: rgba(146, 228, 209, 0.5);
+  border-radius: 50% 50% 50% 0;
+  position: relative;
+}
+
+/* 백그라운드 요소 */
+.home-container::before, 
+.home-container::after {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background-color: #92E4D1;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.home-container::before {
+  top: 30%;
+  left: 10%;
+}
+
+.home-container::after {
+  bottom: 40%;
+  right: 15%;
+}
+
+/* 기능 섹션 */
+.feature-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 80px 100px;
+  min-height: 100vh; /* 각 섹션을 화면 높이만큼 설정 */
+  position: relative;
+}
+
+.feature-section.reverse {
+  flex-direction: row-reverse;
+}
+
+.feature-content {
+  flex: 1;
+  max-width: 500px;
+  text-align: right;
+}
+
+.feature-section.reverse .feature-content {
+  text-align: left;
+}
+
+.feature-title {
+  font-size: 2.2rem;
+  color: #333;
+  font-weight: 500;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.highlight {
+  color: #00a683;
+  font-weight: 700;
+}
+
+.feature-image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.phone-img {
+  max-width: 300px;
+  height: auto;
+}
+
+/* 장식용 점 */
+.feature-section:nth-child(2)::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: #92E4D1;
+  border-radius: 50%;
+  opacity: 0.7;
+  top: 15%;
+  right: 20%;
+}
+
+.feature-section:nth-child(3)::before {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background-color: #92E4D1;
+  border-radius: 50%;
+  opacity: 0.7;
+  bottom: 25%;
+  left: 10%;
+}
+
+.feature-section:nth-child(4)::after {
+  content: '';
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  background-color: #92E4D1;
+  border-radius: 50%;
+  opacity: 0.7;
+  top: 30%;
+  right: 15%;
+}
+
+.feature-section:nth-child(5)::before {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background-color: #92E4D1;
+  border-radius: 50%;
+  opacity: 0.7;
+  bottom: 20%;
+  left: 25%;
+}
+
+@media (max-width: 768px) {
+  .hero-section, .feature-section {
     flex-direction: column;
-    align-items: center;
-    padding: 50px 20px;
-    background-color: #f8f8f8;
+    padding: 40px 20px;
   }
   
-  .hero-section {
+  .feature-section.reverse {
+    flex-direction: column;
+  }
+  
+  .hero-content, .feature-content {
     text-align: center;
-    padding: 50px 20px;
+    margin-bottom: 30px;
   }
   
-  .hero-section h1 {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #005f43;
-  }
-  
-  .hero-section h2 {
-    font-size: 2rem;
-    color: #28a745;
-  }
-  
-  .hero-section p {
-    font-size: 1.2rem;
-    color: #333;
-    margin: 10px 0;
-  }
-  
-  .signup-btn, .login-btn {
-    padding: 10px 20px;
-    margin: 10px;
-    font-size: 1rem;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-  
-  .signup-btn {
-    background-color: #007bff;
-    color: white;
-  }
-  
-  .login-btn {
-    background-color: #28a745;
-    color: white;
-  }
-  
-  .section {
-    width: 80%;
-    max-width: 800px;
-    margin: 80px 0;
-    padding: 20px;
+  .feature-section.reverse .feature-content {
     text-align: center;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
   
-  .section h3 {
-    font-size: 1.5rem;
-    color: #555;
+  .hero-buttons {
+    justify-content: center;
   }
-  
-  .section span {
-    font-weight: bold;
-    color: #005f43;
-  }
-  
+}
