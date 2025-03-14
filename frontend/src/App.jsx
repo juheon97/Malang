@@ -5,6 +5,7 @@ import Layout from './components/layout/Layout';
 import Community from './pages/Community';
 import CommunityWrite from './components/community/CommunityWrite';
 import CommunityDetail from './components/community/CommunityDetail';
+import Counsel from './pages/Counsel';
 
 function App() {
   return (
@@ -15,7 +16,7 @@ function App() {
             <Route path="/community" element={<Community />} />
             <Route path="/community/write" element={<CommunityWrite />} />
             <Route path="/community/:id" element={<CommunityDetail />} />
-
+            <Route path="/counsel-channel" element={<Counsel />} />
           </Routes>
         </Layout>
       </Router>

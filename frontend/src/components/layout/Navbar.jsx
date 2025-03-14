@@ -11,15 +11,15 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <span className="text-2xl font-semibold text-[#00a173]">말랑</span>
+            <span style={{fontFamily: "'HancomMalangMalang-Regular', sans-serif"}} className="text-2xl text-[#00a173]">말랑</span>
             </Link>
           </div>
           
           {/* 컴퓨터터 메뉴 */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/sotongdam" className="text-gray-800 hover:text-[#00a173]">소통담</Link>
-            <Link to="/sudabang" className="text-gray-800 hover:text-[#00a173]">수다방</Link>
-            <Link to="/singdam" className="text-gray-800 hover:text-[#00a173]">싱담방</Link>
+            <Link to="/sotongdam" className="text-gray-800 hover:text-[#00a173]">음성변환</Link>
+            <Link to="/sudabang" className="text-gray-800 hover:text-[#00a173]">음성채널</Link>
+            <Link to="/singdam" className="text-gray-800 hover:text-[#00a173]">상담채널</Link>
             
             <div className="relative">
               <button 
@@ -68,25 +68,25 @@ const Navbar = () => {
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link 
-              to="/sotongdam" 
+              to="/voice-change" 
               className="block px-3 py-2 text-gray-800 hover:text-[#00a173]"
               onClick={() => setMenuOpen(false)}
             >
-              소통담
+              음성변환
             </Link>
             <Link 
-              to="/sudabang" 
+              to="/voice-channel" 
               className="block px-3 py-2 text-gray-800 hover:text-[#00a173]"
               onClick={() => setMenuOpen(false)}
             >
-              수다방
+              음성채널
             </Link>
             <Link 
-              to="/singdam" 
+              to="/counsel-channel" 
               className="block px-3 py-2 text-gray-800 hover:text-[#00a173]"
               onClick={() => setMenuOpen(false)}
             >
-              싱담방
+              상담채널
             </Link>
             <div>
               <button 
