@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import ReviewModal from '../components/modal/ReviewModal';
+import ReviewModal from '../../components/modal/ReviewModal';
 
 const Counsel = () => {
    

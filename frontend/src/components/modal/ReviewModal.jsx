@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const ReviewModal = ({ counselor, onClose }) => {
   // 정렬 상태 (최신순/도움순)
-  const [sortType, setSortType] = useState('latest'); // 'latest' 또는 'helpful'
+  const [sortType, setSortType] = useState('latest'); 
   
   // 리뷰 더미 데이터
   const reviews = [
