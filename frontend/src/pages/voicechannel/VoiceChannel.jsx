@@ -1,8 +1,11 @@
 import React, { useState, useMemo } from 'react';
+import PasswordModal from '../../components/modal/PasswordModal';
+import WaitingModal from '../../components/modal/WaitingModal';
 
 const VoiceChannel = () => {
   const [searchInput, setSearchInput] = useState('');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showWaitingModal, setShowWaitingModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [currentChannelId, setCurrentChannelId] = useState(null);
   
@@ -41,8 +44,27 @@ const VoiceChannel = () => {
     } else {
       // 비밀번호가 필요없는 경우
       console.log(`채널 ${channelId} 입장`);
-      // 여기에 실제 입장 로직 구현
+      //**** */ 실제 입장 로직 구현필요요
     }
+  };
+
+  // 비밀번호 제출 및 방장 수락 대기 처리
+  const handlePasswordSubmit = () => {
+    // 비밀번호 모달 닫기
+    setShowPasswordModal(false);
+    setPasswordInput('');
+    
+    // 방장 수락 대기 모달 표시
+    setShowWaitingModal(true);
+    
+    // *******서버에 비밀번호 검증 및 방장에게 요청을 보내는 로직 필요**********
+    console.log(`채널 ${currentChannelId} 비밀번호 제출 후 방장 수락 대기`);
+  };
+
+  // 대기 취소
+  const handleCancelWaiting = () => {
+    setShowWaitingModal(false);
+    console.log('입장 요청 취소');
   };
 
   // 원형 그라데이션션
@@ -132,48 +154,22 @@ const VoiceChannel = () => {
         </div>
       </div>
 
-      {/* 비밀번호 입력 모달 */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* 배경 오버레이 */}
-          <div 
-            className="absolute inset-0 bg-black bg-opacity-50"
-            onClick={() => setShowPasswordModal(false)}
-          ></div>
-          
-          <div className="relative max-w-xl w-full overflow-hidden">
-            {/* 상단 초록색 바 */}
-            <div className="w-full h-3 bg-green-500"></div>
-            
-            <div className="bg-white rounded-b-sm shadow-xl p-6 z-10">
-              <h2 className="text-xl font-bold text-center mb-6">비밀번호를 입력해주세요</h2>
-              
-              <div className="mb-6">
-                <input
-                  type="password"
-                  placeholder="비밀번호"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#4DC0B5] focus:border-transparent"
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                />
-              </div>
-              
-              <div className="flex justify-center">
-                <button
-                  className="bg-[#f2f2f2] hover:bg-gradient-to-r hover:from-[#79E7B7] hover:to-[#08976E] hover:text-white text-black font-medium px-8 py-2 rounded-lg shadow-md transition-colors"
-                  onClick={() => {
-                    setShowPasswordModal(false);
-                    setPasswordInput('');
-                    console.log(`채널 ${currentChannelId} 비밀번호 확인`);
-                  }}
-                >
-                  확인
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 모달 컴포넌트 */}
+      <PasswordModal 
+        isOpen={showPasswordModal} 
+        onClose={() => setShowPasswordModal(false)} 
+        passwordInput={passwordInput}
+        setPasswordInput={setPasswordInput}
+        onSubmit={handlePasswordSubmit}
+      />
+      
+      <WaitingModal 
+  isOpen={showWaitingModal} 
+  onCancel={handleCancelWaiting}
+  waitingFor="방장"
+  title="수락을 기다려주세요..."
+
+/>
     </div>
   );
 };
