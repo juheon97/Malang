@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ReviewModal from '../components/modal/ReviewModal';
+import ReviewModal from '../../components/modal/ReviewModal';
 
 const Counsel = () => {
    
@@ -26,7 +26,7 @@ const Counsel = () => {
         name: '다혜 상담사',
         title: '심리 상담 전문가',
         satisfaction: '98%',
-        responseTime: '5분',
+        personalHistory: '5년',
         isAvailable: true,
       },
       {
@@ -34,7 +34,7 @@ const Counsel = () => {
         name: '해빈 상담사',
         title: '심리 상담 전문가',
         satisfaction: '98%',
-        responseTime: '40분',
+        personalHistory: '40년',
         isAvailable: true,
       },
       {
@@ -42,7 +42,7 @@ const Counsel = () => {
         name: '다혜 상담사',
         title: '심리 상담 전문가',
         satisfaction: '98%',
-        responseTime: '5분',
+        personalHistory: '5년',
         isAvailable: true,
       },
       {
@@ -50,7 +50,7 @@ const Counsel = () => {
         name: '다혜 상담사',
         title: '심리 상담 전문가',
         satisfaction: '98%',
-        responseTime: '5분',
+        personalHistory: '5년',
         isAvailable: true,
       },
       {
@@ -58,7 +58,7 @@ const Counsel = () => {
         name: '다혜 상담사',
         title: '심리 상담 전문가',
         satisfaction: '98%',
-        responseTime: '5분',
+        personalHistory: '5년',
         isAvailable: false,
       },
       {
@@ -66,7 +66,7 @@ const Counsel = () => {
         name: '다혜 상담사',
         title: '심리 상담 전문가',
         satisfaction: '98%',
-        responseTime: '5분',
+        personalHistory: '5년',
         isAvailable: false,
       },
       {
@@ -74,7 +74,7 @@ const Counsel = () => {
         name: '다혜 상담사',
         title: '심리 상담 전문가',
         satisfaction: '98%',
-        responseTime: '5분',
+        personalHistory: '5년',
         isAvailable: false,
       },
       {
@@ -82,7 +82,7 @@ const Counsel = () => {
         name: '다혜 상담사',
         title: '심리 상담 전문가',
         satisfaction: '98%',
-        responseTime: '5분',
+        personalHistory: '5년',
         isAvailable: false,
       },
     ];
@@ -90,7 +90,7 @@ const Counsel = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
      
-        <div className="max-w-7xl mx-auto p-8 mt-8 bg-white rounded-3xl shadow-xl relative overflow-hidden">
+        <div className="max-w-7xl mx-auto p-8 mt-8 bg-white rounded-3xl shadow-2xl relative overflow-hidden">
 
           <div className="absolute top-0 right-0 w-64 h-64 bg-green-50 rounded-full -mr-32 -mt-32 opacity-20"></div>
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-green-50 rounded-full -ml-48 -mb-48 opacity-20"></div>
@@ -156,8 +156,8 @@ const Counsel = () => {
                       className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-2 transform transition hover:scale-105"
                       style={{boxShadow: "0 2px 5px rgba(0,0,0,0.05), inset 0 1px 2px rgba(255,255,255,0.3)"}}
                     >
-                      <p className="text-white text-sm font-bold">{counselor.responseTime}</p>
-                      <p className="text-green-50 text-xs">상담 대기</p>
+                      <p className="text-white text-sm font-bold">{counselor.personalHistory}</p>
+                      <p className="text-green-50 text-xs">상담 경력</p>
                     </div>
                   </div>
                 </div>
