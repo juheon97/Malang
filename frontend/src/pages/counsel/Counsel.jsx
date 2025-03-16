@@ -1,21 +1,48 @@
 import React, { useState } from 'react';
 import ReviewModal from '../../components/modal/ReviewModal';
+import CounselorRequestModal from '../../components/modal/CounselorRequestModal';
+import WaitingModal from '../../components/modal/WaitingModal';
 
 const Counsel = () => {
    
     const [selectedCounselor, setSelectedCounselor] = useState(null);
-    const [showModal, setShowModal] = useState(false);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [showRequestModal, setShowRequestModal] = useState(false);
+    const [showWaitingModal, setShowWaitingModal] = useState(false);
   
-    // 모달 열기
+    // 리뷰 모달 열기
     const openReviewModal = (counselor) => {
       setSelectedCounselor(counselor);
-      setShowModal(true);
+      setShowReviewModal(true);
       document.body.style.overflow = 'hidden';
+    };
+  
+    // 상담 요청 모달 열기
+    const openRequestModal = (counselor) => {
+      setSelectedCounselor(counselor);
+      setShowRequestModal(true);
+      document.body.style.overflow = 'hidden';
+    };
+    
+    // 상담 요청 제출 처리
+    const handleRequestSubmit = (userInfo) => {
+      console.log('상담 요청:', userInfo, '상담사:', selectedCounselor?.name);
+      setShowRequestModal(false);
+      setShowWaitingModal(true); // 대기 모달 표시
+    };
+    
+    // 대기 취소
+    const handleCancelWaiting = () => {
+      setShowWaitingModal(false);
+      document.body.style.overflow = 'unset';
+      console.log('상담 요청 취소');
     };
   
     // 모달 닫기
     const closeModal = () => {
-      setShowModal(false);
+      setShowReviewModal(false);
+      setShowRequestModal(false);
+      setShowWaitingModal(false);
       document.body.style.overflow = 'unset';
     };
   
@@ -230,6 +257,7 @@ const Counsel = () => {
                       background: "linear-gradient(to right, #79E7B7, #08976E)",
                       boxShadow: "0 4px 6px -1px rgba(8, 151, 110, 0.3), 0 2px 4px -1px rgba(8, 151, 110, 0.1)"
                     }}
+                    onClick={() => openRequestModal(counselor)}
                   >
                     상담 요청
                   </button>
@@ -240,10 +268,30 @@ const Counsel = () => {
         </div>
   
         {/* 리뷰 모달 */}
-        {showModal && selectedCounselor && (
+        {showReviewModal && selectedCounselor && (
           <ReviewModal 
             counselor={selectedCounselor} 
             onClose={closeModal} 
+          />
+        )}
+        
+        {/* 상담 요청 모달 */}
+        {showRequestModal && selectedCounselor && (
+          <CounselorRequestModal 
+            isOpen={showRequestModal}
+            onClose={closeModal}
+            onSubmit={handleRequestSubmit}
+          />
+        )}
+        
+        {/* 상담사 대기 모달 */}
+        {showWaitingModal && selectedCounselor && (
+          <WaitingModal 
+            isOpen={showWaitingModal} 
+            onCancel={handleCancelWaiting}
+            waitingFor="상담사"
+            title="수락을 기다려주세요..."
+            message="상담사가 요청을 확인하고 있습니다. 잠시만 기다려주세요."
           />
         )}
       </div>
