@@ -96,21 +96,21 @@ const VoiceChannel = () => {
             <h1 style={{fontFamily: "'HancomMalangMalang-Regular', sans-serif"}} className="text-4xl font-bold text-[#00a173]">음성채널</h1>
           </div>
           
-          {/* 검색창창 */}
+          {/* 검색창창 - 크기 조정됨 */}
           <div className="mb-12 flex justify-left">
-            <div className="bg-white p-2 rounded-xl shadow-md w-full max-w-xl">
+            <div className="bg-white p-2 rounded-xl shadow-md w-full max-w-md">
               <div className="relative">
                 <form onSubmit={handleSearch}>
                   <input
                     type="text"
                     placeholder="방을 검색하세요..."
-                    className="w-full py-3 px-5 rounded-lg border border-gray-200 focus:outline-none focus:border-[#4DC0B5] focus:ring-2 focus:ring-[#4DC0B5] focus:ring-opacity-20"
+                    className="w-full py-2 px-4 rounded-lg border border-gray-200 focus:outline-none focus:border-[#4DC0B5] focus:ring-2 focus:ring-[#4DC0B5] focus:ring-opacity-20 text-sm"
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                   />
                   <button 
                     type="submit"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white px-4 py-2 rounded-lg shadow-md transition duration-200"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white px-3 py-1.5 rounded-lg shadow-md transition duration-200 text-xs"
                   >
                     검색
                   </button>
@@ -164,12 +164,11 @@ const VoiceChannel = () => {
       />
       
       <WaitingModal 
-  isOpen={showWaitingModal} 
-  onCancel={handleCancelWaiting}
-  waitingFor="방장"
-  title="수락을 기다려주세요..."
-
-/>
+        isOpen={showWaitingModal} 
+        onCancel={handleCancelWaiting}
+        waitingFor="방장"
+        title="수락을 기다려주세요..."
+      />
     </div>
   );
 };
