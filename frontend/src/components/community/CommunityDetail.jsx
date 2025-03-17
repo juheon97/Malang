@@ -1,138 +1,223 @@
-// src/components/community/CommunityDetail.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { PostService, CommentService } from '../../api';
-import CommentForm from './CommentForm';
-import CommentList from './CommentList';
+import { useNavigate, useParams } from 'react-router-dom';
+import { PostService, CommentService } from '/src/api';
 
 const CommunityDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
-  const [likes, setLikes] = useState(0);
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editCommentContent, setEditCommentContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  
+  // 현재 사용자 정보 (실제로는 인증 시스템에서 가져와야 함)
+  const currentUser = {
+    id: 1,
+    username: '익명의 리뷰어'
+  };
 
-  // 게시글 데이터 불러오기
+  // 게시글 및 댓글 데이터 불러오기
   useEffect(() => {
-    const fetchPostData = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-
-        // PostService를 사용하여 특정 ID의 게시글 가져오기
-        const response = await PostService.getPostById(id);
-        const postData = response.data;
-
-        setPost(postData);
-        setLikes(postData.likes);
-        setEditTitle(postData.title);
-        setEditContent(postData.content);
-
-        // 댓글 데이터 가져오기
-        if (postData.comments) {
-          setComments(postData.comments);
-        } else {
-          const commentsResponse = await CommentService.getCommentsByPostId(id);
-          setComments(commentsResponse.data);
-        }
+        // PostService 사용하여 게시글 데이터 가져오기
+        const postResponse = await PostService.getPostById(id);
+        setPost(postResponse.data);
+        setEditTitle(postResponse.data.title);
+        setEditContent(postResponse.data.content);
+        
+        // CommentService 사용하여 댓글 데이터 가져오기
+        const commentsResponse = await CommentService.getCommentsByPostId(id);
+        setComments(commentsResponse.data);
       } catch (err) {
+        console.error('데이터 로딩 오류:', err);
         setError('게시글을 불러오는 중 오류가 발생했습니다.');
-        console.error('게시글 로딩 오류:', err);
+        
+        // 백엔드 연동 전 테스트용 더미 데이터
+        const dummyPost = {
+          id: parseInt(id),
+          category: '시각장애',
+          title: '시각장애 관련 질문입니다',
+          content: '시각장애인을 위한 기능은 어떻게 사용하나요?',
+          date: '25.03.17',
+          likes: 5,
+          authorId: 1, // 현재 사용자와 같은 ID로 설정
+          authorName: '익명의 리뷰어'
+        };
+        
+        setPost(dummyPost);
+        setEditTitle(dummyPost.title);
+        setEditContent(dummyPost.content);
+        
+        setComments([
+          { 
+            id: 1, 
+            postId: parseInt(id),
+            authorId: 2, 
+            authorName: '다른 사용자', 
+            content: '도움이 필요하시면 연락주세요!', 
+            date: '25.03.17' 
+          }
+        ]);
       } finally {
         setLoading(false);
       }
     };
+    
+    fetchData();
+  }, [id]);
 
-    fetchPostData();
-  }, [id]); // id가 변경될 때마다 데이터를 다시 불러옴
-
+  // 좋아요 버튼 클릭 핸들러
   const handleLikeClick = async () => {
     try {
-      // 좋아요 수 증가
-      const updatedLikes = likes + 1;
-      setLikes(updatedLikes);
-
-      // API를 통해 서버에 업데이트 (실제 구현 시)
-      await PostService.updatePost(id, { likes: updatedLikes });
+      const updatedLikes = post.likes + 1;
+      // PostService 사용하여 좋아요 업데이트
+      await PostService.updateLikes(id, updatedLikes);
+      setPost({ ...post, likes: updatedLikes });
     } catch (err) {
       console.error('좋아요 업데이트 오류:', err);
-      // 실패 시 원래 값으로 복원
-      setLikes(likes);
+      alert('좋아요 업데이트 중 오류가 발생했습니다.');
     }
   };
 
-  const handleCommentSubmit = async comment => {
+  // 댓글 제출 핸들러
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!comment.trim()) return;
+    
+    setIsSubmitting(true);
+    
     try {
+      // 현재 날짜 생성
+      const currentDate = new Date().toLocaleDateString('ko-KR', {
+        year: '2-digit',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\. /g, '.').replace(/\.$/, '');
+      
+      // 댓글 데이터 구성
       const commentData = {
+        postId: parseInt(id),
         content: comment,
         authorId: currentUser.id,
         authorName: currentUser.username,
-        date: new Date()
-          .toLocaleDateString('ko-KR', {
-            year: '2-digit',
-            month: '2-digit',
-            day: '2-digit',
-          })
-          .replace(/\. /g, '.')
-          .replace(/\.$/, ''),
+        date: currentDate
       };
-
-      // API를 통해 댓글 생성
+      
+      // CommentService 사용하여 댓글 생성
       const response = await CommentService.createComment(id, commentData);
-      const newComment = response.data;
-
-      // 함수형 업데이트를 사용하여 이전 상태에 의존하지 않도록 함
+      
+      // 새 댓글에 고유한 ID 보장
+      const newComment = {
+        ...response.data,
+        // 서버에서 ID를 제공하지 않는 경우 임시 ID 생성
+        id: response.data.id || Date.now() + Math.random().toString(36).substr(2, 9)
+      };
+      
+      // 댓글 목록 업데이트 (함수형 업데이트 사용)
       setComments(prevComments => [...prevComments, newComment]);
-      return true; // 성공 시 true 반환
+      setComment(''); // 입력 필드 초기화
     } catch (err) {
       console.error('댓글 작성 오류:', err);
       alert('댓글 작성 중 오류가 발생했습니다.');
-      return false; // 실패 시 false 반환
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleDeletePost = async () => {
-    if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
-      try {
-        // API를 통해 게시글 삭제
-        await PostService.deletePost(id);
-        alert('게시글이 삭제되었습니다.');
-        navigate('/community');
-      } catch (err) {
-        console.error('게시글 삭제 오류:', err);
-        alert('게시글 삭제 중 오류가 발생했습니다.');
-      }
+  // 댓글 수정 시작 핸들러
+  const handleEditCommentStart = (comment) => {
+    setEditingCommentId(comment.id);
+    setEditCommentContent(comment.content);
+  };
+
+  // 댓글 수정 취소 핸들러
+  const handleEditCommentCancel = () => {
+    setEditingCommentId(null);
+    setEditCommentContent('');
+  };
+
+  // 댓글 수정 저장 핸들러
+  const handleEditCommentSave = async (commentId) => {
+    if (!editCommentContent.trim()) return;
+    
+    try {
+      // CommentService 사용하여 댓글 수정
+      await CommentService.updateComment(commentId, {
+        content: editCommentContent
+      });
+      
+      // 댓글 목록 업데이트
+      setComments(prevComments => 
+        prevComments.map(comment => 
+          comment.id === commentId 
+            ? { ...comment, content: editCommentContent } 
+            : comment
+        )
+      );
+      
+      setEditingCommentId(null);
+      setEditCommentContent('');
+    } catch (err) {
+      console.error('댓글 수정 오류:', err);
+      alert('댓글 수정 중 오류가 발생했습니다.');
     }
   };
 
-  const handleEditPost = () => {
+  // 댓글 삭제 핸들러
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) return;
+    
+    try {
+      // CommentService 사용하여 댓글 삭제
+      await CommentService.deleteComment(commentId);
+      
+      // 댓글 목록 업데이트
+      setComments(prevComments => 
+        prevComments.filter(comment => comment.id !== commentId)
+      );
+    } catch (err) {
+      console.error('댓글 삭제 오류:', err);
+      alert('댓글 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 게시글 수정 시작 핸들러
+  const handleEditStart = () => {
     setIsEditing(true);
   };
 
-  const handleCancelEdit = () => {
+  // 게시글 수정 취소 핸들러
+  const handleEditCancel = () => {
     setIsEditing(false);
     setEditTitle(post.title);
     setEditContent(post.content);
   };
 
-  const handleSaveEdit = async () => {
+  // 게시글 수정 저장 핸들러
+  const handleEditSave = async () => {
+    if (!editTitle.trim() || !editContent.trim()) {
+      alert('제목과 내용을 모두 입력해주세요.');
+      return;
+    }
+    
     try {
-      const updatedPostData = {
+      // PostService 사용하여 게시글 수정
+      const response = await PostService.updatePost(id, {
         title: editTitle,
-        content: editContent,
-      };
-
-      // API를 통해 게시글 업데이트
-      const response = await PostService.updatePost(id, updatedPostData);
-      const updatedPost = response.data;
-
-      setPost(updatedPost);
+        content: editContent
+      });
+      
+      setPost({ ...post, title: editTitle, content: editContent });
       setIsEditing(false);
       alert('게시글이 수정되었습니다.');
     } catch (err) {
@@ -141,125 +226,194 @@ const CommunityDetail = () => {
     }
   };
 
-  const handleUpdateComment = async (commentId, newContent) => {
+  // 게시글 삭제 핸들러
+  const handleDeletePost = async () => {
+    if (!window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
+    
     try {
-      // API를 통해 댓글 업데이트
-      await CommentService.updateComment(commentId, { content: newContent });
-
-      // 댓글 목록 업데이트
-      setComments(
-        comments.map(comment =>
-          comment.id === commentId
-            ? { ...comment, content: newContent }
-            : comment,
-        ),
-      );
+      // PostService 사용하여 게시글 삭제
+      await PostService.deletePost(id);
+      alert('게시글이 삭제되었습니다.');
+      navigate('/community');
     } catch (err) {
-      console.error('댓글 수정 오류:', err);
-      alert('댓글 수정 중 오류가 발생했습니다.');
+      console.error('게시글 삭제 오류:', err);
+      alert('게시글 삭제 중 오류가 발생했습니다.');
     }
   };
 
-  const handleDeleteComment = async commentId => {
-    if (window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
-      try {
-        // API를 통해 댓글 삭제
-        await CommentService.deleteComment(commentId);
+  if (loading) return <div className="text-center py-10">로딩 중...</div>;
+  if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
+  if (!post) return <div className="text-center py-10">게시글을 찾을 수 없습니다.</div>;
 
-        // 댓글 목록 업데이트
-        setComments(comments.filter(comment => comment.id !== commentId));
-      } catch (err) {
-        console.error('댓글 삭제 오류:', err);
-        alert('댓글 삭제 중 오류가 발생했습니다.');
-      }
-    }
-  };
+  const isAuthor = currentUser.id === post.authorId;
 
-  if (loading) return <div className="loading">로딩 중...</div>;
-  if (error) return <div className="error-message">{error}</div>;
-  if (!post) return <div className="not-found">게시글을 찾을 수 없습니다.</div>;
-
-  const isAuthor = currentUser && post.authorId === currentUser.id;
-
+  // JSX 렌더링 부분은 변경 없음
   return (
-    <div className="community-container">
-      <h1 className="community-title">커뮤니티</h1>
-
-      <div className="community-content">
+    <div className="bg-gradient-to-br from-[#e6f7f0] to-[#f0f9f5] rounded-xl shadow-md p-6 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold text-center text-[#00a173] mb-8">커뮤니티</h1>
+      
+      <div className="bg-white rounded-lg shadow-sm p-6">
         {isEditing ? (
-          <div className="post-edit-form">
-            <div className="post-category">{post.category}</div>
+          <div className="mb-6">
             <input
               type="text"
-              className="title-input"
               value={editTitle}
-              onChange={e => setEditTitle(e.target.value)}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="w-full px-4 py-3 mb-4 bg-white border border-[#e0e7e0] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8ed7af]"
             />
             <textarea
-              className="content-textarea"
               value={editContent}
-              onChange={e => setEditContent(e.target.value)}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-full h-64 px-4 py-3 bg-white border border-[#e0e7e0] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8ed7af] resize-none"
             />
-            <div className="edit-buttons">
-              <button className="cancel-button" onClick={handleCancelEdit}>
+            <div className="flex justify-end gap-2 mt-4">
+              <button 
+                onClick={handleEditCancel}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
+              >
                 취소
               </button>
-              <button className="save-button" onClick={handleSaveEdit}>
+              <button 
+                onClick={handleEditSave}
+                className="px-4 py-2 bg-[#8ed7af] text-white rounded-full hover:bg-[#7bc89e] transition-colors"
+              >
                 저장
               </button>
             </div>
           </div>
         ) : (
           <>
-            <div className="post-header">
-              <div className="post-category">{post.category}</div>
-              <div className="post-title">{post.title}</div>
-              <div className="post-info">
-                <span className="post-author">{post.authorName}</span>
-                <span className="post-date">{post.date}</span>
+            <div className="mb-6 border-b border-[#e0f0e9] pb-4">
+              <div className="inline-block px-3 py-1 bg-[#8ed7af] text-white text-xs rounded-full mb-2">
+                {post.category}
+              </div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">{post.title}</h2>
+              <div className="flex justify-between items-center text-sm text-gray-500">
+                <span>{post.authorName}</span>
+                <span>{post.date}</span>
               </div>
             </div>
-
-            <div className="post-content">{post.content}</div>
-
-            <div className="post-actions">
-              <div className="left-actions">
-                <button
-                  className="back-button"
+            
+            <div className="min-h-[200px] mb-8 text-gray-700">
+              {post.content}
+            </div>
+            
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex gap-2">
+                <button 
                   onClick={() => navigate('/community')}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
                 >
                   목록보기
                 </button>
+                
                 {isAuthor && (
                   <>
-                    <button className="edit-button" onClick={handleEditPost}>
+                    <button 
+                      onClick={handleEditStart}
+                      className="px-4 py-2 bg-[#8ed7af] text-white rounded-full hover:bg-[#7bc89e] transition-colors"
+                    >
                       수정
                     </button>
-                    <button
-                      className="delete-button"
+                    <button 
                       onClick={handleDeletePost}
+                      className="px-4 py-2 bg-[#ff6b6b] text-white rounded-full hover:bg-[#ff5252] transition-colors"
                     >
                       삭제
                     </button>
                   </>
                 )}
               </div>
-              <button className="like-button" onClick={handleLikeClick}>
-                좋아요 <span className="like-count">{likes}</span>
+              
+              <button 
+                onClick={handleLikeClick}
+                className="group flex items-center gap-2 px-4 py-2 bg-[#ff6b6b] text-white rounded-full hover:bg-[#ff5252] transition-colors shadow-sm hover:shadow-md transform hover:-translate-y-0.5 duration-200"
+              >
+                <span>좋아요</span>
+                <span className="flex items-center justify-center w-6 h-6 bg-white text-[#ff6b6b] rounded-full group-hover:animate-pulse">
+                  {post.likes}
+                </span>
               </button>
             </div>
           </>
         )}
-
-        <div className="comments-section">
-          <h3>댓글</h3>
-          <CommentList
-            comments={comments}
-            currentUser={currentUser}
-            onUpdateComment={handleUpdateComment}
-            onDeleteComment={handleDeleteComment}
-          />
-          <CommentForm onSubmit={handleCommentSubmit} />
+        
+        <div className="border-t border-[#e0f0e9] pt-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">댓글</h3>
+          
+          <div className="space-y-4 mb-6">
+            {comments.map((comment) => (
+              <div key={comment.id} className="bg-[#f9fcfa] p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium text-[#00a173]">{comment.authorName}</span>
+                  <span className="text-sm text-gray-500">{comment.date}</span>
+                </div>
+                
+                {editingCommentId === comment.id ? (
+                  <div className="mt-2">
+                    <textarea
+                      value={editCommentContent}
+                      onChange={(e) => setEditCommentContent(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#e0f0e9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8ed7af]"
+                      rows="3"
+                    />
+                    <div className="flex justify-end gap-2 mt-2">
+                      <button 
+                        onClick={handleEditCommentCancel}
+                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 transition-colors"
+                      >
+                        취소
+                      </button>
+                      <button 
+                        onClick={() => handleEditCommentSave(comment.id)}
+                        className="px-3 py-1 bg-[#8ed7af] text-white rounded-full text-xs hover:bg-[#7bc89e] transition-colors"
+                      >
+                        저장
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-gray-700">{comment.content}</p>
+                    {currentUser.id === comment.authorId && (
+                      <div className="flex justify-end gap-2 mt-2">
+                        <button 
+                          onClick={() => handleEditCommentStart(comment)}
+                          className="text-xs text-gray-500 hover:text-[#00a173]"
+                        >
+                          수정
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteComment(comment.id)}
+                          className="text-xs text-gray-500 hover:text-[#ff6b6b]"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          <form onSubmit={handleCommentSubmit} className="flex gap-2">
+            <input
+              type="text"
+              placeholder="댓글을 입력하세요..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2 border border-[#e0f0e9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8ed7af] disabled:opacity-50"
+            />
+            <button 
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-[#8ed7af] text-white rounded-lg hover:bg-[#7bc89e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? '입력 중...' : '입력'}
+            </button>
+          </form>
         </div>
       </div>
     </div>

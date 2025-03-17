@@ -3,198 +3,155 @@
 let posts = [
   {
     id: 1,
-    title: '시작장애에 어떻게 여기서 글을 쓰지?',
-    content: '시작장애가 있는데 어떻게 글을 쓰나요?',
-    category: '시작장애',
-    date: '25.03.14',
+    title: '시각장애 관련 질문입니다',
+    content: '시각장애인을 위한 기능은 어떻게 사용하나요?',
+    category: '시각장애',
+    date: '25.03.17',
     authorId: 1,
     authorName: '익명의 리뷰어',
-    likes: 56,
+    likes: 5,
     comments: [
       {
         id: 1,
         postId: 1,
-        content: '우와 글쓰기~~~~!',
+        content: '도움이 필요하시면 연락주세요!',
         authorId: 2,
         authorName: '다른 사용자',
-        date: '25.03.14',
-      },
-    ],
+        date: '25.03.17'
+      }
+    ]
   },
   {
     id: 2,
-    title: '인정? 이게 맞나요?',
-    content: '인정하시나요?',
-    category: '인정?',
-    date: '25.03.14',
+    title: '구음장애 앱 사용법',
+    content: '구음장애 앱은 어떻게 사용하나요?',
+    category: '구음장애',
+    date: '25.03.16',
     authorId: 2,
     authorName: '다른 사용자',
-    likes: 100,
-    comments: [],
+    likes: 12,
+    comments: []
   },
+  {
+    id: 3,
+    title: '청각장애인을 위한 기능은 어떻게 사용하나요?',
+    content: '청각장애인을 위한 기능에 대해 알고 싶습니다.',
+    category: '청각장애',
+    date: '25.03.15',
+    authorId: 3,
+    authorName: '사용자3',
+    likes: 8,
+    comments: []
+  }
 ];
 
-// 목 서비스
+// 목 API 서비스
 export const mockPostAPI = {
-  getAllPosts: () => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve({ data: posts });
-      }, 500);
+  getAllPosts: (page = 1) => {
+    const postsPerPage = 10;
+    const startIndex = (page - 1) * postsPerPage;
+    const endIndex = startIndex + postsPerPage;
+    const paginatedPosts = posts.slice(startIndex, endIndex);
+    
+    return Promise.resolve({
+      data: {
+        posts: paginatedPosts,
+        totalPages: Math.ceil(posts.length / postsPerPage),
+        currentPage: page
+      }
     });
   },
-
-  getPostById: postId => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const post = posts.find(p => p.id === parseInt(postId));
-        if (post) {
-          resolve({ data: post });
-        } else {
-          reject({ message: '게시글을 찾을 수 없습니다.' });
-        }
-      }, 500);
-    });
+  
+  getPostById: (postId) => {
+    const post = posts.find(p => p.id === parseInt(postId));
+    if (post) {
+      return Promise.resolve({ data: post });
+    }
+    return Promise.reject({ message: '게시글을 찾을 수 없습니다.' });
   },
-
-  createPost: postData => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const newPost = {
-          ...postData,
-          id: posts.length + 1,
-          date: new Date()
-            .toLocaleDateString('ko-KR', {
-              year: '2-digit',
-              month: '2-digit',
-              day: '2-digit',
-            })
-            .replace(/\. /g, '.')
-            .replace(/\.$/, ''),
-          comments: [],
-        };
-        posts = [newPost, ...posts];
-        resolve({ data: newPost });
-      }, 500);
-    });
+  
+  createPost: (postData) => {
+    const newPost = {
+      ...postData,
+      id: posts.length + 1,
+      comments: []
+    };
+    posts = [newPost, ...posts];
+    return Promise.resolve({ data: newPost });
   },
-
+  
   updatePost: (postId, postData) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const index = posts.findIndex(p => p.id === parseInt(postId));
-        if (index !== -1) {
-          posts[index] = { ...posts[index], ...postData };
-          resolve({ data: posts[index] });
-        } else {
-          reject({ message: '게시글을 찾을 수 없습니다.' });
-        }
-      }, 500);
-    });
+    const index = posts.findIndex(p => p.id === parseInt(postId));
+    if (index !== -1) {
+      posts[index] = { ...posts[index], ...postData };
+      return Promise.resolve({ data: posts[index] });
+    }
+    return Promise.reject({ message: '게시글을 찾을 수 없습니다.' });
   },
-
-  deletePost: postId => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const index = posts.findIndex(p => p.id === parseInt(postId));
-        if (index !== -1) {
-          posts = posts.filter(p => p.id !== parseInt(postId));
-          resolve({ data: { success: true } });
-        } else {
-          reject({ message: '게시글을 찾을 수 없습니다.' });
-        }
-      }, 500);
-    });
+  
+  deletePost: (postId) => {
+    const index = posts.findIndex(p => p.id === parseInt(postId));
+    if (index !== -1) {
+      posts = posts.filter(p => p.id !== parseInt(postId));
+      return Promise.resolve({ data: { success: true } });
+    }
+    return Promise.reject({ message: '게시글을 찾을 수 없습니다.' });
   },
+  
+  updateLikes: (postId, likes) => {
+    const index = posts.findIndex(p => p.id === parseInt(postId));
+    if (index !== -1) {
+      posts[index].likes = likes;
+      return Promise.resolve({ data: posts[index] });
+    }
+    return Promise.reject({ message: '게시글을 찾을 수 없습니다.' });
+  }
 };
 
 export const mockCommentAPI = {
-  getCommentsByPostId: postId => {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const post = posts.find(p => p.id === parseInt(postId));
-        if (post) {
-          resolve({ data: post.comments });
-        } else {
-          resolve({ data: [] });
-        }
-      }, 500);
-    });
+  getCommentsByPostId: (postId) => {
+    const post = posts.find(p => p.id === parseInt(postId));
+    if (post) {
+      return Promise.resolve({ data: post.comments });
+    }
+    return Promise.resolve({ data: [] });
   },
-
+  
   createComment: (postId, commentData) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const postIndex = posts.findIndex(p => p.id === parseInt(postId));
-        if (postIndex !== -1) {
-          const newComment = {
-            ...commentData,
-            id: Date.now(),
-            postId: parseInt(postId),
-            date: new Date()
-              .toLocaleDateString('ko-KR', {
-                year: '2-digit',
-                month: '2-digit',
-                day: '2-digit',
-              })
-              .replace(/\. /g, '.')
-              .replace(/\.$/, ''),
-          };
-          posts[postIndex].comments.push(newComment);
-          resolve({ data: newComment });
-        } else {
-          reject({ message: '게시글을 찾을 수 없습니다.' });
-        }
-      }, 500);
-    });
+    const post = posts.find(p => p.id === parseInt(postId));
+    if (post) {
+      // 고유한 ID 생성 보장
+      const maxId = post.comments.length ? Math.max(...post.comments.map(c => c.id)) + 1 : 1;
+      const newComment = {
+        ...commentData,
+        id: maxId, // 기존 ID 중 최대값 + 1
+        postId: parseInt(postId)
+      };
+      post.comments.push(newComment);
+      return Promise.resolve({ data: newComment });
+    }
+    return Promise.reject({ message: '게시글을 찾을 수 없습니다.' });
   },
-
+  
   updateComment: (commentId, commentData) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        let found = false;
-        for (let i = 0; i < posts.length; i++) {
-          const commentIndex = posts[i].comments.findIndex(
-            c => c.id === parseInt(commentId),
-          );
-          if (commentIndex !== -1) {
-            posts[i].comments[commentIndex] = {
-              ...posts[i].comments[commentIndex],
-              ...commentData,
-            };
-            resolve({ data: posts[i].comments[commentIndex] });
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          reject({ message: '댓글을 찾을 수 없습니다.' });
-        }
-      }, 500);
-    });
+    for (const post of posts) {
+      const commentIndex = post.comments.findIndex(c => c.id === parseInt(commentId));
+      if (commentIndex !== -1) {
+        post.comments[commentIndex] = { ...post.comments[commentIndex], ...commentData };
+        return Promise.resolve({ data: post.comments[commentIndex] });
+      }
+    }
+    return Promise.reject({ message: '댓글을 찾을 수 없습니다.' });
   },
-
-  deleteComment: commentId => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        let found = false;
-        for (let i = 0; i < posts.length; i++) {
-          const commentIndex = posts[i].comments.findIndex(
-            c => c.id === parseInt(commentId),
-          );
-          if (commentIndex !== -1) {
-            posts[i].comments = posts[i].comments.filter(
-              c => c.id !== parseInt(commentId),
-            );
-            resolve({ data: { success: true } });
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          reject({ message: '댓글을 찾을 수 없습니다.' });
-        }
-      }, 500);
-    });
-  },
+  
+  deleteComment: (commentId) => {
+    for (const post of posts) {
+      const commentIndex = post.comments.findIndex(c => c.id === parseInt(commentId));
+      if (commentIndex !== -1) {
+        post.comments = post.comments.filter(c => c.id !== parseInt(commentId));
+        return Promise.resolve({ data: { success: true } });
+      }
+    }
+    return Promise.reject({ message: '댓글을 찾을 수 없습니다.' });
+  }
 };
