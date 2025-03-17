@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { mockEntryRequests } from '../../api/entryRequests';
+import EntryRequestList from '../../components/common/EntryRequestList';
 
 function CounselChannelVideo() {
   const [entryRequests, setEntryRequests] = useState([]);
@@ -16,13 +18,10 @@ function CounselChannelVideo() {
 
   // 테스트용 입장 요청 추가
   useEffect(() => {
-    // 3초 후 테스트 요청 추가
     const timer = setTimeout(() => {
-      setEntryRequests([
-        { id: 'req1', name: '박다빈', birthdate: '2000.10.10' }
-      ]);
+      setEntryRequests(mockEntryRequests);
     }, 3000);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -44,27 +43,52 @@ function CounselChannelVideo() {
       }
     });
     setParticipantControls(initialControls);
+  }, []);
+
+  // 미디어 스트림 연결을 위한 별도의 useEffect - 수정된 부분
+  useEffect(() => {
+    let stream = null;
     
-    // 실제 구현에서는 여기서 미디어 스트림을 가져와 연결
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then(stream => {
+    const getMedia = async () => {
+      try {
+        // 브라우저가 getUserMedia를 지원하는지 확인
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          console.error('브라우저가 getUserMedia를 지원하지 않습니다.');
+          return;
+        }
+        
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: true, 
+          audio: true 
+        });
+        
+        // ref가 설정된 후에만 srcObject 설정
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
         }
-      })
-      .catch(err => {
+      } catch (err) {
         console.error('미디어 장치 접근 오류:', err);
-      });
+      }
+    };
+    
+    getMedia();
+    
+    // 컴포넌트 언마운트 시 스트림 정리
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
   }, []);
 
   const handleAcceptRequest = (requestId) => {
-    // 실제 구현에서는 여기서 사용자 입장 처리 로직 추가
-    setEntryRequests(prev => prev.filter(req => req.id !== requestId));
+    setEntryRequests((prev) => prev.filter((req) => req.id !== requestId));
+    console.log(`입장 요청 수락: ${requestId}`);
   };
-  
+
   const handleRejectRequest = (requestId) => {
-    // 실제 구현에서는 여기서 거절 처리 로직 추가
-    setEntryRequests(prev => prev.filter(req => req.id !== requestId));
+    setEntryRequests((prev) => prev.filter((req) => req.id !== requestId));
+    console.log(`입장 요청 거절: ${requestId}`);
   };
   
   // 채팅 스크롤 자동 이동
@@ -285,33 +309,13 @@ function CounselChannelVideo() {
 
   return (
     <div className="w-full bg-gradient-to-b from-[#EAF2EE] to-[#C6E1D8] rounded-xl pt-8 pb-4 px-4">
+      {/* Entry Request List */}
       {entryRequests.length > 0 && (
-        <div className="fixed top-20 right-4 z-50">
-          {entryRequests.map(request => (
-            <div 
-              key={request.id} 
-              className="bg-white rounded-lg shadow-lg p-4 mb-2 w-72"
-            >
-              <p className="text-sm mb-3">
-                {request.name}({request.birthdate})님께서 입장을 요청하셨습니다.
-              </p>
-              <div className="flex justify-end space-x-2">
-                <button 
-                  onClick={() => handleAcceptRequest(request.id)}
-                  className="px-3 py-1 bg-[#E8F5E9] text-green-600 rounded-full text-sm hover:bg-[#C8E6C9]"
-                >
-                  수락
-                </button>
-                <button 
-                  onClick={() => handleRejectRequest(request.id)}
-                  className="px-3 py-1 bg-red-100 text-red-600 rounded-full text-sm hover:bg-red-200"
-                >
-                  거절
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <EntryRequestList 
+          entryRequests={entryRequests} 
+          onAccept={handleAcceptRequest} 
+          onReject={handleRejectRequest} 
+        />
       )}
 
       <div className="w-full max-w-6xl mx-auto">
