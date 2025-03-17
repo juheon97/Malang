@@ -4,15 +4,45 @@ import '../../styles/Signup.css';
 
 const Signup = () => {
   const [userType, setUserType] = useState('일반인 사용자');
+  
+  // 일반인 사용자 상태
   const [isVisuallyImpaired, setIsVisuallyImpaired] = useState(true);
-  const [hasCertification, setHasCertification] = useState(true);
+  
+  // 상담사 상태
   const [gender, setGender] = useState('남');
   const [birthYear, setBirthYear] = useState(1990);
   const [birthMonth, setBirthMonth] = useState(1);
   const [birthDay, setBirthDay] = useState(1);
+  const [hasCertification, setHasCertification] = useState(true);
+  
+  // 공통 상태 (이름, 이메일, 비밀번호 필드용)
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   
   const handleUserTypeChange = (type) => {
-    setUserType(type);
+    // 현재 선택된 타입과 다른 경우에만 상태 초기화
+    if (userType !== type) {
+      setUserType(type);
+      
+      // 타입별 상태 초기화
+      if (type === '일반인 사용자') {
+        // 일반인 사용자로 변경 시 일반인 상태 초기화
+        setIsVisuallyImpaired(true);
+      } else {
+        // 상담사로 변경 시 상담사 상태 초기화
+        setGender('남');
+        setBirthYear(1990);
+        setBirthMonth(1);
+        setBirthDay(1);
+        setHasCertification(true);
+      }
+      
+      // 공통 입력 필드도 초기화
+      setName('');
+      setEmail('');
+      setPassword('');
+    }
   };
   
   const handleVisualImpairmentChange = () => {
@@ -64,17 +94,32 @@ const Signup = () => {
         <form className="signup-form">
           <div className="form-group">
             <label>이름 :</label>
-            <input type="text" className="form-input" />
+            <input 
+              type="text" 
+              className="form-input" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </div>
           
           <div className="form-group">
             <label>이메일 :</label>
-            <input type="email" className="form-input" />
+            <input 
+              type="email" 
+              className="form-input" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
           
           <div className="form-group">
             <label>비밀번호 :</label>
-            <input type="password" className="form-input" />
+            <input 
+              type="password" 
+              className="form-input" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
           
           {userType === '일반인 사용자' ? (
