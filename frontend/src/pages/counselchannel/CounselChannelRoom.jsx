@@ -104,7 +104,7 @@ function CounselChannelRoom() {
   
   <button 
     type="submit" 
-    className="bg-[#98D5B0] text-white font-semibold shadow-lg px-16 py-2 rounded-2xl text-base hover:bg-[#7bc89a] transition-colors"
+    className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white font-semibold shadow-lg px-16 py-2 rounded-2xl text-base transition-colors"
   >
     생성
   </button>
