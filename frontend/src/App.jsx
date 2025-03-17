@@ -2,14 +2,13 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/layout/Layout';
-import HomeMain from "./components/home/HomeMain";
+import HomeMain from './components/home/HomeMain';
 import Community from './pages/Community';
 import CommunityWrite from './components/community/CommunityWrite';
 import CommunityDetail from './components/community/CommunityDetail';
 import Counsel from './pages/counsel/Counsel';
 import VoiceChannel from './pages/voicechannel/VoiceChannel';
 import Signup from './components/home/Signup';
-
 
 function App() {
   return (

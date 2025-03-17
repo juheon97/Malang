@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const CommunityList = ({ posts }) => {
   const navigate = useNavigate();
 
-  const handlePostClick = (postId) => {
+  const handlePostClick = postId => {
     navigate(`/community/${postId}`);
   };
 
@@ -20,15 +20,13 @@ const CommunityList = ({ posts }) => {
         </tr>
       </thead>
       <tbody>
-        {posts.map((post) => (
+        {posts.map(post => (
           <tr key={post.id} onClick={() => handlePostClick(post.id)}>
             <td>{post.category}</td>
             <td className="title-cell">{post.title}</td>
             <td>{post.date}</td>
             <td>
-              <span className="like-container">
-                ❤️ {post.likes}
-              </span>
+              <span className="like-container">❤️ {post.likes}</span>
             </td>
           </tr>
         ))}
