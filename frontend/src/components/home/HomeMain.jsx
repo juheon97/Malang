@@ -27,7 +27,7 @@ function HomeMain() {
           </p>
           <div className="hero-buttons">
             <button className="home-signup-btn" onClick={() => navigate("/Signup")}>회원가입</button>
-            <button className="login-btn">로그인</button>
+            <button className="login-btn" onClick={() => navigate("/login")}>로그인</button>
           </div>
         </div>
         <div className="hero-image">

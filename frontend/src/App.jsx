@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/layout/Layout';
 import HomeMain from "./components/home/HomeMain";
+import Login from './components/home/Login';
 import CommunityList from './components/community/CommunityList';
 import CommunityWrite from './components/community/CommunityWrite';
 import CommunityDetail from './components/community/CommunityDetail';
@@ -21,6 +22,7 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<HomeMain />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/Signup" element={<Signup />} />
             <Route path="/community" element={<CommunityList />} />
             <Route path="/community/write" element={<CommunityWrite />} />
