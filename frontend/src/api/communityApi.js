@@ -14,47 +14,49 @@ const apiClient = axios.create({
 
 // 요청 인터셉터 설정 (토큰 추가 등)
 apiClient.interceptors.request.use(
-  (config) => {
+  config => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
+  error => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // 게시글 관련 API
 export const postAPI = {
   // 모든 게시글 조회
   getAllPosts: () => apiClient.get('/posts'),
-  
+
   // 특정 게시글 조회
-  getPostById: (postId) => apiClient.get(`/posts/${postId}`),
-  
+  getPostById: postId => apiClient.get(`/posts/${postId}`),
+
   // 게시글 작성
-  createPost: (postData) => apiClient.post('/posts', postData),
-  
+  createPost: postData => apiClient.post('/posts', postData),
+
   // 게시글 수정
   updatePost: (postId, postData) => apiClient.put(`/posts/${postId}`, postData),
-  
+
   // 게시글 삭제
-  deletePost: (postId) => apiClient.delete(`/posts/${postId}`),
+  deletePost: postId => apiClient.delete(`/posts/${postId}`),
 };
 
 // 댓글 관련 API
 export const commentAPI = {
   // 게시글의 모든 댓글 조회
-  getCommentsByPostId: (postId) => apiClient.get(`/posts/${postId}/comments`),
-  
+  getCommentsByPostId: postId => apiClient.get(`/posts/${postId}/comments`),
+
   // 댓글 작성
-  createComment: (postId, commentData) => apiClient.post(`/posts/${postId}/comments`, commentData),
-  
+  createComment: (postId, commentData) =>
+    apiClient.post(`/posts/${postId}/comments`, commentData),
+
   // 댓글 수정
-  updateComment: (commentId, commentData) => apiClient.put(`/comments/${commentId}`, commentData),
-  
+  updateComment: (commentId, commentData) =>
+    apiClient.put(`/comments/${commentId}`, commentData),
+
   // 댓글 삭제
-  deleteComment: (commentId) => apiClient.delete(`/comments/${commentId}`),
+  deleteComment: commentId => apiClient.delete(`/comments/${commentId}`),
 };

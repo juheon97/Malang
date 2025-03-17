@@ -37,18 +37,20 @@ const Community = () => {
   return (
     <div className="community-container">
       <h1 className="community-title">커뮤니티</h1>
-      
+
       <div className="community-content">
         {error && <div className="error-message">{error}</div>}
-        
+
         {posts.length > 0 ? (
           <CommunityList posts={posts} />
         ) : (
           <div className="no-posts">등록된 게시글이 없습니다.</div>
         )}
-        
+
         <div className="community-footer">
-          <button className="write-button" onClick={handleWriteClick}>글쓰기</button>
+          <button className="write-button" onClick={handleWriteClick}>
+            글쓰기
+          </button>
         </div>
       </div>
     </div>

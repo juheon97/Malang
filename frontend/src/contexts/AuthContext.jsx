@@ -6,10 +6,10 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState({
     id: 1,
-    username: '익명의 리뷰어'
+    username: '익명의 리뷰어',
   });
 
-  const login = (user) => {
+  const login = user => {
     setCurrentUser(user);
   };
 
