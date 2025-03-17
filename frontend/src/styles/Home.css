@@ -10,7 +10,7 @@
 }
 
 body {
-  font-family: 'sans-font', 'Noto Sans KR', sans-serif;
+  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
   overflow-x: hidden;
 }
 
@@ -18,10 +18,10 @@ body {
 .home-container {
   width: 100%;
   min-height: 300vh; /* 세로 길이 대폭 증가 */
-  background: linear-gradient(to bottom, #f5fff5 0%, #ffffff 100%);
+  background: #ffffff;
   position: relative;
   overflow: hidden;
-  font-family: 'sans-font', 'Noto Sans KR', sans-serif;
+  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
 }
 
 /* 네비게이션 바 제거됨 */
@@ -48,35 +48,39 @@ body {
 }
 
 .hero-logo {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   margin-right: 10px;
 }
 
 .hero-title {
-  font-size: 2.8rem;
+  font-size: 32px;
   font-weight: 700;
-  color: #00a683;
+  color: #000000;
+  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
 }
 
 .hero-subtitle {
-  font-size: 2.5rem;
+  font-size: 64px;
   font-weight: 600;
-  color: #00a683;
-  margin-bottom: 15px;
+  color: #00775c;
+  margin-bottom: 0px;
+  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
 }
 
 .hero-desc {
-  font-size: 1.5rem;
+  font-size: 48px;
   color: #333;
-  margin-bottom: 15px;
+  margin-bottom: 30px;
+  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
 }
 
 .hero-features {
-  font-size: 0.9rem;
+  font-size: 20px;
   color: #555;
   line-height: 1.5;
   margin-bottom: 25px;
+  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
 }
 
 .hero-buttons {
@@ -85,14 +89,19 @@ body {
 }
 
 .home-signup-btn, .login-btn {
-  padding: 10px 25px;
+  width: 136px;
+  height: 32px;
+  padding: 0;
   border: none;
   border-radius: 25px;
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'sans-font', 'Noto Sans KR', sans-serif;
+  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .home-signup-btn, .login-btn {
@@ -114,33 +123,13 @@ body {
 }
 
 .chat-bubble {
-  width: 180px;
-  height: 150px;
-  background-color: rgba(146, 228, 209, 0.5);
-  border-radius: 50% 50% 50% 0;
-  position: relative;
+  display: none;
 }
 
-/* 백그라운드 요소 */
+/* 백그라운드 요소 제거됨 */
 .home-container::before, 
 .home-container::after {
-  content: '';
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  background-color: #92E4D1;
-  border-radius: 50%;
-  opacity: 0.5;
-}
-
-.home-container::before {
-  top: 30%;
-  left: 10%;
-}
-
-.home-container::after {
-  bottom: 40%;
-  right: 15%;
+  display: none;
 }
 
 /* 기능 섹션 */
@@ -160,7 +149,7 @@ body {
 .feature-content {
   flex: 1;
   max-width: 500px;
-  text-align: right;
+  text-align: left;
 }
 
 .feature-section.reverse .feature-content {
@@ -168,18 +157,20 @@ body {
 }
 
 .feature-title {
-  font-size: 2.2rem;
+  font-size: 64px;
   color: #333;
   font-weight: 500;
   line-height: 1.5;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  font-family: 'sans-font', 'Noto Sans KR', sans-serif;
 }
 
 .highlight {
   color: #00a683;
   font-weight: 700;
+  font-family: 'sans-font', 'Noto Sans KR', sans-serif;
 }
 
 .feature-image {
@@ -194,53 +185,12 @@ body {
   height: auto;
 }
 
-/* 장식용 점 */
-.feature-section:nth-child(2)::before {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  background-color: #92E4D1;
-  border-radius: 50%;
-  opacity: 0.7;
-  top: 15%;
-  right: 20%;
-}
-
-.feature-section:nth-child(3)::before {
-  content: '';
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  background-color: #92E4D1;
-  border-radius: 50%;
-  opacity: 0.7;
-  bottom: 25%;
-  left: 10%;
-}
-
-.feature-section:nth-child(4)::after {
-  content: '';
-  position: absolute;
-  width: 25px;
-  height: 25px;
-  background-color: #92E4D1;
-  border-radius: 50%;
-  opacity: 0.7;
-  top: 30%;
-  right: 15%;
-}
-
+/* 장식용 점 제거됨 */
+.feature-section:nth-child(2)::before,
+.feature-section:nth-child(3)::before,
+.feature-section:nth-child(4)::after,
 .feature-section:nth-child(5)::before {
-  content: '';
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  background-color: #92E4D1;
-  border-radius: 50%;
-  opacity: 0.7;
-  bottom: 20%;
-  left: 25%;
+  display: none;
 }
 
 @media (max-width: 768px) {

@@ -16,10 +16,10 @@ function HomeMain() {
         <div className="hero-content">
           <div className="logo-area">
             <img src={MallangLogo} alt="말랑 로고" className="hero-logo" />
-            <h1 className="hero-title malang-font">말랑</h1>
+            <h1 className="hero-title">말랑</h1>
           </div>
           <h2 className="hero-subtitle">Mallang</h2>
-          <p className="hero-desc malang-font">누구든 쉽게 소통할 수 있는</p>
+          <p className="hero-desc">누구든 쉽게 소통할 수 있는</p>
           <p className="hero-features">
             음성 입력 / 음성 번역 / 음성 출력 / 음성 STT<br />
             음성 인식 / 실시간 대화 / 실시간 자막 / STT TTS 번역으로<br />
@@ -47,7 +47,7 @@ function HomeMain() {
         </div>
       </div>
       
-      <div className="feature-section reverse">
+      <div className="feature-section">
         <div className="feature-content">
           <h3 className="feature-title">
             <span className="highlight">수어 인식</span> 후 자막 생성
@@ -70,7 +70,7 @@ function HomeMain() {
         </div>
       </div>
       
-      <div className="feature-section reverse">
+      <div className="feature-section">
         <div className="feature-content">
           <h3 className="feature-title">
             누구나 어려움 없이
