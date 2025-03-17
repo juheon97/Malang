@@ -11,6 +11,8 @@ import VoiceChannel from './pages/voicechannel/VoiceChannel';
 import Signup from './components/home/Signup';
 import VoiceChannelRoom from './pages/voicechannel/VoiceChannelRoom';
 import VoiceChannelVideo from './pages/voicechannel/VoiceChannelVideo';
+import CounselChannelRoom from './pages/counselchannel/CounselChannelRoom';
+import CounselChannelVideo from './pages/counselchannel/CounselChannelVideo';
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
             <Route path="/voice-channel" element={<VoiceChannel />} />
             <Route path="/voice-channel-room" element={<VoiceChannelRoom />} />
             <Route path="/voice-channel-video" element={<VoiceChannelVideo />} />
+            <Route path="/counsel-channel-room" element={<CounselChannelRoom />} />
+            <Route path="/counsel-channel-video" element={<CounselChannelVideo />} />
           </Routes>
         </Layout>
       </Router>
