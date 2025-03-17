@@ -21,8 +21,8 @@ const CommentList = ({ comments, currentUser, onUpdateComment, onDeleteComment }
 
   return (
     <div className="comment-list">
-      {comments.map((comment) => (
-        <div key={comment.id} className="comment-item">
+      {comments.map((comment, index) => (
+        <div key={`comment-${comment.id}-${index}`} className="comment-item">
           <div className="comment-header">
             <span className="comment-author">{comment.authorName}</span>
             <span className="comment-date">{comment.date}</span>
