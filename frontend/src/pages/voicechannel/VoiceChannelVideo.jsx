@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import EntryRequestList from '../../components/common/EntryRequestList'; // EntryRequestList 컴포넌트 임포트
+import { mockEntryRequests } from '../../api/entryRequests'; // 테스트 데이터 임포트
+
 
 function VoiceChannelVideo() {
   const [participants, setParticipants] = useState([]);
@@ -7,8 +10,46 @@ function VoiceChannelVideo() {
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [currentUserId, setCurrentUserId] = useState('user1');
+  const [entryRequests, setEntryRequests] = useState([]); // 입장 요청 상태 추가
   const localVideoRef = useRef(null);
   const chatContainerRef = useRef(null);
+
+  // 테스트용 입장 요청 추가
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setEntryRequests(mockEntryRequests);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 입장 요청 수락 처리
+  const handleAcceptRequest = (requestId) => {
+    // 요청 목록에서 해당 요청 찾기
+    const request = entryRequests.find(req => req.id === requestId);
+    if (request) {
+      // 참가자 목록에 추가
+      const newParticipant = {
+        id: request.id,
+        name: request.name,
+        stream: null,
+        isSelf: false
+      };
+      setParticipants(prev => [...prev, newParticipant]);
+      
+      // 요청 목록에서 제거
+      setEntryRequests(prev => prev.filter(req => req.id !== requestId));
+      
+      console.log(`입장 요청 수락: ${requestId}`);
+    }
+  };
+
+  // 입장 요청 거절 처리
+  const handleRejectRequest = (requestId) => {
+    setEntryRequests(prev => prev.filter(req => req.id !== requestId));
+    console.log(`입장 요청 거절: ${requestId}`);
+  };
+
 
   // 가상의 참가자 데이터 초기화
   useEffect(() => {
@@ -187,6 +228,14 @@ function VoiceChannelVideo() {
 
   return (
     <div className="w-full bg-gradient-to-b from-[#EAF2EE] to-[#C6E1D8] rounded-xl pt-8 pb-4 px-4 ">
+         {/* Entry Request List */}
+      {entryRequests.length > 0 && (
+        <EntryRequestList
+          entryRequests={entryRequests}
+          onAccept={handleAcceptRequest}
+          onReject={handleRejectRequest}
+        />
+      )}
       <div className="w-full max-w-6xl mx-auto">
         {/* 메인 컨테이너 - 비디오와 채팅 영역 */}
 <div className="flex flex-col lg:flex-row gap-4 mb-4 h-full">
