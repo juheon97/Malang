@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function VoiceChannelRoom() {
+function VoiceChannelForm() {
   const [formData, setFormData] = useState({
     roomName: '',
     password: '',
@@ -29,7 +29,7 @@ function VoiceChannelRoom() {
 
   return (
     
-    <div className="flex justify-center items-center p-4  mt-8 ">
+    <div className="flex justify-center items-center p-4  mt-8">
       <div className="w-full max-w-4xl bg-[#EFF5F2] rounded-xl p-6 shadow-lg">
         <div className="flex flex-col md:flex-row gap-6">
           {/* 방 유형 선택 */}
@@ -37,7 +37,7 @@ function VoiceChannelRoom() {
             <h3 className="text-gray-700 font-semibold mb-4">방 유형</h3>
             <div className="flex items-center bg-gradient-to-b from-[#E0FEE0] to-[#B0DAAF] rounded-lg shadow-md p-2 cursor-pointer">
   <div className="text-green-600 mr-2">✓</div>
-  <span className="text-sm font-semibold text-gray-700 ">상담채널</span>
+  <span className="text-sm font-semibold text-gray-700 ">음성채널</span>
 </div>
           </div>
 
@@ -47,11 +47,11 @@ function VoiceChannelRoom() {
             <h1 
               style={{fontFamily: "'HancomMalangMalang-Regular', sans-serif"}} 
               className="text-2xl font-bold text-gray-800 relative mb-12 mt-3">
-              상담채널 생성
+              음성채널 생성
             </h1>
             
             <form onSubmit={handleSubmit}>
-              <div className=" mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 <div>
                   <label htmlFor="roomName" className="block text-base font-semibold text-gray-600 mb-3">방 이름</label>
                   <input
@@ -64,7 +64,17 @@ function VoiceChannelRoom() {
                   />
                 </div>
                 
-               
+                <div>
+                  <label htmlFor="password" className="block font-semibold text-base text-gray-600 mb-3">비밀번호</label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full border border-gray-200 rounded-xl p-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                  />
+                </div>
               </div>
               
               <div className="mb-8">
@@ -114,4 +124,4 @@ function VoiceChannelRoom() {
   );
 }
 
-export default VoiceChannelRoom;
+export default VoiceChannelForm;

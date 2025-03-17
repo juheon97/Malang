@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PasswordModal from '../../components/modal/PasswordModal';
 import WaitingModal from '../../components/modal/WaitingModal';
 
 const VoiceChannel = () => {
+  const navigate = useNavigate(); // useNavigate 훅 사용
   const [searchInput, setSearchInput] = useState('');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showWaitingModal, setShowWaitingModal] = useState(false);
@@ -89,11 +91,13 @@ const VoiceChannel = () => {
         <div className="max-w-6xl mx-auto px-6 relative">
           {/* 방 생성 버튼튼 */}
           <div className="absolute top-0 right-6">
-            <button className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white px-6 py-2 rounded-lg shadow-md transition duration-200">
-              방 생성
-            </button>
-          </div>
-
+        <button
+          className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white px-6 py-2 rounded-lg shadow-md transition duration-200"
+          onClick={() => navigate('/voice-channel-room')} // 클릭 시 경로 변경
+        >
+          방 생성
+        </button>
+      </div>
           {/* 제목 */}
           <div className="text-center mb-10">
             <h1

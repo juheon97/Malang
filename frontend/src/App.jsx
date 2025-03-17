@@ -9,6 +9,7 @@ import CommunityDetail from './components/community/CommunityDetail';
 import Counsel from './pages/counsel/Counsel';
 import VoiceChannel from './pages/voicechannel/VoiceChannel';
 import Signup from './components/home/Signup';
+import VoiceChannelRoom from './pages/voicechannel/VoiceChannelRoom';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
             <Route path="/community/:id" element={<CommunityDetail />} />
             <Route path="/counsel-channel" element={<Counsel />} />
             <Route path="/voice-channel" element={<VoiceChannel />} />
+            <Route path="/voice-channel-room" element={<VoiceChannelRoom />} />
           </Routes>
         </Layout>
       </Router>
