@@ -10,6 +10,7 @@ import Counsel from './pages/counsel/Counsel';
 import VoiceChannel from './pages/voicechannel/VoiceChannel';
 import Signup from './components/home/Signup';
 import VoiceChannelRoom from './pages/voicechannel/VoiceChannelRoom';
+import VoiceChannelVideo from './pages/voicechannel/VoiceChannelVideo';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/counsel-channel" element={<Counsel />} />
             <Route path="/voice-channel" element={<VoiceChannel />} />
             <Route path="/voice-channel-room" element={<VoiceChannelRoom />} />
+            <Route path="/voice-channel-video" element={<VoiceChannelVideo />} />
           </Routes>
         </Layout>
       </Router>
