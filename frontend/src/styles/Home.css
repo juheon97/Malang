@@ -10,7 +10,7 @@
 }
 
 body {
-  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
+  font-family: 'sans-font', 'Noto Sans KR', sans-serif;
   overflow-x: hidden;
 }
 
@@ -21,7 +21,7 @@ body {
   background: linear-gradient(to bottom, #f5fff5 0%, #ffffff 100%);
   position: relative;
   overflow: hidden;
-  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
+  font-family: 'sans-font', 'Noto Sans KR', sans-serif;
 }
 
 /* 네비게이션 바 제거됨 */
@@ -92,18 +92,12 @@ body {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
+  font-family: 'sans-font', 'Noto Sans KR', sans-serif;
 }
 
-.home-signup-btn {
+.home-signup-btn, .login-btn {
   background-color: #00a683;
   color: white;
-}
-
-.login-btn {
-  background-color: #f0f0f0;
-  color: #333;
-  border: 1px solid #ddd;
 }
 
 .home-signup-btn:hover, .login-btn:hover {
