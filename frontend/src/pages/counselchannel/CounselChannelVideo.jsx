@@ -3,6 +3,8 @@ import { mockEntryRequests } from '../../api/entryRequests';
 import EntryRequestList from '../../components/common/EntryRequestList';
 import VideoLayout from '../../components/video/VideoLayout'; 
 import ChatBox from '../../components/video/ChatBox';
+import VideoControls from '../../components/video/VideoControls';
+
 
 function CounselChannelVideo() {
   const [entryRequests, setEntryRequests] = useState([]);
@@ -220,7 +222,9 @@ function CounselChannelVideo() {
     );
   };
 
-  
+  const handleLeaveChannel = () => {
+    window.location.href = '/counsel-channel';
+  };
 
   return (
     <div className="w-full bg-gradient-to-b from-[#EAF2EE] to-[#C6E1D8] rounded-xl pt-8 pb-4 px-4">
