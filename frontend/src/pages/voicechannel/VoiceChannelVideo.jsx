@@ -60,7 +60,7 @@ function VoiceChannelVideo() {
       { id: 'user1', name: '나', stream: null, isSelf: true },
       { id: 'user2', name: '참가자 1', stream: null, isSelf: false },
       { id: 'user3', name: '참가자 2', stream: null, isSelf: false },
-      { id: 'user4', name: '참가자 3', stream: null, isSelf: false },
+   
     ];
     
     setParticipants(mockParticipants);
@@ -127,6 +127,17 @@ function VoiceChannelVideo() {
     window.location.href = '/voice-channel';
   };
   
+  const [isVoiceTranslationOn, setIsVoiceTranslationOn] = useState(false);
+const [isSignLanguageOn, setIsSignLanguageOn] = useState(false);
+
+const toggleVoiceTranslation = () => {
+  setIsVoiceTranslationOn(!isVoiceTranslationOn);
+};
+
+const toggleSignLanguage = () => {
+  setIsSignLanguageOn(!isSignLanguageOn);
+};
+
 
   return (
     <div className="w-full bg-gradient-to-b from-[#EAF2EE] to-[#C6E1D8] rounded-xl pt-8 pb-4 px-4 ">
@@ -164,13 +175,16 @@ function VoiceChannelVideo() {
           />
         </div>
         {/* 컨트롤 영역 */}
-        <VideoControls
-          isMicOn={isMicOn}
-          isCameraOn={isCameraOn}
-          toggleMic={toggleMic}
-          toggleCamera={toggleCamera}
-          onLeave={handleLeaveChannel}
-        />
+        <VideoControls 
+  isMicOn={isMicOn}
+  isCameraOn={isCameraOn}
+  toggleMic={toggleMic}
+  toggleCamera={toggleCamera}
+  isVoiceTranslationOn={isVoiceTranslationOn}
+  isSignLanguageOn={isSignLanguageOn}
+  toggleVoiceTranslation={toggleVoiceTranslation}
+  toggleSignLanguage={toggleSignLanguage}
+/>
       </div>
     </div>
   );
