@@ -6,6 +6,9 @@ import "../../styles/Home.css";
 import "../../styles/fonts.css";
 // SVG 로고 import
 import MallangLogo from "../../assets/image/Mallang_logo.svg";
+// 메인 대화 이미지 import
+import MainDialogue from "../../assets/image/Main_dialogue.png";
+import MainPhone from "../../assets/image/Main_phone.png";
 
 function HomeMain() {
   const navigate = useNavigate();
@@ -31,41 +34,44 @@ function HomeMain() {
           </div>
         </div>
         <div className="hero-image">
-          <div className="chat-bubble"></div>
+          <img src={MainDialogue} alt="대화 이미지" className="main-dialogue-img" />
         </div>
       </div>
       
       <div className="feature-section">
         <div className="feature-image">
-          <img src="/phone.png" alt="음성 번역 앱" className="phone-img" />
+          <img src={MainPhone} alt="음성 번역 앱" className="phone-img" />
         </div>
-        <div className="feature-content">
+        <div className="feature-content right-align">
           <h3 className="feature-title">
-            원활한 소통을 위한
-            <span className="highlight"> 음성 번역</span>
+            <span className="normal-text">원활한 소통을 위한</span>
+            <span className="highlight">음성 번역</span>
           </h3>
         </div>
       </div>
       
+      {/* 수어 인식 섹션 - 완전히 새로 작성 */}
       <div className="feature-section">
         <div className="feature-content">
           <h3 className="feature-title">
-            <span className="highlight">수어 인식</span> 후 자막 생성
+            <div className="inline-title">
+              <span className="highlight">수어 인식</span>&nbsp;<span className="normal-text">후 자막 생성</span>
+            </div>
           </h3>
         </div>
-        <div className="feature-image">
-          {/* 이미지가 있다면 여기에 추가 */}
-        </div>
-      </div>
-      
-      <div className="feature-section">
         <div className="feature-image">
           {/* 이미지가 있다면 여기에 추가 */}
         </div>
-        <div className="feature-content">
+      </div>
+      
+      <div className="feature-section">
+        <div className="feature-image">
+          {/* 이미지가 있다면 여기에 추가 */}
+        </div>
+        <div className="feature-content right-align">
           <h3 className="feature-title">
-            상담을 위한
-            <span className="highlight"> 상담 전용 채널</span>
+            <span className="normal-text">상담을 위한</span>
+            <span className="highlight">상담 전용 채널</span>
           </h3>
         </div>
       </div>
@@ -73,8 +79,8 @@ function HomeMain() {
       <div className="feature-section">
         <div className="feature-content">
           <h3 className="feature-title">
-            누구나 어려움 없이
-            <span className="highlight"> 소통 채널 지원</span>
+            <span className="normal-text">누구나 어려움 없이</span>
+            <span className="highlight">소통 채널 지원</span>
           </h3>
         </div>
         <div className="feature-image">
