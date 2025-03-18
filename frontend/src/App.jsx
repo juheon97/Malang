@@ -15,6 +15,7 @@ import VoiceChannelRoom from './pages/voicechannel/VoiceChannelRoom';
 import VoiceChannelVideo from './pages/voicechannel/VoiceChannelVideo';
 import CounselChannelRoom from './pages/counselchannel/CounselChannelRoom';
 import CounselChannelVideo from './pages/counselchannel/CounselChannelVideo';
+import VoiceChange from './pages/VoiceChange';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
             <Route path="/voice-channel-video" element={<VoiceChannelVideo />} />
             <Route path="/counsel-channel-room" element={<CounselChannelRoom />} />
             <Route path="/counsel-channel-video" element={<CounselChannelVideo />} />
+            <Route path="/voice-change" element={<VoiceChange />} />
           </Routes>
         </Layout>
       </Router>
