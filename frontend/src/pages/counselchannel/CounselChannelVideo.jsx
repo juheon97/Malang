@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { mockEntryRequests } from '../../api/entryRequests';
 import EntryRequestList from '../../components/common/EntryRequestList';
+import VideoLayout from '../../components/video/VideoLayout'; 
 
 function CounselChannelVideo() {
   const [entryRequests, setEntryRequests] = useState([]);
@@ -218,94 +219,7 @@ function CounselChannelVideo() {
     );
   };
 
-  // 참가자 수에 따른 비디오 레이아웃 결정
-  const getVideoLayout = () => {
-    const count = participants.length;
-    
-    if (count === 1) {
-      return (
-        <div className="w-full aspect-video bg-gray-100 rounded-lg overflow-hidden">
-          <video
-            ref={localVideoRef}
-            autoPlay
-            muted
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute bottom-2 right-2 bg-gray-700 bg-opacity-70 text-white px-2 py-1 rounded text-xs">
-            나
-          </div>
-        </div>
-      );
-    } else if (count === 2) {
-      return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {participants.map((participant, index) => (
-            <div 
-              key={participant.id} 
-              className="relative bg-gray-100 rounded-lg overflow-hidden aspect-video"
-            >
-              <video
-                ref={participant.isSelf ? localVideoRef : null}
-                autoPlay
-                muted={participant.isSelf}
-                className="w-full h-full object-cover"
-              />
-              {renderParticipantInfo(participant)}
-            </div>
-          ))}
-        </div>
-      );
-    } else if (count === 3) {
-      return (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-            {participants.slice(0, 2).map((participant) => (
-              <div 
-                key={participant.id} 
-                className="relative bg-gray-100 rounded-lg overflow-hidden aspect-video"
-              >
-                <video
-                  ref={participant.isSelf ? localVideoRef : null}
-                  autoPlay
-                  muted={participant.isSelf}
-                  className="w-full h-full object-cover"
-                />
-                {renderParticipantInfo(participant)}
-              </div>
-            ))}
-          </div>
-          <div className="mx-auto relative bg-gray-100 rounded-lg overflow-hidden aspect-video sm:w-1/2">
-            <video
-              ref={participants[2].isSelf ? localVideoRef : null}
-              autoPlay
-              muted={participants[2].isSelf}
-              className="w-full h-full object-cover"
-            />
-            {renderParticipantInfo(participants[2])}
-          </div>
-        </>
-      );
-    } else {
-      return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {participants.map((participant) => (
-            <div 
-              key={participant.id} 
-              className="relative bg-gray-100 rounded-lg overflow-hidden aspect-video"
-            >
-              <video
-                ref={participant.isSelf ? localVideoRef : null}
-                autoPlay
-                muted={participant.isSelf}
-                className="w-full h-full object-cover"
-              />
-              {renderParticipantInfo(participant)}
-            </div>
-          ))}
-        </div>
-      );
-    }
-  };
+  
 
   return (
     <div className="w-full bg-gradient-to-b from-[#EAF2EE] to-[#C6E1D8] rounded-xl pt-8 pb-4 px-4">
@@ -324,7 +238,11 @@ function CounselChannelVideo() {
           {/* 비디오 영역 */}
           <div className="bg-white rounded-xl shadow-lg overflow-hidden lg:flex-1">
             <div className="p-4 bg-[#F8F9FA]">
-              {getVideoLayout()}
+            <VideoLayout 
+                participants={participants} 
+                localVideoRef={localVideoRef} 
+                renderParticipantInfo={renderParticipantInfo} 
+              />
             </div>
           </div>
 
