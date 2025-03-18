@@ -27,9 +27,9 @@ body {
   min-height: 300vh; /* 세로 길이 대폭 증가 */
   background: #ffffff;
   position: relative;
-  overflow: visible;
+  overflow: visible; /* visible로 변경하여 내용이 잘리지 않도록 함 */
   font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
-  padding-left: 20px; /* 왼쪽에 여백 추가 */
+  padding-left: 0; /* 왼쪽 패딩을 0으로 수정 */
 }
 
 /* 애니메이션 키프레임 정의 */
@@ -78,18 +78,121 @@ body {
   }
 }
 
+/* 원형과 점 애니메이션을 위한 새로운 keyframes */
+@keyframes floatAnimation {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(10px) rotate(-2deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes pulseAnimation {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+@keyframes bounceAnimation {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes spinAnimation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 원형과 점의 애니메이션 적용 */
+.shape-animation {
+  opacity: 0;
+  animation-fill-mode: forwards;
+  animation-duration: 1.5s;
+}
+
+.green-circle {
+  animation-name: pulseAnimation, fadeInLeft;
+  animation-duration: 4s, 1.5s;
+  animation-delay: 0.3s;
+  animation-iteration-count: infinite, 1;
+  animation-timing-function: ease-in-out;
+  transform-origin: center center;
+}
+
+.yellow-circle {
+  animation-name: floatAnimation, fadeInLeft;
+  animation-duration: 5s, 1.5s;
+  animation-delay: 0.5s;
+  animation-iteration-count: infinite, 1;
+  animation-timing-function: ease-in-out;
+}
+
+.dot-animation {
+  animation-name: bounceAnimation, fadeInRight;
+  animation-duration: 3s, 1.5s;
+  animation-delay: 0.8s;
+  animation-iteration-count: infinite, 1;
+  animation-timing-function: ease-in-out;
+}
+
+.dot-animation-delayed {
+  animation-name: spinAnimation, fadeInLeft;
+  animation-duration: 8s, 1.5s;
+  animation-delay: 1s;
+  animation-iteration-count: infinite, 1;
+  animation-timing-function: linear, ease-in-out;
+}
+
 /* 히어로 섹션 */
 .hero-section {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start; /* center 대신 flex-start로 변경 */
-  padding-top: 60px; /* 상단 패딩 조정 */
+  align-items: flex-start;
+  padding-top: 80px; /* 상단 패딩 */
   padding-right: 0px;
   padding-bottom: 100px;
   padding-left: 20px;
   position: relative;
   min-height: 100vh; /* 첫 섹션을 화면 높이만큼 설정 */
-  overflow: visible; /* 내용이 벗어나도 잘리지 않도록 변경 */
+  overflow: visible; /* 내용이 잘리지 않도록 설정 */
+}
+
+/* 점 이미지가 잘리지 않도록 왼쪽 여백 설정 */
+.hero-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -20px; /* 왼쪽에 추가 공간 확보 */
+  width: 20px;
+  height: 100%;
+  z-index: 4;
 }
 
 .hero-content {
@@ -128,14 +231,15 @@ body {
   font-size: 64px;
   font-weight: 600;
   color: #00775c;
-  margin-bottom: 0px;
+  margin-bottom: -5px; /* 음수 마진으로 간격 줄임 */
   font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
 }
 
 .hero-desc {
   font-size: 48px;
   color: #333;
-  margin-bottom: 30px;
+  margin-top: 0; /* 상단 여백 제거 */
+  margin-bottom: 25px; /* 하단 여백 약간 줄임 */
   font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
 }
 
@@ -335,6 +439,30 @@ body {
     align-items: center;
   }
   
+  /* 원형 이미지 모바일 스타일 */
+  .hero-section img[alt="녹색 원"] {
+    width: 100px !important;
+    height: 100px !important;
+    top: 15px !important;
+    left: 70px !important;
+  }
+  
+  .hero-section img[alt="노란색 원"] {
+    width: 80px !important;
+    height: 80px !important;
+    top: 15px !important;
+    left: 110px !important;
+  }
+
+  /* 점 이미지 모바일 스타일 */
+  .hero-section img[alt="점 이미지2"] {
+    left: -25px !important; /* 모바일에서도 약간의 왼쪽 여백 유지 */
+    top: 255px !important; /* 모바일에서 아래로 조정 */
+    width: 15px !important; /* 모바일에서 더 작게 표시 */
+    height: 15px !important;
+    z-index: 6 !important; /* 더 높은 z-index 적용 */
+  }
+  
   .feature-section.reverse {
     flex-direction: column;
   }
@@ -368,6 +496,17 @@ body {
     width: 400px;
     height: 400px;
     margin-right: 0;
+  }
+  
+  /* 모바일 원형 애니메이션 조정 */
+  .green-circle, .yellow-circle {
+    animation-name: pulseAnimation;
+    animation-duration: 3s;
+  }
+  
+  .dot-animation, .dot-animation-delayed {
+    animation-name: bounceAnimation;
+    animation-duration: 2s;
   }
   
   /* 모바일 애니메이션 조정 */
