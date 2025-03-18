@@ -53,7 +53,7 @@ const VideoControls = ({ isMicOn, isCameraOn, toggleMic, toggleCamera, isVoiceTr
           >
             <span className="mr-2">음성 번역</span>
             <span className={isVoiceTranslationOn ? 'text-green-500' : 'text-red-400'}>
-              {isVoiceTranslationOn ? '시작' : '중단'}
+              {isVoiceTranslationOn ? '중단' : '시작'}
             </span>
           </button>
           
@@ -64,7 +64,7 @@ const VideoControls = ({ isMicOn, isCameraOn, toggleMic, toggleCamera, isVoiceTr
           >
             <span className="mr-2">수화 번역</span>
             <span className={isSignLanguageOn ? 'text-green-500' : 'text-red-400'}>
-              {isSignLanguageOn ? '시작' : '중단'}
+              {isSignLanguageOn ? '중단' : '시작'}
             </span>
           </button>
           
