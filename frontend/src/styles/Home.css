@@ -9,6 +9,13 @@
   box-sizing: border-box;
 }
 
+html, body {
+  overflow-x: visible;
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+}
+
 body {
   font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
   overflow-x: hidden;
@@ -20,11 +27,56 @@ body {
   min-height: 300vh; /* 세로 길이 대폭 증가 */
   background: #ffffff;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
+  padding-left: 20px; /* 왼쪽에 여백 추가 */
 }
 
-/* 네비게이션 바 제거됨 */
+/* 애니메이션 키프레임 정의 */
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px); /* 더 가까운 위치에서 시작 */
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 스크롤 애니메이션을 위한 새로운 keyframes */
+@keyframes slideFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
 
 /* 히어로 섹션 */
 .hero-section {
@@ -37,7 +89,7 @@ body {
   padding-left: 20px;
   position: relative;
   min-height: 100vh; /* 첫 섹션을 화면 높이만큼 설정 */
-  overflow: hidden; /* 이미지가 화면을 벗어나지 않도록 */
+  overflow: visible; /* 내용이 벗어나도 잘리지 않도록 변경 */
 }
 
 .hero-content {
@@ -46,6 +98,11 @@ body {
   padding-left: 0; /* 왼쪽 여백 제거 */
   margin-right: 20px; /* 우측 여백 줄임 */
   margin-top: 50px; /* 텍스트 영역을 아래로 내림 */
+  animation: fadeInLeft 1.2s ease-out forwards;
+  opacity: 0; /* 처음에는 보이지 않게 설정 */
+  position: relative;
+  z-index: 1; /* 레이어 순서 설정 */
+  overflow: visible; /* 내용이 잘리지 않도록 설정 */
 }
 
 .logo-area {
@@ -112,7 +169,7 @@ body {
 }
 
 .home-signup-btn, .login-btn {
-  background-color: #00a683;
+  background-color: #55BCA4;
   color: white;
 }
 
@@ -129,6 +186,9 @@ body {
   position: relative;
   padding-right: 0; /* 오른쪽 여백 제거 */
   margin-top: -50px; /* 이미지 영역을 위로 올림 */
+  animation: fadeInRight 1.2s ease-out forwards;
+  animation-delay: 0.3s; /* 텍스트보다 약간 늦게 시작 */
+  opacity: 0; /* 처음에는 보이지 않게 설정 */
 }
 
 /* 대화 이미지 스타일 추가 */
@@ -161,6 +221,38 @@ body {
   position: relative;
 }
 
+/* 스크롤 애니메이션 클래스 */
+.feature-section .slide-from-left,
+.feature-section .slide-from-right {
+  opacity: 0;
+  transform: translateX(-100px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.feature-section .slide-from-right {
+  transform: translateX(100px);
+}
+
+/* 애니메이션 적용 클래스 */
+.feature-section.animate-section .slide-from-left {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.feature-section.animate-section .slide-from-right {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* 연속적인 애니메이션 효과를 위한 지연 설정 */
+.feature-section .feature-image {
+  transition-delay: 0.2s;
+}
+
+.feature-section .feature-content {
+  transition-delay: 0.4s;
+}
+
 .feature-section.reverse {
   flex-direction: row-reverse;
 }
@@ -176,7 +268,7 @@ body {
 }
 
 .feature-title {
-  font-size: 64px;
+  font-size: 48px; /* 누구든 쉽게 소통할 수 있는과 같은 크기로 변경 */
   color: #333;
   font-weight: 500;
   line-height: 1.5;
@@ -187,13 +279,12 @@ body {
   text-align: right; /* 오른쪽 정렬 추가 */
 }
 
-/* 수어 인식 부분을 위한 인라인 타이틀 스타일 */
-.inline-title {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  white-space: nowrap;
-  font-size: 64px;
+.feature-content.left-align {
+  margin-left: -60px; /* 왼쪽으로 더 이동 (-40px에서 -60px로 변경) */
+}
+
+.feature-content.left-align .feature-title {
+  text-align: left; /* 왼쪽 정렬 */
 }
 
 /* right-align 클래스가 적용된 콘텐츠의 텍스트를 오른쪽 정렬 */
@@ -277,5 +368,16 @@ body {
     width: 400px;
     height: 400px;
     margin-right: 0;
+  }
+  
+  /* 모바일 애니메이션 조정 */
+  .feature-section .slide-from-left,
+  .feature-section .slide-from-right {
+    transform: translateY(50px);
+  }
+  
+  .feature-section.animate-section .slide-from-left,
+  .feature-section.animate-section .slide-from-right {
+    transform: translateY(0);
   }
 }
