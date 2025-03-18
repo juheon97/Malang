@@ -74,14 +74,25 @@ function HomeMain() {
           </div>
         </div>
         <div className="hero-image">
-          <img src={MainDialogue} alt="대화 이미지" className="main-dialogue-img" />
+          {/* 이미지 크기 및 CSS 속성 조정하여 포인터 이벤트가 이미지를 통과하도록 함 */}
+          <img 
+            src={MainDialogue} 
+            alt="대화 이미지" 
+            className="main-dialogue-img" 
+            style={{ pointerEvents: 'none' }} // 이미지 클릭 이벤트 무시
+          />
         </div>
       </div>
       
       {/* 음성 번역 섹션 - 애니메이션 적용 */}
       <div className="feature-section" ref={addToRefs}>
         <div className="feature-image slide-from-left">
-          <img src={MainPhone} alt="음성 번역 앱" className="phone-img" />
+          <img 
+            src={MainPhone} 
+            alt="음성 번역 앱" 
+            className="phone-img" 
+            style={{ pointerEvents: 'none' }} // 이미지 클릭 이벤트 무시
+          />
         </div>
         <div className="feature-content right-align slide-from-right">
           <h3 className="feature-title">
