@@ -1,4 +1,4 @@
-// src/components/home/Login.jsx
+// src/components/home/Login.jsx - 클래스명 변경
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/Login.css';
@@ -58,7 +58,10 @@ const Login = () => {
               Forgot Password
             </button>
             
-            <button type="submit" className="login-submit-btn">
+            <button 
+              type="submit" 
+              className="login-page-submit-btn"
+            >
               Log in
             </button>
           </div>
