@@ -226,6 +226,17 @@ function CounselChannelVideo() {
     window.location.href = '/counsel-channel';
   };
 
+    const [isVoiceTranslationOn, setIsVoiceTranslationOn] = useState(false);
+  const [isSignLanguageOn, setIsSignLanguageOn] = useState(false);
+  
+  const toggleVoiceTranslation = () => {
+    setIsVoiceTranslationOn(!isVoiceTranslationOn);
+  };
+  
+  const toggleSignLanguage = () => {
+    setIsSignLanguageOn(!isSignLanguageOn);
+  };
+  
   return (
     <div className="w-full bg-gradient-to-b from-[#EAF2EE] to-[#C6E1D8] rounded-xl pt-8 pb-4 px-4">
       {/* Entry Request List */}
@@ -262,14 +273,17 @@ function CounselChannelVideo() {
             currentUserId={currentUserId}
           />
         </div>
-        {/* 컨트롤 영역 */}
-        <VideoControls
-          isMicOn={isMicOn}
-          isCameraOn={isCameraOn}
-          toggleMic={toggleMic}
-          toggleCamera={toggleCamera}
-          onLeave={handleLeaveChannel}
-        />
+      {/* 컨트롤 영역 */}
+      <VideoControls 
+  isMicOn={isMicOn}
+  isCameraOn={isCameraOn}
+  toggleMic={toggleMic}
+  toggleCamera={toggleCamera}
+  isVoiceTranslationOn={isVoiceTranslationOn}
+  isSignLanguageOn={isSignLanguageOn}
+  toggleVoiceTranslation={toggleVoiceTranslation}
+  toggleSignLanguage={toggleSignLanguage}
+/>
   </div>
 </div>
   );
