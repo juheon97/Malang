@@ -4,6 +4,7 @@ const CommentForm = ({ onSubmit }) => {
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const formRef = useRef(null);
+  
 
   const handleSubmit = async e => {
     e.preventDefault();

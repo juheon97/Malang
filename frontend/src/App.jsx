@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/layout/Layout';
 import HomeMain from "./components/home/HomeMain";
 import Login from './components/home/Login';
+import Community from './pages/Community';
 import CommunityList from './components/community/CommunityList';
 import CommunityWrite from './components/community/CommunityWrite';
 import CommunityDetail from './components/community/CommunityDetail';

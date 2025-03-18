@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PostService, CommentService } from '/src/api';
 
+
 const CommunityDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -16,11 +17,11 @@ const CommunityDetail = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
-  
+
   // 현재 사용자 정보 (실제로는 인증 시스템에서 가져와야 함)
   const currentUser = {
     id: 1,
-    username: '익명의 리뷰어'
+    username: '익명의 리뷰어',
   };
 
   // 게시글 및 댓글 데이터 불러오기
@@ -33,14 +34,14 @@ const CommunityDetail = () => {
         setPost(postResponse.data);
         setEditTitle(postResponse.data.title);
         setEditContent(postResponse.data.content);
-        
+
         // CommentService 사용하여 댓글 데이터 가져오기
         const commentsResponse = await CommentService.getCommentsByPostId(id);
         setComments(commentsResponse.data);
       } catch (err) {
         console.error('데이터 로딩 오류:', err);
         setError('게시글을 불러오는 중 오류가 발생했습니다.');
-        
+
         // 백엔드 연동 전 테스트용 더미 데이터
         const dummyPost = {
           id: parseInt(id),
@@ -50,28 +51,28 @@ const CommunityDetail = () => {
           date: '25.03.17',
           likes: 5,
           authorId: 1, // 현재 사용자와 같은 ID로 설정
-          authorName: '익명의 리뷰어'
+          authorName: '익명의 리뷰어',
         };
-        
+
         setPost(dummyPost);
         setEditTitle(dummyPost.title);
         setEditContent(dummyPost.content);
-        
+
         setComments([
-          { 
-            id: 1, 
+          {
+            id: 1,
             postId: parseInt(id),
-            authorId: 2, 
-            authorName: '다른 사용자', 
-            content: '도움이 필요하시면 연락주세요!', 
-            date: '25.03.17' 
-          }
+            authorId: 2,
+            authorName: '다른 사용자',
+            content: '도움이 필요하시면 연락주세요!',
+            date: '25.03.17',
+          },
         ]);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [id]);
 
@@ -89,40 +90,45 @@ const CommunityDetail = () => {
   };
 
   // 댓글 제출 핸들러
-  const handleCommentSubmit = async (e) => {
+  const handleCommentSubmit = async e => {
     e.preventDefault();
-    
+
     if (!comment.trim()) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // 현재 날짜 생성
-      const currentDate = new Date().toLocaleDateString('ko-KR', {
-        year: '2-digit',
-        month: '2-digit',
-        day: '2-digit'
-      }).replace(/\. /g, '.').replace(/\.$/, '');
-      
+      const currentDate = new Date()
+        .toLocaleDateString('ko-KR', {
+          year: '2-digit',
+          month: '2-digit',
+          day: '2-digit',
+        })
+        .replace(/\. /g, '.')
+        .replace(/\.$/, '');
+
       // 댓글 데이터 구성
       const commentData = {
         postId: parseInt(id),
         content: comment,
         authorId: currentUser.id,
         authorName: currentUser.username,
-        date: currentDate
+        date: currentDate,
       };
-      
+
       // CommentService 사용하여 댓글 생성
       const response = await CommentService.createComment(id, commentData);
-      
+
       // 새 댓글에 고유한 ID 보장
       const newComment = {
         ...response.data,
         // 서버에서 ID를 제공하지 않는 경우 임시 ID 생성
-        id: response.data.id || Date.now() + Math.random().toString(36).substr(2, 9)
+        id:
+          response.data.id ||
+          Date.now() + Math.random().toString(36).substr(2, 9),
       };
-      
+
       // 댓글 목록 업데이트 (함수형 업데이트 사용)
       setComments(prevComments => [...prevComments, newComment]);
       setComment(''); // 입력 필드 초기화
@@ -135,7 +141,7 @@ const CommunityDetail = () => {
   };
 
   // 댓글 수정 시작 핸들러
-  const handleEditCommentStart = (comment) => {
+  const handleEditCommentStart = comment => {
     setEditingCommentId(comment.id);
     setEditCommentContent(comment.content);
   };
@@ -147,24 +153,24 @@ const CommunityDetail = () => {
   };
 
   // 댓글 수정 저장 핸들러
-  const handleEditCommentSave = async (commentId) => {
+  const handleEditCommentSave = async commentId => {
     if (!editCommentContent.trim()) return;
-    
+
     try {
       // CommentService 사용하여 댓글 수정
       await CommentService.updateComment(commentId, {
-        content: editCommentContent
+        content: editCommentContent,
       });
-      
+
       // 댓글 목록 업데이트
-      setComments(prevComments => 
-        prevComments.map(comment => 
-          comment.id === commentId 
-            ? { ...comment, content: editCommentContent } 
-            : comment
-        )
+      setComments(prevComments =>
+        prevComments.map(comment =>
+          comment.id === commentId
+            ? { ...comment, content: editCommentContent }
+            : comment,
+        ),
       );
-      
+
       setEditingCommentId(null);
       setEditCommentContent('');
     } catch (err) {
@@ -174,16 +180,16 @@ const CommunityDetail = () => {
   };
 
   // 댓글 삭제 핸들러
-  const handleDeleteComment = async (commentId) => {
+  const handleDeleteComment = async commentId => {
     if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) return;
-    
+
     try {
       // CommentService 사용하여 댓글 삭제
       await CommentService.deleteComment(commentId);
-      
+
       // 댓글 목록 업데이트
-      setComments(prevComments => 
-        prevComments.filter(comment => comment.id !== commentId)
+      setComments(prevComments =>
+        prevComments.filter(comment => comment.id !== commentId),
       );
     } catch (err) {
       console.error('댓글 삭제 오류:', err);
@@ -209,14 +215,14 @@ const CommunityDetail = () => {
       alert('제목과 내용을 모두 입력해주세요.');
       return;
     }
-    
+
     try {
       // PostService 사용하여 게시글 수정
       const response = await PostService.updatePost(id, {
         title: editTitle,
-        content: editContent
+        content: editContent,
       });
-      
+
       setPost({ ...post, title: editTitle, content: editContent });
       setIsEditing(false);
       alert('게시글이 수정되었습니다.');
@@ -229,7 +235,7 @@ const CommunityDetail = () => {
   // 게시글 삭제 핸들러
   const handleDeletePost = async () => {
     if (!window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
-    
+
     try {
       // PostService 사용하여 게시글 삭제
       await PostService.deletePost(id);
@@ -242,38 +248,42 @@ const CommunityDetail = () => {
   };
 
   if (loading) return <div className="text-center py-10">로딩 중...</div>;
-  if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
-  if (!post) return <div className="text-center py-10">게시글을 찾을 수 없습니다.</div>;
+  if (error)
+    return <div className="text-center py-10 text-red-500">{error}</div>;
+  if (!post)
+    return <div className="text-center py-10">게시글을 찾을 수 없습니다.</div>;
 
   const isAuthor = currentUser.id === post.authorId;
 
   // JSX 렌더링 부분은 변경 없음
   return (
     <div className="bg-gradient-to-br from-[#e6f7f0] to-[#f0f9f5] rounded-xl shadow-md p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-center text-[#00a173] mb-8">커뮤니티</h1>
-      
+      <h1 className="text-3xl font-bold text-center text-[#00a173] mb-8">
+        커뮤니티
+      </h1>
+
       <div className="bg-white rounded-lg shadow-sm p-6">
         {isEditing ? (
           <div className="mb-6">
             <input
               type="text"
               value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
+              onChange={e => setEditTitle(e.target.value)}
               className="w-full px-4 py-3 mb-4 bg-white border border-[#e0e7e0] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8ed7af]"
             />
             <textarea
               value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
+              onChange={e => setEditContent(e.target.value)}
               className="w-full h-64 px-4 py-3 bg-white border border-[#e0e7e0] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8ed7af] resize-none"
             />
             <div className="flex justify-end gap-2 mt-4">
-              <button 
+              <button
                 onClick={handleEditCancel}
                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
               >
                 취소
               </button>
-              <button 
+              <button
                 onClick={handleEditSave}
                 className="px-4 py-2 bg-[#8ed7af] text-white rounded-full hover:bg-[#7bc89e] transition-colors"
               >
@@ -287,35 +297,37 @@ const CommunityDetail = () => {
               <div className="inline-block px-3 py-1 bg-[#8ed7af] text-white text-xs rounded-full mb-2">
                 {post.category}
               </div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">{post.title}</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                {post.title}
+              </h2>
               <div className="flex justify-between items-center text-sm text-gray-500">
                 <span>{post.authorName}</span>
                 <span>{post.date}</span>
               </div>
             </div>
-            
+
             <div className="min-h-[200px] mb-8 text-gray-700">
               {post.content}
             </div>
-            
+
             <div className="flex justify-between items-center mb-8">
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={() => navigate('/community')}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors"
                 >
                   목록보기
                 </button>
-                
+
                 {isAuthor && (
                   <>
-                    <button 
+                    <button
                       onClick={handleEditStart}
                       className="px-4 py-2 bg-[#8ed7af] text-white rounded-full hover:bg-[#7bc89e] transition-colors"
                     >
                       수정
                     </button>
-                    <button 
+                    <button
                       onClick={handleDeletePost}
                       className="px-4 py-2 bg-[#ff6b6b] text-white rounded-full hover:bg-[#ff5252] transition-colors"
                     >
@@ -324,8 +336,8 @@ const CommunityDetail = () => {
                   </>
                 )}
               </div>
-              
-              <button 
+
+              <button
                 onClick={handleLikeClick}
                 className="group flex items-center gap-2 px-4 py-2 bg-[#ff6b6b] text-white rounded-full hover:bg-[#ff5252] transition-colors shadow-sm hover:shadow-md transform hover:-translate-y-0.5 duration-200"
               >
@@ -337,34 +349,36 @@ const CommunityDetail = () => {
             </div>
           </>
         )}
-        
+
         <div className="border-t border-[#e0f0e9] pt-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">댓글</h3>
-          
+
           <div className="space-y-4 mb-6">
-            {comments.map((comment) => (
+            {comments.map(comment => (
               <div key={comment.id} className="bg-[#f9fcfa] p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium text-[#00a173]">{comment.authorName}</span>
+                  <span className="font-medium text-[#00a173]">
+                    {comment.authorName}
+                  </span>
                   <span className="text-sm text-gray-500">{comment.date}</span>
                 </div>
-                
+
                 {editingCommentId === comment.id ? (
                   <div className="mt-2">
                     <textarea
                       value={editCommentContent}
-                      onChange={(e) => setEditCommentContent(e.target.value)}
+                      onChange={e => setEditCommentContent(e.target.value)}
                       className="w-full px-3 py-2 border border-[#e0f0e9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8ed7af]"
                       rows="3"
                     />
                     <div className="flex justify-end gap-2 mt-2">
-                      <button 
+                      <button
                         onClick={handleEditCommentCancel}
                         className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs hover:bg-gray-200 transition-colors"
                       >
                         취소
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleEditCommentSave(comment.id)}
                         className="px-3 py-1 bg-[#8ed7af] text-white rounded-full text-xs hover:bg-[#7bc89e] transition-colors"
                       >
@@ -377,13 +391,13 @@ const CommunityDetail = () => {
                     <p className="text-gray-700">{comment.content}</p>
                     {currentUser.id === comment.authorId && (
                       <div className="flex justify-end gap-2 mt-2">
-                        <button 
+                        <button
                           onClick={() => handleEditCommentStart(comment)}
                           className="text-xs text-gray-500 hover:text-[#00a173]"
                         >
                           수정
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteComment(comment.id)}
                           className="text-xs text-gray-500 hover:text-[#ff6b6b]"
                         >
@@ -396,17 +410,17 @@ const CommunityDetail = () => {
               </div>
             ))}
           </div>
-          
+
           <form onSubmit={handleCommentSubmit} className="flex gap-2">
             <input
               type="text"
               placeholder="댓글을 입력하세요..."
               value={comment}
-              onChange={(e) => setComment(e.target.value)}
+              onChange={e => setComment(e.target.value)}
               disabled={isSubmitting}
               className="flex-1 px-4 py-2 border border-[#e0f0e9] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8ed7af] disabled:opacity-50"
             />
-            <button 
+            <button
               type="submit"
               disabled={isSubmitting}
               className="px-4 py-2 bg-[#8ed7af] text-white rounded-lg hover:bg-[#7bc89e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
