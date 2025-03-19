@@ -1,12 +1,4 @@
-/* src/styles/Home2.css - 두 번째 섹션(음성 번역) 스타일 */
-.green-circle-feature {
-  animation-name: floatAnimation, fadeInRight;
-  animation-duration: 6s, 1.5s;
-  animation-delay: 0.7s;
-  animation-iteration-count: infinite, 1;
-  animation-timing-function: ease-in-out;
-  transform-origin: center center;
-}
+/* src/styles/home/Home2.css - 두 번째 섹션(음성 번역) 스타일 */
 
 /* 폰 이미지 스타일 */
 .phone-img {
@@ -14,4 +6,56 @@
   height: 512px;
   position: relative;
   left: -80px; /* 왼쪽으로 이동 */
+}
+
+/* 원 이미지들을 위한 페이드인 애니메이션 */
+@keyframes circleFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+}
+
+/* 점들을 위한 슬라이드인 애니메이션 */
+@keyframes dotSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 기본 상태에서는 애니메이션 속성이 없음 */
+.circle-fade-in,
+.dot-slide-in {
+  animation-duration: 0.8s;
+  animation-fill-mode: forwards;
+  animation-play-state: paused;
+}
+
+/* 섹션이 화면에 나타났을 때 애니메이션 실행 */
+.animate-section .circle-fade-in {
+  animation-name: circleFadeIn;
+  animation-play-state: running;
+}
+
+.animate-section .dot-slide-in {
+  animation-name: dotSlideIn;
+  animation-play-state: running;
+}
+
+/* 애니메이션 후 효과 */
+.animate-section .circle-fade-in {
+  animation-timing-function: ease-out;
+}
+
+.animate-section .dot-slide-in {
+  animation-timing-function: ease-out;
 }

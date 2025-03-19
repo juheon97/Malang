@@ -1,24 +1,24 @@
 // src/components/home/HomeMain2.jsx
 import React from 'react';
 import '../../styles/home/Home2.css';
-// 이미지 import
-import MainPhone from '../../assets/image/mainpage/Main_phone.png';
-import MainGreenCircle from '../../assets/image/mainpage/Main_green_circle.png';
-import MainGreenCircle2 from '../../assets/image/mainpage/Main_green_circle2.png';
-import MainYellowCircle from '../../assets/image/mainpage/Main_yellow_circle.png';
-import MainDot3 from '../../assets/image/mainpage/Main_dot3.png';
-import MainDot4 from '../../assets/image/mainpage/Main_dot4.png';
+import MainPhone from '../../assets/image/homemain2/Main2_phone.png';
+import MainGreenCircle1 from '../../assets/image/homemain2/Main2_green_circle1.png';
+import MainGreenCircle2 from '../../assets/image/homemain2/Main2_green_circle2.png';
+import MainYellowCircle1 from '../../assets/image/homemain2/Main2_yellow_circle1.png';
+import MainDot1 from '../../assets/image/homemain2/Main2_dot1.png';
+import MainDot2 from '../../assets/image/homemain2/Main2_dot2.png';
 
 const HomeMain2 = () => {
   return (
     <>
-      {/* 녹색 원 이미지 추가 - 애니메이션 없이 */}
+      {/* 기존 녹색 원 이미지 - 약간 왼쪽으로 이동 */}
       <img
-        src={MainGreenCircle2}
+        src={MainGreenCircle1}
         alt="녹색 원2"
+        className="circle-fade-in"
         style={{
           position: 'absolute',
-          top: '50%',
+          top: '15%',
           right: '0%',
           width: '500px',
           height: '500px',
@@ -26,111 +26,119 @@ const HomeMain2 = () => {
           objectFit: 'contain',
           maxWidth: 'none',
           zIndex: '0',
-          opacity: '0.6',
+          opacity: '0',
           transform: 'translateY(-50%)',
+          animationDelay: '0.5s',
         }}
       />
 
-      {/* 점 이미지 3과 4를 feature-image 외부로 이동하여 애니메이션 영향을 받지 않도록 함 */}
+      {/* 녹색 원 이미지 추가 - 11시 방향 */}
       <img
-        src={MainDot3}
-        alt="점 이미지3"
+        src={MainGreenCircle2}
+        alt="녹색 원 11시"
+        className="circle-fade-in"
+        style={{
+          position: 'absolute',
+          top: '5%',
+          left: '0%',
+          width: '400px',
+          height: '400px',
+          pointerEvents: 'none',
+          objectFit: 'contain',
+          maxWidth: 'none',
+          zIndex: '0',
+          opacity: '0',
+          animationDelay: '0.6s',
+        }}
+      />
+
+      {/* 녹색 원 이미지 추가 - 5시 방향 */}
+      <img
+        src={MainGreenCircle2}
+        alt="녹색 원 5시"
+        className="circle-fade-in"
+        style={{
+          position: 'absolute',
+          bottom: '5%',
+          left: '20%',
+          width: '400px',
+          height: '400px',
+          pointerEvents: 'none',
+          objectFit: 'contain',
+          maxWidth: 'none',
+          zIndex: '0',
+          opacity: '0',
+          animationDelay: '0.7s',
+        }}
+      />
+
+      {/* 노란색 원 이미지 추가 - 3시 방향 */}
+      <img
+        src={MainYellowCircle1}
+        alt="노란색 원 3시"
+        className="circle-fade-in"
+        style={{
+          position: 'absolute',
+          top: '25%',
+          left: '25%',
+          width: '400px',
+          height: '400px',
+          pointerEvents: 'none',
+          objectFit: 'contain',
+          maxWidth: 'none',
+          zIndex: '0',
+          opacity: '0',
+          animationDelay: '0.8s',
+        }}
+      />
+
+      {/* 점 이미지 추가 */}
+      <img
+        src={MainDot1}
+        alt="점 이미지1"
+        className="dot-slide-in"
         style={{
           position: 'absolute',
           top: '28%',
-          left: 'calc(50% - 550px)',
+          left: '3%',
           width: '24px',
           height: '24px',
           pointerEvents: 'none',
           objectFit: 'contain',
           zIndex: '2',
-          opacity: '1', // 항상 보이도록 opacity 값 설정
+          opacity: '0',
+          animationDelay: '1s',
         }}
       />
 
       <img
-        src={MainDot4}
-        alt="점 이미지4"
+        src={MainDot2}
+        alt="점 이미지2"
+        className="dot-slide-in"
         style={{
           position: 'absolute',
           top: '70%',
-          left: 'calc(50% - 650px)',
+          left: '-5%',
           width: '25px',
           height: '25px',
           pointerEvents: 'none',
           objectFit: 'contain',
           zIndex: '2',
-          opacity: '1', // 항상 보이도록 opacity 값 설정
+          opacity: '0',
+          animationDelay: '1.2s',
         }}
       />
 
-      <div
-        className="feature-image slide-from-left"
-        style={{ position: 'relative' }}
-      >
-        {/* 추가된 원형 이미지들 */}
-        <img
-          src={MainGreenCircle}
-          alt="녹색 원 1"
-          className="shape-animation green-circle-feature"
-          style={{
-            position: 'absolute',
-            top: '-30px',
-            left: '-100px',
-            width: '320px',
-            height: '320px',
-            pointerEvents: 'none',
-            objectFit: 'contain',
-            zIndex: '0',
-            opacity: '0.8',
-          }}
-        />
-
-        <img
-          src={MainGreenCircle}
-          alt="녹색 원 2"
-          className="shape-animation green-circle"
-          style={{
-            position: 'absolute',
-            bottom: '-40px',
-            right: '50px',
-            width: '200px',
-            height: '200px',
-            pointerEvents: 'none',
-            objectFit: 'contain',
-            zIndex: '0',
-            opacity: '0.6',
-          }}
-        />
-
-        <img
-          src={MainYellowCircle}
-          alt="노란색 원"
-          className="shape-animation yellow-circle"
-          style={{
-            position: 'absolute',
-            top: '120px',
-            right: '-70px',
-            width: '320px',
-            height: '320px',
-            pointerEvents: 'none',
-            objectFit: 'contain',
-            zIndex: '0',
-            opacity: '0.7',
-          }}
-        />
-
+      <div className="feature-image slide-from-left">
         <img
           src={MainPhone}
           alt="음성 번역 앱"
           className="phone-img"
-          style={{ pointerEvents: 'none', position: 'relative', zIndex: '1' }} // 이미지 클릭 이벤트 무시, z-index 추가
+          style={{ pointerEvents: 'none', position: 'relative', zIndex: '1' }}
         />
       </div>
-      <div
-        className="feature-content right-align slide-from-right"
-        style={{ position: 'relative', zIndex: '1' }}
-      >
+
+      <div className="feature-content right-align slide-from-right">
         <h3 className="feature-title">
           <span className="normal-text">원활한 소통을 위한</span>
           <span className="highlight">음성 번역</span>
