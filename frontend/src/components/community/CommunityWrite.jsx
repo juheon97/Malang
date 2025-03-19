@@ -51,7 +51,7 @@ const CommunityWrite = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-gradient-to-br from-[#f5fdf5] to-[#e6f7f0] rounded-lg shadow-lg">
+    <div className="mt-16 max-w-4xl mx-auto p-6 bg-gradient-to-br from-[#f5fdf5] to-[#e6f7f0] rounded-lg shadow-lg">
       <h1 className="text-3xl font-bold text-center text-[#00a173] mb-8">커뮤니티</h1>
       
       <form onSubmit={handleSubmit} className="space-y-6">
