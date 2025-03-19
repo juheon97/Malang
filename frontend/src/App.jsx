@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/layout/Layout';
-import HomeMain from "./components/home/HomeMain";
+import HomeMain from './components/home/HomeMain';
 import Login from './components/home/Login';
 import Community from './pages/Community';
 import CommunityList from './components/community/CommunityList';
@@ -10,7 +10,7 @@ import CommunityWrite from './components/community/CommunityWrite';
 import CommunityDetail from './components/community/CommunityDetail';
 import Counsel from './pages/counsel/Counsel';
 import VoiceChannel from './pages/voicechannel/VoiceChannel';
-import Signup from './components/home/Signup';
+import Signup from './components/signup/Signup';
 import VoiceChannelRoom from './pages/voicechannel/VoiceChannelRoom';
 import VoiceChannelVideo from './pages/voicechannel/VoiceChannelVideo';
 import CounselChannelRoom from './pages/counselchannel/CounselChannelRoom';
@@ -32,9 +32,18 @@ function App() {
             <Route path="/counsel-channel" element={<Counsel />} />
             <Route path="/voice-channel" element={<VoiceChannel />} />
             <Route path="/voice-channel-room" element={<VoiceChannelRoom />} />
-            <Route path="/voice-channel-video" element={<VoiceChannelVideo />} />
-            <Route path="/counsel-channel-room" element={<CounselChannelRoom />} />
-            <Route path="/counsel-channel-video" element={<CounselChannelVideo />} />
+            <Route
+              path="/voice-channel-video"
+              element={<VoiceChannelVideo />}
+            />
+            <Route
+              path="/counsel-channel-room"
+              element={<CounselChannelRoom />}
+            />
+            <Route
+              path="/counsel-channel-video"
+              element={<CounselChannelVideo />}
+            />
             <Route path="/voice-change" element={<VoiceChange />} />
           </Routes>
         </Layout>

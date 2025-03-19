@@ -1,6 +1,8 @@
 // src/components/home/HomeMain3.jsx
 import React from 'react';
-import '../../styles/home/Home3.css';
+import styles from '../../styles/home/Home3.module.css';
+import homeStyles from '../../styles/home/Home.module.css';
+import home2Styles from '../../styles/home/Home2.module.css';
 import MainDot1 from '../../assets/image/homemain3/Main3_dot1.svg';
 import MainDot2 from '../../assets/image/homemain3/Main3_dot2.svg';
 import MainGreenCircle1 from '../../assets/image/homemain3/Main3_green_circle1.svg';
@@ -14,7 +16,7 @@ const HomeMain3 = () => {
       <img
         src={MainGreenCircle1}
         alt="녹색 원"
-        className="circle-fade-in"
+        className={home2Styles.circleFadeIn}
         style={{
           position: 'absolute',
           top: '30%',
@@ -33,7 +35,7 @@ const HomeMain3 = () => {
       <img
         src={MainYellowCircle1}
         alt="노란색 원"
-        className="circle-fade-in"
+        className={home2Styles.circleFadeIn}
         style={{
           position: 'absolute',
           bottom: '35%',
@@ -52,7 +54,7 @@ const HomeMain3 = () => {
       <img
         src={MainDot1}
         alt="점 이미지1"
-        className="dot-slide-in"
+        className={home2Styles.dotSlideIn}
         style={{
           position: 'absolute',
           top: '32%',
@@ -71,7 +73,7 @@ const HomeMain3 = () => {
       <img
         src={MainDot1}
         alt="점 이미지2"
-        className="dot-slide-in"
+        className={home2Styles.dotSlideIn}
         style={{
           position: 'absolute',
           top: '70%',
@@ -92,7 +94,7 @@ const HomeMain3 = () => {
       <img
         src={MainDot2}
         alt="점 이미지3"
-        className="dot-slide-in"
+        className={home2Styles.dotSlideIn}
         style={{
           position: 'absolute',
           top: '46.7%',
@@ -111,7 +113,7 @@ const HomeMain3 = () => {
       <img
         src={MainGreenHalf}
         alt="녹색 반원"
-        className="circle-fade-in"
+        className={home2Styles.circleFadeIn}
         style={{
           position: 'absolute',
           bottom: '-35%',
@@ -127,18 +129,18 @@ const HomeMain3 = () => {
       />
 
       <div
-        className="feature-content left-align slide-from-left"
+        className={`${homeStyles.featureContent} ${homeStyles.leftAlign} ${homeStyles.slideFromLeft}`}
         style={{ position: 'relative', zIndex: '2' }}
       >
-        <h3 className="feature-title">
-          <div className="inline-title">
-            <span className="highlight">수어 인식</span>&nbsp;
-            <span className="normal-text">후 자막 생성</span>
+        <h3 className={homeStyles.featureTitle}>
+          <div className={styles.inlineTitle}>
+            <span className={homeStyles.highlight}>수어 인식</span>&nbsp;
+            <span className={homeStyles.normalText}>후 자막 생성</span>
           </div>
         </h3>
       </div>
       <div
-        className="feature-image slide-from-right"
+        className={`${homeStyles.featureImage} ${homeStyles.slideFromRight}`}
         style={{ position: 'relative', zIndex: '2' }}
       >
         {/* 이미지가 있다면 여기에 추가 */}

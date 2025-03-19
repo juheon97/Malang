@@ -1,7 +1,7 @@
-/* src/styles/home/Home2.css - 두 번째 섹션(음성 번역) 스타일 */
+/* src/styles/home/Home2.module.css - 두 번째 섹션(음성 번역) 스타일 */
 
 /* 폰 이미지 스타일 */
-.phone-img {
+.phoneImg {
   width: 460px;
   height: 512px;
   position: relative;
@@ -33,29 +33,30 @@
 }
 
 /* 기본 상태에서는 애니메이션 속성이 없음 */
-.circle-fade-in,
-.dot-slide-in {
+.circleFadeIn,
+.dotSlideIn {
   animation-duration: 0.8s;
   animation-fill-mode: forwards;
   animation-play-state: paused;
+  opacity: 0;
 }
 
 /* 섹션이 화면에 나타났을 때 애니메이션 실행 */
-.animate-section .circle-fade-in {
+:global(.animate-section) .circleFadeIn {
   animation-name: circleFadeIn;
   animation-play-state: running;
 }
 
-.animate-section .dot-slide-in {
+:global(.animate-section) .dotSlideIn {
   animation-name: dotSlideIn;
   animation-play-state: running;
 }
 
 /* 애니메이션 후 효과 */
-.animate-section .circle-fade-in {
+:global(.animate-section) .circleFadeIn {
   animation-timing-function: ease-out;
 }
 
-.animate-section .dot-slide-in {
+:global(.animate-section) .dotSlideIn {
   animation-timing-function: ease-out;
 }

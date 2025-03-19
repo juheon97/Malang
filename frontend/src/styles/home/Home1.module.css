@@ -1,5 +1,85 @@
-/* src/styles/Home1.css - 첫 번째 섹션(Hero) 스타일 */
-.green-circle {
+/* src/styles/home/Home1.module.css - 첫 번째 섹션(Hero) 스타일 */
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes floatAnimation {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(10px) rotate(-2deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes pulseAnimation {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+@keyframes bounceAnimation {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes spinAnimation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.shapeAnimation {
+  opacity: 0;
+  animation-fill-mode: forwards;
+  animation-duration: 1.5s;
+}
+
+.greenCircle {
   animation-name: pulseAnimation, fadeInLeft;
   animation-duration: 4s, 1.5s;
   animation-delay: 0.3s;
@@ -8,7 +88,7 @@
   transform-origin: center center;
 }
 
-.yellow-circle {
+.yellowCircle {
   animation-name: floatAnimation, fadeInLeft;
   animation-duration: 5s, 1.5s;
   animation-delay: 0.5s;
@@ -16,7 +96,7 @@
   animation-timing-function: ease-in-out;
 }
 
-.dot-animation {
+.dotAnimation {
   animation-name: bounceAnimation, fadeInRight;
   animation-duration: 3s, 1.5s;
   animation-delay: 0.8s;
@@ -24,7 +104,7 @@
   animation-timing-function: ease-in-out;
 }
 
-.dot-animation-delayed {
+.dotAnimationDelayed {
   animation-name: spinAnimation, fadeInLeft;
   animation-duration: 8s, 1.5s;
   animation-delay: 1s;
@@ -32,7 +112,7 @@
   animation-timing-function: linear, ease-in-out;
 }
 
-.green-circle-large {
+.greenCircleLarge {
   animation-name: floatAnimation, fadeInRight;
   animation-duration: 8s, 2s; /* 더 느린 부유 효과 */
   animation-delay: 0.6s; /* 기존 원들보다 살짝 나중에 나타나도록 */
@@ -42,7 +122,7 @@
 }
 
 /* 히어로 섹션 */
-.hero-section {
+.heroSection {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -56,7 +136,7 @@
 }
 
 /* 점 이미지가 잘리지 않도록 왼쪽 여백 설정 */
-.hero-section::before {
+.heroSection::before {
   content: '';
   position: absolute;
   top: 0;
@@ -66,7 +146,7 @@
   z-index: 4;
 }
 
-.hero-content {
+.heroContent {
   flex: 0 0 45%; /* 고정 너비 설정, 확장 안되게 변경 */
   max-width: 550px;
   padding-left: 0; /* 왼쪽 여백 제거 */
@@ -79,26 +159,26 @@
   overflow: visible; /* 내용이 잘리지 않도록 설정 */
 }
 
-.logo-area {
+.logoArea {
   display: flex;
   align-items: center;
   margin-bottom: 10px;
 }
 
-.hero-logo {
+.heroLogo {
   width: 32px;
   height: 32px;
   margin-right: 10px;
 }
 
-.hero-title {
+.heroTitle {
   font-size: 32px;
   font-weight: 700;
   color: #000000;
   font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
 }
 
-.hero-subtitle {
+.heroSubtitle {
   font-size: 64px;
   font-weight: 600;
   color: #00775c;
@@ -106,7 +186,7 @@
   font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
 }
 
-.hero-desc {
+.heroDesc {
   font-size: 48px;
   color: #333;
   margin-top: 0; /* 상단 여백 제거 */
@@ -114,7 +194,7 @@
   font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
 }
 
-.hero-features {
+.heroFeatures {
   font-size: 20px;
   color: #555;
   line-height: 1.5;
@@ -122,13 +202,13 @@
   font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
 }
 
-.hero-buttons {
+.heroButtons {
   display: flex;
   gap: 15px;
 }
 
-.home-signup-btn,
-.login-btn {
+.homeSignupBtn,
+.loginBtn {
   width: 136px;
   height: 32px;
   padding: 0;
@@ -144,19 +224,19 @@
   align-items: center;
 }
 
-.home-signup-btn,
-.login-btn {
+.homeSignupBtn,
+.loginBtn {
   background-color: #55bca4;
   color: white;
 }
 
-.home-signup-btn:hover,
-.login-btn:hover {
+.homeSignupBtn:hover,
+.loginBtn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.hero-image {
+.heroImage {
   flex: 0 0 55%; /* 고정 너비 설정, 더 많은 공간 할당 */
   display: flex;
   justify-content: flex-end;
@@ -170,7 +250,7 @@
 }
 
 /* 대화 이미지 스타일 추가 */
-.main-dialogue-img {
+.mainDialogueImg {
   width: 512px;
   height: 512px;
   border-radius: 8px;
@@ -179,6 +259,6 @@
   margin-top: 40px; /* -95px에서 40px로 수정하여 아래로 이동 */
 }
 
-.chat-bubble {
+.chatBubble {
   display: none;
 }
