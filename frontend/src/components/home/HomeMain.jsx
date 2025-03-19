@@ -4,21 +4,21 @@ import { useNavigate } from 'react-router-dom';
 import '../../styles/Home.css';
 // 폰트 CSS 파일 import
 import '../../styles/fonts.css';
-// SVG 로고 import
+// SVG 로고 import - 이건 변경하지 않음
 import MallangLogo from '../../assets/image/Mallang_logo.svg';
-// 메인 대화 이미지 import
-import MainDialogue from '../../assets/image/Main_dialogue.png';
-import MainPhone from '../../assets/image/Main_phone.png';
-// 원형 이미지 import
-import MainGreenCircle from '../../assets/image/Main_green_circle.png';
-import MainYellowCircle from '../../assets/image/Main_yellow_circle.png';
-import MainGreenCircle2 from '../../assets/image/Main_green_circle2.png';
-import MainGreenCircle3 from '../../assets/image/Main_green_circle3.png';
-// 점 이미지 import
-import MainDot1 from '../../assets/image/Main_dot1.png';
-import MainDot2 from '../../assets/image/Main_dot2.png';
-import MainDot3 from '../../assets/image/Main_dot3.png';
-import MainDot4 from '../../assets/image/Main_dot4.png';
+// 메인 대화 이미지 import - 경로 변경
+import MainDialogue from '../../assets/image/mainpage/Main_dialogue.png';
+import MainPhone from '../../assets/image/mainpage/Main_phone.png';
+// 원형 이미지 import - 경로 변경
+import MainGreenCircle from '../../assets/image/mainpage/Main_green_circle.png';
+import MainYellowCircle from '../../assets/image/mainpage/Main_yellow_circle.png';
+import MainGreenCircle2 from '../../assets/image/mainpage/Main_green_circle2.png';
+import MainGreenCircle3 from '../../assets/image/mainpage/Main_green_circle3.png';
+// 점 이미지 import - 경로 변경
+import MainDot1 from '../../assets/image/mainpage/Main_dot1.png';
+import MainDot2 from '../../assets/image/mainpage/Main_dot2.png';
+import MainDot3 from '../../assets/image/mainpage/Main_dot3.png';
+import MainDot4 from '../../assets/image/mainpage/Main_dot4.png';
 
 function HomeMain() {
   const navigate = useNavigate();
@@ -115,6 +115,7 @@ function HomeMain() {
               maxWidth: 'none',
             }}
           />
+          {/* 점 이미지 추가 - 녹색 원 우측에서 약간 우상단으로 이동 */}
           <img
             src={MainDot1}
             alt="점 이미지"
@@ -177,6 +178,7 @@ function HomeMain() {
             </button>
           </div>
         </div>
+        {/* 녹색 원 이미지를 hero-section에 절대 위치로 배치 및 애니메이션 추가 */}
         <img
           src={MainGreenCircle3}
           alt="녹색 원3"
@@ -216,6 +218,7 @@ function HomeMain() {
         ref={addToRefs}
         style={{ position: 'relative' }}
       >
+        {/* 녹색 원 이미지 추가 - 애니메이션 없이 */}
         <img
           src={MainGreenCircle2}
           alt="녹색 원2"
@@ -274,8 +277,8 @@ function HomeMain() {
           {/* 추가된 원형 이미지들 */}
           <img
             src={MainGreenCircle}
-            alt="phone 근처 녹색원1"
-            className="shape-animation green-circle1"
+            alt="녹색 원 1"
+            className="shape-animation green-circle-feature"
             style={{
               position: 'absolute',
               top: '-30px',
@@ -291,14 +294,14 @@ function HomeMain() {
 
           <img
             src={MainGreenCircle}
-            alt="phone 근처 녹색원1"
-            className="shape-animation green-circle2"
+            alt="녹색 원 2"
+            className="shape-animation green-circle"
             style={{
               position: 'absolute',
-              bottom: '-50px',
-              right: '-10px',
-              width: '300px',
-              height: '300px',
+              bottom: '-40px',
+              right: '50px',
+              width: '200px',
+              height: '200px',
               pointerEvents: 'none',
               objectFit: 'contain',
               zIndex: '0',
@@ -308,8 +311,8 @@ function HomeMain() {
 
           <img
             src={MainYellowCircle}
-            alt="phone 근처 노란색원"
-            className="shape-animation yellow-circle1"
+            alt="노란색 원"
+            className="shape-animation yellow-circle"
             style={{
               position: 'absolute',
               top: '120px',
