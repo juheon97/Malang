@@ -9,12 +9,12 @@ import MallangLogo from '../../assets/image/Mallang_logo.svg';
 // 메인 대화 이미지 import
 import MainDialogue from '../../assets/image/homemain1/Main1_dialogue.png';
 // 원형 이미지 import
-import MainGreenCircle1 from '../../assets/image/homemain1/Main1_green_circle1.png';
-import MainGreenCircle2 from '../../assets/image/homemain1/Main1_green_circle2.png';
-import MainYellowCircle from '../../assets/image/homemain1/Main1_yellow_circle.png';
+import MainGreenCircle1 from '../../assets/image/homemain1/Main1_green_circle1.svg';
+import MainGreenCircle2 from '../../assets/image/homemain1/Main1_green_circle2.svg';
+import MainYellowCircle from '../../assets/image/homemain1/Main1_yellow_circle.svg';
 // 점 이미지 import
-import MainDot1 from '../../assets/image/homemain1/Main1_dot1.png';
-import MainDot2 from '../../assets/image/homemain1/Main1_dot2.png';
+import MainDot1 from '../../assets/image/homemain1/Main1_dot1.svg';
+import MainDot2 from '../../assets/image/homemain1/Main1_dot2.svg';
 
 const HomeMain1 = () => {
   const navigate = useNavigate();
@@ -53,6 +53,7 @@ const HomeMain1 = () => {
             pointerEvents: 'none',
             objectFit: 'contain',
             maxWidth: 'none',
+            zIndex: '0',
           }}
         />
         <img
@@ -68,6 +69,7 @@ const HomeMain1 = () => {
             pointerEvents: 'none',
             objectFit: 'contain',
             maxWidth: 'none',
+            zIndex: '0',
           }}
         />
         <img
@@ -99,11 +101,14 @@ const HomeMain1 = () => {
             pointerEvents: 'none',
             objectFit: 'contain',
             maxWidth: 'none',
-            zIndex: '5',
+            zIndex: '0',
           }}
         />
       </div>
-      <div className="hero-content">
+      <div
+        className="hero-content"
+        style={{ position: 'relative', zIndex: '2' }}
+      >
         <div className="logo-area">
           <img src={MallangLogo} alt="말랑 로고" className="hero-logo" />
           <h1 className="hero-title">말랑</h1>
@@ -141,12 +146,12 @@ const HomeMain1 = () => {
           top: '-30px',
           right: '-140px',
           pointerEvents: 'none',
-          zIndex: '1',
+          zIndex: '0',
           opacity: 0,
         }}
       />
 
-      <div className="hero-image">
+      <div className="hero-image" style={{ position: 'relative', zIndex: '2' }}>
         <img
           src={MainDialogue}
           alt="대화 이미지"
