@@ -1,0 +1,17 @@
+/* src/styles/Home2.css - 두 번째 섹션(음성 번역) 스타일 */
+.green-circle-feature {
+  animation-name: floatAnimation, fadeInRight;
+  animation-duration: 6s, 1.5s;
+  animation-delay: 0.7s;
+  animation-iteration-count: infinite, 1;
+  animation-timing-function: ease-in-out;
+  transform-origin: center center;
+}
+
+/* 폰 이미지 스타일 */
+.phone-img {
+  width: 460px;
+  height: 512px;
+  position: relative;
+  left: -80px; /* 왼쪽으로 이동 */
+}

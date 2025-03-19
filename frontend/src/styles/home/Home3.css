@@ -1,0 +1,6 @@
+/* src/styles/Home3.css - 세 번째 섹션(수어 인식) 스타일 */
+.inline-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
