@@ -15,8 +15,8 @@ function HomeMain() {
     // Intersection Observer 설정
     const observerOptions = {
       root: null, // viewport를 root로 사용
-      rootMargin: '0px',
-      threshold: 0.2, // 요소의 20%가 보일 때 콜백 실행
+      rootMargin: '0px 0px -20% 0px', // 화면 아래쪽 20% 지점에 도달했을 때 트리거
+      threshold: 0.4, // 요소의 40%가 보일 때 콜백 실행 (더 많이 보여야 함)
     };
 
     const sectionObserver = new IntersectionObserver(entries => {
