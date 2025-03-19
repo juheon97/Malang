@@ -1,6 +1,6 @@
 // src/components/home/HomeMain.jsx
 import React, { useEffect, useRef } from 'react';
-import '../../styles/home/Home.css';
+import styles from '../../styles/home/Home.module.css';
 import HomeMain1 from './HomeMain1';
 import HomeMain2 from './HomeMain2';
 import HomeMain3 from './HomeMain3';
@@ -23,6 +23,7 @@ function HomeMain() {
       entries.forEach(entry => {
         // 요소가 화면에 들어오면 애니메이션 클래스 추가
         if (entry.isIntersecting) {
+          // CSS 모듈에서는 클래스 이름이 해시화되므로, 일반 클래스 이름을 직접 추가
           entry.target.classList.add('animate-section');
         }
       });
@@ -49,12 +50,12 @@ function HomeMain() {
   };
 
   return (
-    <div className="home-container">
+    <div className={styles.homeContainer}>
       <HomeMain1 />
 
       {/* 음성 번역 섹션 - 애니메이션 적용 */}
       <div
-        className="feature-section"
+        className={styles.featureSection}
         ref={addToRefs}
         style={{ position: 'relative' }}
       >
@@ -62,17 +63,17 @@ function HomeMain() {
       </div>
 
       {/* 수어 인식 섹션 - 애니메이션 적용 */}
-      <div className="feature-section" ref={addToRefs}>
+      <div className={styles.featureSection} ref={addToRefs}>
         <HomeMain3 />
       </div>
 
       {/* 상담 전용 채널 섹션 - 애니메이션 적용 */}
-      <div className="feature-section" ref={addToRefs}>
+      <div className={styles.featureSection} ref={addToRefs}>
         <HomeMain4 />
       </div>
 
       {/* 소통 채널 지원 섹션 - 애니메이션 적용 */}
-      <div className="feature-section" ref={addToRefs}>
+      <div className={styles.featureSection} ref={addToRefs}>
         <HomeMain5 />
       </div>
     </div>

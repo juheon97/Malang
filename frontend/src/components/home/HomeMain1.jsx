@@ -1,7 +1,7 @@
 // src/components/home/HomeMain1.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../../styles/home/Home1.css';
+import styles from '../../styles/home/Home1.module.css';
 // 폰트 CSS 파일 import
 import '../../styles/fonts.css';
 // SVG 로고 import
@@ -21,7 +21,7 @@ const HomeMain1 = () => {
 
   return (
     <div
-      className="hero-section"
+      className={styles.heroSection}
       style={{
         paddingTop: '80px',
         position: 'relative',
@@ -43,7 +43,7 @@ const HomeMain1 = () => {
         <img
           src={MainGreenCircle1}
           alt="녹색 원"
-          className="shape-animation green-circle"
+          className={`${styles.shapeAnimation} ${styles.greenCircle}`}
           style={{
             position: 'absolute',
             top: '0px',
@@ -59,7 +59,7 @@ const HomeMain1 = () => {
         <img
           src={MainYellowCircle}
           alt="노란색 원"
-          className="shape-animation yellow-circle"
+          className={`${styles.shapeAnimation} ${styles.yellowCircle}`}
           style={{
             position: 'absolute',
             top: '-50px',
@@ -75,7 +75,7 @@ const HomeMain1 = () => {
         <img
           src={MainDot1}
           alt="점 이미지"
-          className="shape-animation dot-animation"
+          className={`${styles.shapeAnimation} ${styles.dotAnimation}`}
           style={{
             position: 'absolute',
             top: '110px',
@@ -91,7 +91,7 @@ const HomeMain1 = () => {
         <img
           src={MainDot2}
           alt="점 이미지2"
-          className="shape-animation dot-animation-delayed"
+          className={`${styles.shapeAnimation} ${styles.dotAnimationDelayed}`}
           style={{
             position: 'absolute',
             top: '350px',
@@ -106,30 +106,33 @@ const HomeMain1 = () => {
         />
       </div>
       <div
-        className="hero-content"
+        className={styles.heroContent}
         style={{ position: 'relative', zIndex: '2' }}
       >
-        <div className="logo-area">
-          <img src={MallangLogo} alt="말랑 로고" className="hero-logo" />
-          <h1 className="hero-title">말랑</h1>
+        <div className={styles.logoArea}>
+          <img src={MallangLogo} alt="말랑 로고" className={styles.heroLogo} />
+          <h1 className={styles.heroTitle}>말랑</h1>
         </div>
-        <h2 className="hero-subtitle">Mallang</h2>
-        <p className="hero-desc">누구든 쉽게 소통할 수 있는</p>
-        <p className="hero-features">
+        <h2 className={styles.heroSubtitle}>Mallang</h2>
+        <p className={styles.heroDesc}>누구든 쉽게 소통할 수 있는</p>
+        <p className={styles.heroFeatures}>
           음성 입력 / 음성 번역 / 음성 출력 / 음성 STT
           <br />
           음성 인식 / 실시간 대화 / 실시간 자막 / STT TTS 번역으로
           <br />
           점자 기기 / 보조기 호환 음성 / 필담으로 간단하게 소통 가능
         </p>
-        <div className="hero-buttons">
+        <div className={styles.heroButtons}>
           <button
-            className="home-signup-btn"
+            className={styles.homeSignupBtn}
             onClick={() => navigate('/Signup')}
           >
             회원가입
           </button>
-          <button className="login-btn" onClick={() => navigate('/login')}>
+          <button
+            className={styles.loginBtn}
+            onClick={() => navigate('/login')}
+          >
             로그인
           </button>
         </div>
@@ -138,7 +141,7 @@ const HomeMain1 = () => {
       <img
         src={MainGreenCircle2}
         alt="녹색 원3"
-        className="shape-animation green-circle-large"
+        className={`${styles.shapeAnimation} ${styles.greenCircleLarge}`}
         style={{
           position: 'absolute',
           width: '800px',
@@ -151,11 +154,14 @@ const HomeMain1 = () => {
         }}
       />
 
-      <div className="hero-image" style={{ position: 'relative', zIndex: '2' }}>
+      <div
+        className={styles.heroImage}
+        style={{ position: 'relative', zIndex: '2' }}
+      >
         <img
           src={MainDialogue}
           alt="대화 이미지"
-          className="main-dialogue-img"
+          className={styles.mainDialogueImg}
           style={{
             pointerEvents: 'none',
             position: 'relative',

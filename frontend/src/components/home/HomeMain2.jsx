@@ -1,6 +1,7 @@
 // src/components/home/HomeMain2.jsx
 import React from 'react';
-import '../../styles/home/Home2.css';
+import styles from '../../styles/home/Home2.module.css';
+import homeStyles from '../../styles/home/Home.module.css';
 import MainPhone from '../../assets/image/homemain2/Main2_phone.png';
 import MainGreenCircle1 from '../../assets/image/homemain2/Main2_green_circle1.svg';
 import MainGreenCircle2 from '../../assets/image/homemain2/Main2_green_circle2.svg';
@@ -15,7 +16,7 @@ const HomeMain2 = () => {
       <img
         src={MainGreenCircle1}
         alt="녹색 원2"
-        className="circle-fade-in"
+        className={styles.circleFadeIn}
         style={{
           position: 'absolute',
           top: '15%',
@@ -26,7 +27,6 @@ const HomeMain2 = () => {
           objectFit: 'contain',
           maxWidth: 'none',
           zIndex: '0',
-          opacity: '0',
           transform: 'translateY(-50%)',
           animationDelay: '0.5s',
         }}
@@ -36,7 +36,7 @@ const HomeMain2 = () => {
       <img
         src={MainGreenCircle2}
         alt="녹색 원 11시"
-        className="circle-fade-in"
+        className={styles.circleFadeIn}
         style={{
           position: 'absolute',
           top: '5%',
@@ -47,7 +47,6 @@ const HomeMain2 = () => {
           objectFit: 'contain',
           maxWidth: 'none',
           zIndex: '0',
-          opacity: '0',
           animationDelay: '0.6s',
         }}
       />
@@ -56,7 +55,7 @@ const HomeMain2 = () => {
       <img
         src={MainGreenCircle2}
         alt="녹색 원 5시"
-        className="circle-fade-in"
+        className={styles.circleFadeIn}
         style={{
           position: 'absolute',
           bottom: '5%',
@@ -67,7 +66,6 @@ const HomeMain2 = () => {
           objectFit: 'contain',
           maxWidth: 'none',
           zIndex: '0',
-          opacity: '0',
           animationDelay: '0.7s',
         }}
       />
@@ -76,7 +74,7 @@ const HomeMain2 = () => {
       <img
         src={MainYellowCircle1}
         alt="노란색 원 3시"
-        className="circle-fade-in"
+        className={styles.circleFadeIn}
         style={{
           position: 'absolute',
           top: '25%',
@@ -87,7 +85,6 @@ const HomeMain2 = () => {
           objectFit: 'contain',
           maxWidth: 'none',
           zIndex: '0',
-          opacity: '0',
           animationDelay: '0.8s',
         }}
       />
@@ -96,7 +93,7 @@ const HomeMain2 = () => {
       <img
         src={MainDot1}
         alt="점 이미지1"
-        className="dot-slide-in"
+        className={styles.dotSlideIn}
         style={{
           position: 'absolute',
           top: '28%',
@@ -106,7 +103,6 @@ const HomeMain2 = () => {
           pointerEvents: 'none',
           objectFit: 'contain',
           zIndex: '0',
-          opacity: '0',
           animationDelay: '1s',
         }}
       />
@@ -114,7 +110,7 @@ const HomeMain2 = () => {
       <img
         src={MainDot2}
         alt="점 이미지2"
-        className="dot-slide-in"
+        className={styles.dotSlideIn}
         style={{
           position: 'absolute',
           top: '70%',
@@ -124,30 +120,29 @@ const HomeMain2 = () => {
           pointerEvents: 'none',
           objectFit: 'contain',
           zIndex: '0',
-          opacity: '0',
           animationDelay: '1.2s',
         }}
       />
 
       <div
-        className="feature-image slide-from-left"
+        className={`${homeStyles.featureImage} ${homeStyles.slideFromLeft}`}
         style={{ position: 'relative', zIndex: '2' }}
       >
         <img
           src={MainPhone}
           alt="음성 번역 앱"
-          className="phone-img"
+          className={styles.phoneImg}
           style={{ pointerEvents: 'none', position: 'relative', zIndex: '2' }}
         />
       </div>
 
       <div
-        className="feature-content right-align slide-from-right"
+        className={`${homeStyles.featureContent} ${homeStyles.rightAlign} ${homeStyles.slideFromRight}`}
         style={{ position: 'relative', zIndex: '2' }}
       >
-        <h3 className="feature-title">
-          <span className="normal-text">원활한 소통을 위한</span>
-          <span className="highlight">음성 번역</span>
+        <h3 className={homeStyles.featureTitle}>
+          <span className={homeStyles.normalText}>원활한 소통을 위한</span>
+          <span className={homeStyles.highlight}>음성 번역</span>
         </h3>
       </div>
     </>

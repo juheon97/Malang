@@ -1,28 +1,29 @@
-/* src/styles/Home.css - 공통 스타일 */
+/* src/styles/home/Home.module.css - 공통 스타일 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
 @import '../fonts.css';
 
-* {
+/* 전역 스타일은 :global 선택자 사용 */
+:global(*) {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html,
-body {
+:global(html),
+:global(body) {
   overflow-x: visible;
   width: 100%;
   max-width: 100%;
   position: relative;
 }
 
-body {
+:global(body) {
   font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
   overflow-x: hidden;
 }
 
 /* 메인 컨테이너 */
-.home-container {
+.homeContainer {
   width: 100%;
   min-height: 300vh; /* 세로 길이 대폭 증가 */
   background: #ffffff;
@@ -132,14 +133,14 @@ body {
 }
 
 /* 원형과 점의 애니메이션 적용 */
-.shape-animation {
+.shapeAnimation {
   opacity: 0;
   animation-fill-mode: forwards;
   animation-duration: 1.5s;
 }
 
 /* 기능 섹션 공통 스타일 */
-.feature-section {
+.featureSection {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -149,8 +150,8 @@ body {
 }
 
 /* 스크롤 애니메이션 클래스 */
-.feature-section .slide-from-left,
-.feature-section .slide-from-right {
+.slideFromLeft,
+.slideFromRight {
   opacity: 0;
   transform: translateX(-100px);
   transition:
@@ -158,45 +159,45 @@ body {
     transform 0.8s ease;
 }
 
-.feature-section .slide-from-right {
+.slideFromRight {
   transform: translateX(100px);
 }
 
-/* 애니메이션 적용 클래스 */
-.feature-section.animate-section .slide-from-left {
+/* 애니메이션 적용 클래스 - :global 선택자 사용 */
+:global(.animate-section) .slideFromLeft {
   opacity: 1;
   transform: translateX(0);
 }
 
-.feature-section.animate-section .slide-from-right {
+:global(.animate-section) .slideFromRight {
   opacity: 1;
   transform: translateX(0);
 }
 
 /* 연속적인 애니메이션 효과를 위한 지연 설정 */
-.feature-section .feature-image {
+.featureImage {
   transition-delay: 0.2s;
 }
 
-.feature-section .feature-content {
+.featureContent {
   transition-delay: 0.4s;
 }
 
-.feature-section.reverse {
+.reverse {
   flex-direction: row-reverse;
 }
 
-.feature-content {
+.featureContent {
   flex: 1;
   max-width: 500px;
   text-align: left;
 }
 
-.feature-section.reverse .feature-content {
+.reverse .featureContent {
   text-align: left;
 }
 
-.feature-title {
+.featureTitle {
   font-size: 48px; /* 누구든 쉽게 소통할 수 있는과 같은 크기로 변경 */
   color: #333;
   font-weight: 500;
@@ -208,21 +209,21 @@ body {
   text-align: right; /* 오른쪽 정렬 추가 */
 }
 
-.feature-content.left-align {
+.leftAlign {
   margin-left: -60px; /* 왼쪽으로 더 이동 (-40px에서 -60px로 변경) */
 }
 
-.feature-content.left-align .feature-title {
+.leftAlign .featureTitle {
   text-align: left; /* 왼쪽 정렬 */
 }
 
 /* right-align 클래스가 적용된 콘텐츠의 텍스트를 오른쪽 정렬 */
-.feature-content.right-align .feature-title {
+.rightAlign .featureTitle {
   text-align: right;
 }
 
 /* 일반 텍스트를 위한 클래스 추가 */
-.normal-text {
+.normalText {
   font-family: 'sans-font', 'Noto Sans KR', sans-serif;
   color: #838691; /* 색상을 #838691로 변경 */
 }
@@ -233,7 +234,7 @@ body {
   font-family: 'sans-font', 'Noto Sans KR', sans-serif;
 }
 
-.feature-image {
+.featureImage {
   flex: 1;
   display: flex;
   justify-content: center;
