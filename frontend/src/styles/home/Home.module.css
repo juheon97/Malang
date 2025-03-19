@@ -174,13 +174,14 @@
   transform: translateX(0);
 }
 
-/* 연속적인 애니메이션 효과를 위한 지연 설정 */
+/* 연속적인 애니메이션 효과를 위한 지연 설정 - 텍스트에 대한 딜레이 제거 */
 .featureImage {
   transition-delay: 0.2s;
 }
 
+/* .featureContent의 딜레이 제거 */
 .featureContent {
-  transition-delay: 0.4s;
+  transition-delay: 0s;
 }
 
 .reverse {
