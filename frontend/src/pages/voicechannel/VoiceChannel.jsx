@@ -5,29 +5,52 @@ import { useNavigate } from 'react-router-dom';
 
 const VoiceChannel = () => {
   const [searchInput, setSearchInput] = useState('');
-  const navigate = useNavigate(); // useNavigate 훅 사용
+  const navigate = useNavigate();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showWaitingModal, setShowWaitingModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [currentChannelId, setCurrentChannelId] = useState(null);
   const [isAccessibleMode, setIsAccessibleMode] = useState(false);
+  const [expandedChannel, setExpandedChannel] = useState(null);
 
-  // 모달용 포커스 관리 => 접근성 모드에서 사용
+  // 모달용 포커스 관리
   const previousFocusRef = useRef(null);
   const modalRef = useRef(null);
 
   // 시각장애인 모드 토글
   const toggleAccessibleMode = () => {
     setIsAccessibleMode(!isAccessibleMode);
+    // 모드 전환 시 펼쳐진 채널 초기화
+    setExpandedChannel(null);
   };
 
   // 채널 데이터 useMemo로 메모이제이션
   const channels = useMemo(
     () => [
-      { id: 1, title: '백종원의 요리교실', participants: 5 },
-      { id: 2, title: '피그마로 수다떨어요', isLocked: true },
-      { id: 3, title: '스탠리', participants: 3 },
-      { id: 4, title: '프로그래밍 스터디', participants: 7 },
+      {
+        id: 1,
+        title: '백종원의 요리교실',
+        participants: 5,
+        description: '요리에 관한 이야기를 나누는 채널입니다.',
+      },
+      {
+        id: 2,
+        title: '피그마로 수다떨어요',
+        isLocked: true,
+        description: '디자인 툴 피그마에 관한 사용법을 공유합니다.',
+      },
+      {
+        id: 3,
+        title: '스탠리',
+        participants: 3,
+        description: '영화와 드라마에 관한 토론방입니다.',
+      },
+      {
+        id: 4,
+        title: '프로그래밍 스터디',
+        participants: 7,
+        description: '코딩 지식을 공유하고 문제를 함께 해결하는 채널입니다.',
+      },
     ],
     [],
   );
@@ -60,6 +83,11 @@ const VoiceChannel = () => {
     }
   };
 
+  // 채널 토글 (시각장애인 모드용)
+  const toggleChannelExpand = channelId => {
+    setExpandedChannel(expandedChannel === channelId ? null : channelId);
+  };
+
   // 채널 입장 처리
   const handleJoinChannel = channelId => {
     if (isAccessibleMode) {
@@ -82,7 +110,7 @@ const VoiceChannel = () => {
     } else {
       // 비밀번호가 필요없는 경우
       console.log(`채널 ${channelId} 입장`);
-      //**** */ 실제 입장 로직 구현필요요
+      // 실제 입장 로직 구현 필요
     }
   };
 
@@ -95,7 +123,7 @@ const VoiceChannel = () => {
     // 방장 수락 대기 모달 표시
     setShowWaitingModal(true);
 
-    // *******서버에 비밀번호 검증 및 방장에게 요청을 보내는 로직 필요**********
+    // 서버에 비밀번호 검증 및 방장에게 요청을 보내는 로직 필요
     console.log(`채널 ${currentChannelId} 비밀번호 제출 후 방장 수락 대기`);
   };
 
@@ -121,7 +149,7 @@ const VoiceChannel = () => {
     }
   };
 
-  // 원형 그라데이션션
+  // 원형 그라데이션 (원래 코드 유지)
   const pageStyle = {
     backgroundImage: `
       radial-gradient(circle at 10% 30%, rgba(121, 231, 183, 0.2) 0%, rgba(255, 255, 255, 0) 15%),
@@ -159,16 +187,14 @@ const VoiceChannel = () => {
       <div className="w-full bg-white py-"></div>
       <div className="w-full bg-transparent py-12">
         <main className="max-w-6xl mx-auto px-6 relative">
-          {/* 방 생성 버튼튼 */}
+          {/* 방 생성 버튼 */}
           <div className="absolute top-0 right-6">
-          <button
-          className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white px-6 py-2 rounded-lg shadow-md transition duration-200"
-          onClick={() => navigate('/voice-channel-room')} // 클릭 시 경로 변경
-        >
-          방 생성
-        </button>
-    
-
+            <button
+              className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white px-6 py-2 rounded-lg shadow-md transition duration-200"
+              onClick={() => navigate('/voice-channel-room')}
+            >
+              방 생성
+            </button>
           </div>
 
           {/* 제목 */}
@@ -191,7 +217,7 @@ const VoiceChannel = () => {
             </p>
           )}
 
-          {/* 검색창창 - 크기 조정 ***/}
+          {/* 검색창 - 기존 스타일 유지 */}
           <div className="mb-12 flex justify-left">
             <div className="bg-white p-2 rounded-xl shadow-md w-full max-w-md">
               <div className="relative">
@@ -234,7 +260,7 @@ const VoiceChannel = () => {
             ></div>
           )}
 
-          {/* 채널 목록 */}
+          {/* 채널 목록 - 모드에 따라 다른 UI */}
           <section
             aria-label={isAccessibleMode ? '음성 채널 목록' : undefined}
             className="mb-6"
@@ -245,76 +271,167 @@ const VoiceChannel = () => {
               </h2>
             )}
 
-            <div
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
-              role={isAccessibleMode ? 'list' : undefined}
-            >
-              {filteredChannels.map(channel => (
-                <div
-                  key={channel.id}
-                  className="bg-white rounded-xl shadow-md p-5 flex justify-between items-center hover:shadow-lg transition duration-200 border border-gray-100"
-                  role={isAccessibleMode ? 'listitem' : undefined}
-                >
-                  <div className="flex items-center">
-                    {channel.isLocked ? (
-                      <div
-                        className="mr-4"
-                        aria-hidden={isAccessibleMode ? 'true' : undefined}
-                      >
-                        <span className="text-yellow-400 text-2xl">🔑</span>
+            {isAccessibleMode ? (
+              // 시각장애인 모드용 채널 목록 - 아코디언 스타일
+              <div className="space-y-3">
+                {filteredChannels.map(channel => (
+                  <div
+                    key={channel.id}
+                    className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200"
+                    role="listitem"
+                  >
+                    {/* 채널 헤더 (항상 표시) */}
+                    <div
+                      className="p-4 flex items-center justify-between cursor-pointer"
+                      onClick={() => toggleChannelExpand(channel.id)}
+                      tabIndex="0"
+                      role="button"
+                      aria-expanded={expandedChannel === channel.id}
+                      aria-controls={`channel-details-${channel.id}`}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleChannelExpand(channel.id);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center">
+                        {/* 채널 상태 아이콘 */}
+                        {channel.isLocked ? (
+                          <div className="mr-4">
+                            <span className="text-yellow-400 text-2xl">🔑</span>
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                            <span className="text-blue-500">●</span>
+                          </div>
+                        )}
+
+                        {/* 채널 제목 */}
+                        <h3 className="text-lg font-bold">
+                          {channel.title}
+                          {channel.isLocked && (
+                            <span className="sr-only">
+                              {' '}
+                              - 비밀번호가 필요한 채널
+                            </span>
+                          )}
+                          {channel.participants && (
+                            <span className="sr-only">
+                              {' '}
+                              - 현재 {channel.participants}명 참여 중
+                            </span>
+                          )}
+                        </h3>
                       </div>
-                    ) : (
-                      <div
-                        className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-4"
-                        aria-hidden={isAccessibleMode ? 'true' : undefined}
+
+                      {/* 화살표 아이콘 */}
+                      <svg
+                        className={`w-5 h-5 text-gray-500 transition-transform ${
+                          expandedChannel === channel.id
+                            ? 'transform rotate-180'
+                            : ''
+                        }`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
                       >
-                        <span className="text-blue-500">●</span>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </div>
+
+                    {/* 확장된 채널 정보 */}
+                    {expandedChannel === channel.id && (
+                      <div
+                        id={`channel-details-${channel.id}`}
+                        className="p-4 border-t border-gray-200"
+                      >
+                        <div className="mb-4">
+                          <h4 className="font-semibold mb-2">채널 설명</h4>
+                          <p className="text-gray-700">
+                            {channel.description || '설명이 없습니다.'}
+                          </p>
+                        </div>
+
+                        {channel.participants && (
+                          <div className="mb-4">
+                            <span className="text-gray-600">
+                              현재 참여자: {channel.participants}명
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end">
+                          <button
+                            className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white px-4 py-2 rounded-lg shadow-md transition duration-200"
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleJoinChannel(channel.id);
+                            }}
+                            aria-label={`${channel.title} 채널 입장하기${channel.isLocked ? ', 비밀번호 필요' : ''}`}
+                          >
+                            {channel.isLocked
+                              ? '비밀번호 입력 후 입장'
+                              : '입장하기'}
+                          </button>
+                        </div>
                       </div>
                     )}
-                    <h3
-                      className="text-lg font-bold"
-                      tabIndex={isAccessibleMode ? '0' : undefined}
-                    >
-                      {channel.title}
-                      {isAccessibleMode && channel.isLocked && (
-                        <span className="sr-only">
-                          {' '}
-                          - 비밀번호가 필요한 채널
-                        </span>
-                      )}
-                      {isAccessibleMode && channel.participants && (
-                        <span className="sr-only">
-                          {' '}
-                          - 현재 {channel.participants}명 참여 중
-                        </span>
-                      )}
-                    </h3>
                   </div>
+                ))}
 
-                  <button
-                    className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white px-4 py-1.5 rounded-lg text-sm shadow-sm transition duration-200"
-                    onClick={() => handleJoinChannel(channel.id)}
-                    aria-label={
-                      isAccessibleMode
-                        ? `${channel.title} 채널 입장하기${channel.isLocked ? ', 비밀번호 필요' : ''}`
-                        : undefined
-                    }
+                {filteredChannels.length === 0 && (
+                  <div
+                    className="text-center py-10 bg-white rounded-xl shadow-md"
+                    role="alert"
+                    aria-live="polite"
                   >
-                    입장
-                  </button>
-                </div>
-              ))}
+                    <p className="text-gray-500">검색 결과가 없습니다.</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // 일반 모드용 채널 목록 - 원래 그리드 유지
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filteredChannels.map(channel => (
+                  <div
+                    key={channel.id}
+                    className="bg-white rounded-xl shadow-md p-5 flex justify-between items-center hover:shadow-lg transition duration-200 border border-gray-100"
+                  >
+                    <div className="flex items-center">
+                      {channel.isLocked ? (
+                        <div className="mr-4">
+                          <span className="text-yellow-400 text-2xl">🔑</span>
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                          <span className="text-blue-500">●</span>
+                        </div>
+                      )}
+                      <h3 className="text-lg font-bold">{channel.title}</h3>
+                    </div>
 
-              {filteredChannels.length === 0 && (
-                <div
-                  className="col-span-2 text-center py-10 bg-white rounded-xl shadow-md"
-                  role={isAccessibleMode ? 'alert' : undefined}
-                  aria-live={isAccessibleMode ? 'polite' : undefined}
-                >
-                  <p className="text-gray-500">검색 결과가 없습니다.</p>
-                </div>
-              )}
-            </div>
+                    <button
+                      className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white px-4 py-1.5 rounded-lg text-sm shadow-sm transition duration-200"
+                      onClick={() => handleJoinChannel(channel.id)}
+                    >
+                      입장
+                    </button>
+                  </div>
+                ))}
+
+                {filteredChannels.length === 0 && (
+                  <div className="col-span-2 text-center py-10 bg-white rounded-xl shadow-md">
+                    <p className="text-gray-500">검색 결과가 없습니다.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </section>
         </main>
       </div>
