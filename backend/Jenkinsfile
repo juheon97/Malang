@@ -30,7 +30,6 @@ pipeline {
                     credentialsId: 'JENKINS_SYSTEM_TOKEN'
             }
         }
-    }
 
         stage('Build Spring Boot App') {
             steps {
@@ -87,7 +86,7 @@ pipeline {
                 }
             }
         }
-    
+    }
     
     post {
         always {
