@@ -11,6 +11,7 @@ import CommunityDetail from './components/community/CommunityDetail';
 import Counsel from './pages/counsel/Counsel';
 import VoiceChannel from './pages/voicechannel/VoiceChannel';
 import Signup from './pages/signup/Signup';
+import Mypage from './pages/mypage/MyPage';
 import VoiceChannelRoom from './pages/voicechannel/VoiceChannelRoom';
 import VoiceChannelVideo from './pages/voicechannel/VoiceChannelVideo';
 import CounselChannelRoom from './pages/counselchannel/CounselChannelRoom';
@@ -26,6 +27,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/Signup" element={<Signup />} />
+            <Route path="/mypage" element={<Mypage />} />
             <Route path="/community" element={<CommunityList />} />
             <Route path="/community/write" element={<CommunityWrite />} />
             <Route path="/community/:id" element={<CommunityDetail />} />
