@@ -46,17 +46,17 @@ const Login = () => {
         style={{ top: navbarHeight }} // navbar 높이만큼 아래로 이동
       >
         {/* 좌상단 빨간 원 */}
-        <div className="absolute -top-64 -left-64 w-[700px] h-[700px]">
+        <div className="absolute -top-64 -left-64 w-[600px] h-[600px]">
           <img src={redCircle} alt="Red Circle" className="w-full h-full" />
         </div>
 
         {/* 우상단 초록 원 */}
-        <div className="absolute -top-64 -right-64 w-[700px] h-[700px]">
+        <div className="absolute -top-64 -right-64 w-[700px] h-[600px]">
           <img src={greenCircle} alt="Green Circle" className="w-full h-full" />
         </div>
 
         {/* 우하단 노란 원 */}
-        <div className="absolute -bottom-64 -right-64 w-[700px] h-[700px]">
+        <div className="absolute -bottom-64 -right-64 w-[900px] h-[800px]">
           <img
             src={yellowCircle}
             alt="Yellow Circle"
