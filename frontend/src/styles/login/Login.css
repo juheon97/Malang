@@ -1,4 +1,4 @@
-/* src/styles/Login.css - 클래스명 변경 */
+/* src/styles/login/Login.css - 경로 변경 */
 * {
   margin: 0;
   padding: 0;
@@ -20,7 +20,7 @@
   max-width: 500px;
   padding: 60px 40px;
   background-color: white;
-  border-top: 5px solid #00775C;
+  border-top: 5px solid #00775c;
   border-bottom: none;
   box-shadow: 0 3px 15px 2px rgba(0, 0, 0, 0.18);
 }
@@ -28,7 +28,7 @@
 .login-title {
   font-size: 36px;
   font-weight: 800;
-  color: #00775C;
+  color: #00775c;
   margin-bottom: 40px;
   text-align: left;
 }
@@ -55,7 +55,7 @@
 }
 
 .login-form-input:focus {
-  border-color: #00775C;
+  border-color: #00775c;
   box-shadow: none;
 }
 
@@ -81,12 +81,12 @@
 }
 
 .forgot-password-btn:hover {
-  color: #00775C;
+  color: #00775c;
 }
 
 /* 클래스명 변경 및 스타일 명확히 함 */
 .login-page-submit-btn {
-  background-color: #00775C !important;
+  background-color: #00775c !important;
   color: white !important;
   border: none !important;
   border-radius: 25px !important;
@@ -103,7 +103,7 @@
 }
 
 .login-page-submit-btn:hover {
-  background-color: #005E49 !important;
+  background-color: #005e49 !important;
 }
 
 @media (max-width: 576px) {

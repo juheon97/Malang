@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/layout/Layout';
 import HomeMain from './components/home/HomeMain';
-import Login from './components/home/Login';
+import Login from './components/login/Login'; // Login 컴포넌트 import 경로 수정
 import Community from './pages/Community';
 import CommunityList from './components/community/CommunityList';
 import CommunityWrite from './components/community/CommunityWrite';

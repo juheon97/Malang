@@ -53,7 +53,7 @@ const Signup = () => {
 
   return (
     <div className="signup-container">
-      {/* 배경 원형 이미지들 */}
+      {/* 배경 원형 이미지들 - 절대적인 위치(px)로 수정 */}
       <img
         src={greenCircle}
         alt="Green Circle"
@@ -61,8 +61,8 @@ const Signup = () => {
         id="signup-green-circle"
         style={{
           position: 'absolute',
-          top: '-35%',
-          right: '-30%',
+          top: '-250px',
+          right: '-350px',
           zIndex: '-1',
           width: '600px',
           height: '600px',
@@ -75,8 +75,8 @@ const Signup = () => {
         id="signup-red-circle"
         style={{
           position: 'absolute',
-          top: '30%',
-          left: '70%',
+          top: '300px',
+          right: '-400px',
           zIndex: '-1',
           width: '800px',
           height: '800px',
@@ -89,8 +89,8 @@ const Signup = () => {
         id="signup-yellow-circle"
         style={{
           position: 'absolute',
-          top: '-20%',
-          right: '-5%',
+          top: '-150px',
+          right: '-50px',
           zIndex: '-1',
         }}
       />
