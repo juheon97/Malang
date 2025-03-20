@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import SignupNormal from '../../components/signup/SignupNormal';
 import SignupCounselor from '../../components/signup/SignupCounselor';
-import '../../styles/signup/Signup.css';
 // Signup 컴포넌트에서 사용하는 circle 이미지들
 import greenCircle from '../../assets/image/signup/signup_green_circle.svg';
 import redCircle from '../../assets/image/signup/signup_red_circle.svg';
@@ -52,62 +51,45 @@ const Signup = () => {
   };
 
   return (
-    <div className="signup-container">
+    <div className="min-h-screen flex flex-col relative bg-white">
       {/* 배경 원형 이미지들 - 절대적인 위치(px)로 수정 */}
       <img
         src={greenCircle}
         alt="Green Circle"
-        className="background-circle green-circle"
-        id="signup-green-circle"
-        style={{
-          position: 'absolute',
-          top: '-250px',
-          right: '-350px',
-          zIndex: '-1',
-          width: '600px',
-          height: '600px',
-        }}
+        className="absolute -top-[250px] -right-[350px] z-0 w-[600px] h-[600px]"
       />
       <img
         src={redCircle}
         alt="Red Circle"
-        className="background-circle red-circle"
-        id="signup-red-circle"
-        style={{
-          position: 'absolute',
-          top: '300px',
-          right: '-400px',
-          zIndex: '-1',
-          width: '800px',
-          height: '800px',
-        }}
+        className="absolute top-[300px] -right-[400px] z-0 w-[800px] h-[800px]"
       />
       <img
         src={yellowCircle}
         alt="Yellow Circle"
-        className="background-circle yellow-circle"
-        id="signup-yellow-circle"
-        style={{
-          position: 'absolute',
-          top: '-150px',
-          right: '-50px',
-          zIndex: '-1',
-        }}
+        className="absolute -top-[150px] -right-[50px] z-0"
       />
 
-      <div className="signup-content">
-        <h1 className="signup-title">회원가입</h1>
-        <div className="divider"></div>
+      <div className="max-w-[1200px] m-0 py-10 px-5 flex-grow relative z-10">
+        <h1 className="text-[#00775c] text-4xl font-bold mb-5">회원가입</h1>
+        <div className="w-full h-px bg-gray-200 mb-8"></div>
 
-        <div className="user-type-selector">
+        <div className="flex gap-3 mb-8">
           <button
-            className={`user-type-btn ${userType === '일반인 사용자' ? 'active' : ''}`}
+            className={`py-2.5 px-5 rounded-full cursor-pointer outline-none text-xl min-w-[120px] text-center whitespace-nowrap border-[4px] ${
+              userType === '일반인 사용자'
+                ? 'border-[#92e4d1] text-black shadow-md bg-white'
+                : 'border-transparent text-gray-500 bg-white'
+            }`}
             onClick={() => handleUserTypeChange('일반인 사용자')}
           >
             일반인 사용자
           </button>
           <button
-            className={`user-type-btn ${userType === '상담사' ? 'active' : ''}`}
+            className={`py-2.5 px-5 rounded-full cursor-pointer outline-none text-xl min-w-[120px] text-center whitespace-nowrap border-[4px] ${
+              userType === '상담사'
+                ? 'border-[#92e4d1] text-black shadow-md bg-white'
+                : 'border-transparent text-gray-500 bg-white'
+            }`}
             onClick={() => handleUserTypeChange('상담사')}
           >
             상담사
@@ -146,7 +128,9 @@ const Signup = () => {
           />
         )}
 
-        <button className="signup-btn">회원가입</button>
+        <button className="bg-[#00775c] text-white border-none rounded-3xl py-3 px-10 text-xl font-semibold cursor-pointer mt-5 absolute bottom-10 right-10 hover:bg-[#005e49]">
+          회원가입
+        </button>
       </div>
     </div>
   );
