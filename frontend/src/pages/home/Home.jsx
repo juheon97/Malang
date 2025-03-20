@@ -1,13 +1,13 @@
-// src/components/home/HomeMain.jsx
+// src/pages/home/Home.jsx
 import React, { useEffect, useRef } from 'react';
 import styles from '../../styles/home/Home.module.css';
-import HomeMain1 from './HomeMain1';
-import HomeMain2 from './HomeMain2';
-import HomeMain3 from './HomeMain3';
-import HomeMain4 from './HomeMain4';
-import HomeMain5 from './HomeMain5';
+import HomeMain1 from '../../components/home/HomeMain1';
+import HomeMain2 from '../../components/home/HomeMain2';
+import HomeMain3 from '../../components/home/HomeMain3';
+import HomeMain4 from '../../components/home/HomeMain4';
+import HomeMain5 from '../../components/home/HomeMain5';
 
-function HomeMain() {
+function Home() {
   // 각 섹션에 대한 ref 생성
   const featureSectionRefs = useRef([]);
 
@@ -80,4 +80,4 @@ function HomeMain() {
   );
 }
 
-export default HomeMain;
+export default Home;
