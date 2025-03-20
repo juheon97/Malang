@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PostService, CommentService } from '../../api';
-import particle2 from '../../assets/image/particle2.png';
 
 const CommunityDetail = () => {
   const { id } = useParams();
@@ -317,15 +316,39 @@ const CommunityDetail = () => {
 
   return (
     <div className="mt-16 max-w-6xl mx-auto relative">
-      {/* 배경 이미지 레이어 */}
-      <div
-        className="absolute top-0 left-0 w-full h-64 -z-9999"
+      {/* 배경 이미지들 */}
+      <img
+        src="/src/assets/image/community/community_dot.svg"
+        alt="도트 이미지"
+        className="absolute"
         style={{
-          backgroundImage: `url(${particle2})`,
-          backgroundPosition: 'left',
-          backgroundRepeat: 'no-repeat',
+          left: '-40px',
+          top: '280px',
+          zIndex: '-1',
         }}
-      ></div>
+      />
+      <img
+        src="/src/assets/image/community/community_green_circle.svg"
+        alt="초록 원 이미지"
+        className="absolute"
+        style={{
+          right: '-120px',
+          top: '-10px',
+          zIndex: '-1',
+        }}
+      />
+      <img
+        src="/src/assets/image/community/community_yellow_green.svg"
+        alt="노란초록 이미지"
+        className="absolute"
+        style={{
+          left: '-200px',
+          top: '-160px',
+          width: '500px',
+          height: '500px',
+          zIndex: '-1',
+        }}
+      />
 
       <h1 className="text-3xl font-bold text-center text-[#00a173] mb-6">
         커뮤니티

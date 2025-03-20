@@ -4,8 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/layout/Layout';
 import Home from './pages/home/Home';
-import Login from './pages/login/Login'; // 경로 수정됨
-import Community from './pages/Community';
+import Login from './pages/login/Login';
 import CommunityList from './components/community/CommunityList';
 import CommunityWrite from './components/community/CommunityWrite';
 import CommunityDetail from './components/community/CommunityDetail';
