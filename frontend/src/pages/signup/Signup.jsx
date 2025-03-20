@@ -1,7 +1,7 @@
 // src/components/signup/Signup.jsx
 import React, { useState } from 'react';
-import SignupNormal from './SignupNormal';
-import SignupCounselor from './SignupCounselor';
+import SignupNormal from '../../components/signup/SignupNormal';
+import SignupCounselor from '../../components/signup/SignupCounselor';
 import '../../styles/signup/Signup.css';
 // Signup 컴포넌트에서 사용하는 circle 이미지들
 import greenCircle from '../../assets/image/signup/signup_green_circle.svg';
