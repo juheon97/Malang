@@ -12,7 +12,6 @@ import MainGreenHalf from '../../assets/image/homemain3/Main3_green_half.svg';
 const HomeMain3 = () => {
   return (
     <>
-      {/* Green Circle Image - Left side, immediate fade in */}
       <img
         src={MainGreenCircle1}
         alt="녹색 원"
@@ -27,11 +26,10 @@ const HomeMain3 = () => {
           objectFit: 'contain',
           zIndex: '0',
           opacity: '0',
-          animationDelay: '0s',
+          animationDelay: '0.5s',
         }}
       />
 
-      {/* Yellow Circle Image - Appears 0.5s after trigger */}
       <img
         src={MainYellowCircle1}
         alt="노란색 원"
@@ -46,11 +44,10 @@ const HomeMain3 = () => {
           objectFit: 'contain',
           zIndex: '0',
           opacity: '0',
-          animationDelay: '0.5s',
+          animationDelay: '0.8s',
         }}
       />
 
-      {/* Dot Image 1 - Slides from left after 0.8s */}
       <img
         src={MainDot1}
         alt="점 이미지1"
@@ -65,11 +62,10 @@ const HomeMain3 = () => {
           objectFit: 'contain',
           zIndex: '0',
           opacity: '0',
-          animationDelay: '0.8s',
+          animationDelay: '0.5s',
         }}
       />
 
-      {/* Dot Image 2 - Slides from right after 1.5s */}
       <img
         src={MainDot1}
         alt="점 이미지2"
@@ -84,13 +80,11 @@ const HomeMain3 = () => {
           objectFit: 'contain',
           zIndex: '0',
           opacity: '0',
-          animationDelay: '1.5s',
-          transform:
-            'translateX(30px)' /* Starting position for right-to-left slide */,
+          animationDelay: '0.8s',
+          transform: 'translateX(30px)',
         }}
       />
 
-      {/* Dot Image 3 - Slides from left after 1s */}
       <img
         src={MainDot2}
         alt="점 이미지3"
@@ -109,7 +103,6 @@ const HomeMain3 = () => {
         }}
       />
 
-      {/* Green Half Image - Appears 2s after trigger */}
       <img
         src={MainGreenHalf}
         alt="녹색 반원"
