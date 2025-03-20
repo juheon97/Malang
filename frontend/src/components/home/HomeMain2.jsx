@@ -103,7 +103,7 @@ const HomeMain2 = () => {
           pointerEvents: 'none',
           objectFit: 'contain',
           zIndex: '0',
-          animationDelay: '1s',
+          animationDelay: '0.6s',
         }}
       />
 
@@ -120,7 +120,7 @@ const HomeMain2 = () => {
           pointerEvents: 'none',
           objectFit: 'contain',
           zIndex: '0',
-          animationDelay: '1.2s',
+          animationDelay: '1.0s',
         }}
       />
 
