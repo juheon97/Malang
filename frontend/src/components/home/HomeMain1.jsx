@@ -109,9 +109,19 @@ const HomeMain1 = () => {
         className={styles.heroContent}
         style={{ position: 'relative', zIndex: '2' }}
       >
-        <div className={styles.logoArea}>
-          <img src={MallangLogo} alt="말랑 로고" className={styles.heroLogo} />
-          <h1 className={styles.heroTitle}>말랑</h1>
+        <div
+          className={styles.logoArea}
+          style={{ display: 'flex', alignItems: 'center' }}
+        >
+          <img
+            src={MallangLogo}
+            alt="말랑 로고"
+            className={styles.heroLogo}
+            style={{ position: 'relative', top: '3px', marginRight: '8px' }}
+          />
+          <h1 className={styles.heroTitle} style={{ color: 'black' }}>
+            말랑
+          </h1>
         </div>
         <h2 className={styles.heroSubtitle}>Mallang</h2>
         <p className={styles.heroDesc}>누구든 쉽게 소통할 수 있는</p>

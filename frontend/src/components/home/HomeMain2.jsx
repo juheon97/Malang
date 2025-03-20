@@ -15,14 +15,14 @@ const HomeMain2 = () => {
       {/* 기존 녹색 원 이미지 - 약간 왼쪽으로 이동 */}
       <img
         src={MainGreenCircle1}
-        alt="녹색 원2"
+        alt="녹색 원1"
         className={styles.circleFadeIn}
         style={{
           position: 'absolute',
-          top: '15%',
-          right: '0%',
-          width: '500px',
-          height: '500px',
+          top: '5%',
+          right: '-20%',
+          width: '700px',
+          height: '700px',
           pointerEvents: 'none',
           objectFit: 'contain',
           maxWidth: 'none',

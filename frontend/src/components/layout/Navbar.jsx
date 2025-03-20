@@ -1,28 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import MallangLogo from '../../assets/image/Mallang_logo.svg';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  // 폰트 및 이미지 로딩 완료 상태 확인
+  useEffect(() => {
+    // 폰트 로딩 확인
+    document.fonts.ready.then(() => {
+      setFontsLoaded(true);
+    });
+  }, []);
+
+  // 폰트 로딩 전 스타일
+  const navbarStyle = {
+    visibility: fontsLoaded ? 'visible' : 'hidden',
+    height: '64px', // h-16과 동일
+  };
+
+  // 로고 이미지에 대한 고정 크기 스타일
+  const logoStyle = {
+    height: '26px', // h-6.5과 유사
+    width: 'auto',
+    marginRight: '10px', // mr-2.5
+    marginTop: '2px', // mt-0.5
+    position: 'relative',
+    top: '2px',
+  };
+
+  // 브랜드 텍스트에 대한 스타일
+  const brandTextStyle = {
+    fontFamily: "'HancomMalangMalang-Regular', sans-serif",
+    fontSize: '1.875rem', // text-3xl
+    fontWeight: 'bold',
+    color: 'black',
+    visibility: fontsLoaded ? 'visible' : 'hidden',
+  };
 
   return (
     <nav className="bg-[#f5fdf5] shadow-sm relative z-50">
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between" style={navbarStyle}>
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <span
-                style={{
-                  fontFamily: "'HancomMalangMalang-Regular', sans-serif",
-                }}
-                className="text-3xl text-[#00a173] font-bold"
-              >
-                말랑
-              </span>
+              {/* 로고 이미지에 고정 크기 적용 */}
+              <div style={{ width: logoStyle.width, height: logoStyle.height }}>
+                <img
+                  src={MallangLogo}
+                  alt="말랑 로고"
+                  style={logoStyle}
+                  onLoad={() => {
+                    // 이미지 로드 완료 처리
+                  }}
+                />
+              </div>
+              <span style={brandTextStyle}>말랑</span>
             </Link>
           </div>
 
-          {/* 컴퓨터터 메뉴 */}
+          {/* 컴퓨터 메뉴 */}
           <div className="hidden md:flex items-center space-x-6">
             <Link
               to="/voice-change"
@@ -116,7 +155,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* 모바일 */}
+      {/* 모바일 메뉴 */}
       {menuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
