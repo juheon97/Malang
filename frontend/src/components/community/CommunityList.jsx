@@ -44,7 +44,41 @@ const CommunityList = () => {
     return <div className="text-center py-10 text-red-500">{error}</div>;
 
   return (
-    <div className="mt-16 max-w-6xl mx-auto">
+    <div className="mt-16 max-w-6xl mx-auto relative">
+      {/* 모든 배경 이미지들을 절대 위치로 배치 */}
+      <img
+        src="/src/assets/image/community/community_dot.svg"
+        alt="도트 이미지"
+        className="absolute"
+        style={{
+          left: '-40px',
+          top: '280px',
+          zIndex: '-1',
+        }}
+      />
+      <img
+        src="/src/assets/image/community/community_green_circle.svg"
+        alt="초록 원 이미지"
+        className="absolute"
+        style={{
+          right: '-120px',
+          top: '-10px',
+          zIndex: '-1',
+        }}
+      />
+      <img
+        src="/src/assets/image/community/community_yellow_green.svg"
+        alt="노란초록 이미지"
+        className="absolute"
+        style={{
+          left: '-200px',
+          top: '-160px',
+          width: '500px',
+          height: '500px',
+          zIndex: '-1',
+        }}
+      />
+
       {/* 제목을 박스 밖으로 뺌 */}
       <h1 className="text-3xl font-bold text-center text-[#00a173] mb-6">
         커뮤니티

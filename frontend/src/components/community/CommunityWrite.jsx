@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PostService } from '../../api';
 
-
 const CommunityWrite = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -10,7 +9,7 @@ const CommunityWrite = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     if (!title.trim() || !content.trim()) {
@@ -21,11 +20,14 @@ const CommunityWrite = () => {
     setIsSubmitting(true);
 
     try {
-      const currentDate = new Date().toLocaleDateString('ko-KR', {
-        year: '2-digit',
-        month: '2-digit',
-        day: '2-digit'
-      }).replace(/\. /g, '.').replace(/\.$/, '');
+      const currentDate = new Date()
+        .toLocaleDateString('ko-KR', {
+          year: '2-digit',
+          month: '2-digit',
+          day: '2-digit',
+        })
+        .replace(/\. /g, '.')
+        .replace(/\.$/, '');
 
       const postData = {
         title,
@@ -34,7 +36,7 @@ const CommunityWrite = () => {
         date: currentDate,
         authorId: 1,
         authorName: '익명의 리뷰어',
-        likes: 0
+        likes: 0,
       };
 
       const response = await PostService.createPost(postData);
@@ -51,22 +53,58 @@ const CommunityWrite = () => {
   };
 
   return (
-    <div className="mt-16 max-w-4xl mx-auto p-6 bg-gradient-to-br from-[#f5fdf5] to-[#e6f7f0] rounded-lg shadow-lg">
-      <h1 className="text-3xl font-bold text-center text-[#00a173] mb-8">커뮤니티</h1>
-      
+    <div className="mt-16 max-w-4xl mx-auto p-6 bg-gradient-to-br from-[#f5fdf5] to-[#e6f7f0] rounded-lg shadow-lg relative">
+      {/* 모든 배경 이미지들을 절대 위치로 배치 - 조정된 위치 */}
+      <img
+        src="/src/assets/image/community/community_dot.svg"
+        alt="도트 이미지"
+        className="absolute"
+        style={{
+          left: '-168px',
+          top: '280px',
+          zIndex: '-1',
+        }}
+      />
+      <img
+        src="/src/assets/image/community/community_green_circle.svg"
+        alt="초록 원 이미지"
+        className="absolute"
+        style={{
+          right: '-248px',
+          top: '-10px',
+          zIndex: '-1',
+        }}
+      />
+      <img
+        src="/src/assets/image/community/community_yellow_green.svg"
+        alt="노란초록 이미지"
+        className="absolute"
+        style={{
+          left: '-328px',
+          top: '-160px',
+          width: '500px',
+          height: '500px',
+          zIndex: '-1',
+        }}
+      />
+
+      <h1 className="text-3xl font-bold text-center text-[#00a173] mb-8 relative">
+        커뮤니티
+      </h1>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 카테고리 선택 */}
         <div className="flex items-center space-x-4">
-          <button 
+          <button
             type="button"
             className="px-4 py-2 bg-[#8ed7af] text-white rounded-full shadow-md hover:shadow-lg transition-transform transform hover:-translate-y-0.5"
           >
             카테고리
           </button>
           <div className="relative">
-            <select 
+            <select
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={e => setCategory(e.target.value)}
               className="px-4 py-2 bg-white border border-[#e0e7e0] rounded-full text-sm font-medium shadow-md appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-[#8ed7af]"
             >
               <option value="시각장애">시각장애</option>
@@ -74,8 +112,12 @@ const CommunityWrite = () => {
               <option value="청각장애">청각장애</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+              <svg
+                className="fill-current h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
               </svg>
             </div>
           </div>
@@ -86,7 +128,7 @@ const CommunityWrite = () => {
           type="text"
           placeholder="제목을 입력해주세요."
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={e => setTitle(e.target.value)}
           className="w-full px-4 py-3 bg-white border border-[#e0e7e0] rounded-lg shadow-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8ed7af]"
           required
         />
@@ -95,7 +137,7 @@ const CommunityWrite = () => {
         <textarea
           placeholder="내용을 입력해주세요."
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={e => setContent(e.target.value)}
           className="w-full h-64 px-4 py-3 bg-white border border-[#e0e7e0] rounded-lg shadow-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8ed7af] resize-none"
           required
         />
