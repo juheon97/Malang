@@ -117,7 +117,7 @@ const HomeMain3 = () => {
           objectFit: 'contain',
           zIndex: '0',
           opacity: '0',
-          animationDelay: '2s',
+          animationDelay: '0.8s',
         }}
       />
 
