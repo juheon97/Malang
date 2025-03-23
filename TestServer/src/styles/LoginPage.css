@@ -1,0 +1,66 @@
+/* src/styles/LoginPage.css */
+.login-container {
+    position: relative;
+    width: 100%;
+  }
+  
+  .login-header {
+    height: 8px;
+    position: relative;
+  }
+  
+  .login-header-line {
+    background-color: #00796b;
+    height: 8px;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+  }
+  
+  .login-title {
+    color: #00796b !important;
+    font-weight: 500 !important;
+    padding-top: 24px !important;
+    padding-bottom: 0 !important;
+  }
+  
+  .login-form {
+    padding: 8px 0;
+  }
+  
+  .login-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+  }
+  
+  .login-button {
+    background-color: #00796b !important;
+    border-radius: 20px !important;
+    padding: 8px 24px !important;
+    text-transform: none !important;
+  }
+  
+  .error-message {
+    margin-bottom: 16px !important;
+    padding: 8px !important;
+    background-color: rgba(244, 67, 54, 0.1);
+    border-radius: 4px;
+  }
+
+  .login-page {
+    min-height: 100vh;
+    background-color: #f5fdf9;
+  }
+  
+  .login-page-container {
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  
