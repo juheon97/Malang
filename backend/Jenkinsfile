@@ -1,0 +1,105 @@
+pipeline {
+    agent any
+
+    environment {
+        SSH_KEY = credentials('SSH_KEY')
+        EC2_USER = credentials('EC2_USER')
+        EC2_IP = credentials('EC2_IP')
+
+        DOCKER_HUB = credentials('dockerhub-credentials')
+
+        JAVA_HOME = '/opt/java/openjdk'
+        GRADLE_HOME = '/opt/gradle-8.13'
+
+        // Docker 이미지 관련 환경 변수
+        DOCKER_IMAGE_NAME = "${DOCKERHUB_CREDENTIALS_USR}/d110_jenkins_image_build"
+        DOCKER_IMAGE_TAG = "${BUILD_NUMBER}" // Jenkins 빌드 번호를 태그로 사용
+    }
+
+    tools {
+        jdk 'JDK17'
+        gradle 'Gradle 8.13'
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                echo 'Cloning the repository...'
+                git branch: 'backend',
+                    url: 'https://lab.ssafy.com/s12-ai-speech-sub1/S12P21D110.git',
+                    credentialsId: 'JENKINS_SYSTEM_TOKEN'
+            }
+        }
+        
+
+        stage('Build Spring Boot App') {
+            steps {
+                echo 'Building the Spring Boot application...'
+                dir('backend') { // 백엔드 코드가 있는 디렉토리로 변경
+                    sh 'gradle clean build -x test'
+                }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                echo 'Building Docker image...'
+                dir('backend') { // Dockerfile이 있는 디렉토리로 변경
+                    sh "docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} ."
+                    sh "docker tag ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} ${DOCKER_IMAGE_NAME}:latest"
+                }
+            }
+        }
+        
+        stage('Docker Push') {
+            steps {
+                echo 'Pushing Docker image to Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                    sh "echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin"
+                    sh "docker push ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
+                    sh "docker push ${DOCKER_IMAGE_NAME}:latest"
+                }
+            }
+        }
+        
+        stage('Deploy to EC2') {
+            steps {
+                echo 'Deploying to EC2...'
+                sshagent(['SSH_KEY']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} '
+                            # Docker 이미지 풀
+                            docker pull ${DOCKER_IMAGE_NAME}:latest
+                            
+                            # 기존 컨테이너 중지 및 제거
+                            docker stop backend-app || true
+                            docker rm backend-app || true
+                            
+                            # 새 컨테이너 실행 (포트는 docker-compose.yml에서 관리)
+                            docker run -d --name backend-app --network app-network ${DOCKER_IMAGE_NAME}:latest
+                            
+                            # 또는 docker-compose를 사용한 배포
+                            # cd /home/ubuntu/app
+                            # echo "BACKEND_IMAGE=${DOCKER_IMAGE_NAME}:latest" > .env
+                            # docker-compose up -d
+                        '
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo 'Cleaning up...'
+            sh 'docker rmi $(docker images -q -f dangling=true) || true'
+        }
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+
+}
