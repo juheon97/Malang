@@ -14,6 +14,5 @@ COPY . .
 # 앱 빌드
 RUN npm run build
 
-# 프리뷰 모드로 실행 (포트 5176에서)
-ENV PORT=5176
-CMD ["npx", "vite", "preview", "--port", "5176", "--host"]
+# 컨테이너 시작 시 실행할 명령
+CMD ["npm", "start"]
