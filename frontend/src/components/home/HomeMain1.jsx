@@ -5,7 +5,7 @@ import styles from '../../styles/home/Home1.module.css';
 // 폰트 CSS 파일 import
 import '../../styles/fonts.css';
 // SVG 로고 import
-import MallangLogo from '../../assets/image/Mallang_logo.svg';
+import MalangLogo from '../../assets/image/Malang_logo.svg';
 // 메인 대화 이미지 import
 import MainDialogue from '../../assets/image/homemain1/Main1_dialogue.png';
 // 원형 이미지 import
@@ -114,7 +114,7 @@ const HomeMain1 = () => {
           style={{ display: 'flex', alignItems: 'center' }}
         >
           <img
-            src={MallangLogo}
+            src={MalangLogo}
             alt="말랑 로고"
             className={styles.heroLogo}
             style={{ position: 'relative', top: '3px', marginRight: '8px' }}
@@ -123,7 +123,7 @@ const HomeMain1 = () => {
             말랑
           </h1>
         </div>
-        <h2 className={styles.heroSubtitle}>Mallang</h2>
+        <h2 className={styles.heroSubtitle}>Malang</h2>
         <p className={styles.heroDesc}>누구든 쉽게 소통할 수 있는</p>
         <p className={styles.heroFeatures}>
           음성 입력 / 음성 번역 / 음성 출력 / 음성 STT
