@@ -1,38 +1,17 @@
+// src/components/community/CommunityList.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PostService } from '../../api';
+import usePostStore from '../../store/postStore';
 
 const CommunityList = () => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
+  const { posts, loading, error, fetchPosts } = usePostStore();
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = 3; // 실제로는 API 응답에서 받아와야 함
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        const response = await PostService.getAllPosts(currentPage);
-
-        if (response.data.posts) {
-          setPosts(response.data.posts);
-          setTotalPages(response.data.totalPages || 3);
-        } else {
-          setPosts(response.data);
-          setTotalPages(3);
-        }
-      } catch (err) {
-        console.error('게시글 목록 로딩 오류:', err);
-        setError('게시글 목록을 불러오는 중 오류가 발생했습니다.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, [currentPage]);
+    fetchPosts(currentPage);
+  }, [currentPage, fetchPosts]);
 
   const handlePageChange = page => {
     if (page < 1 || page > totalPages) return;
@@ -44,41 +23,7 @@ const CommunityList = () => {
     return <div className="text-center py-10 text-red-500">{error}</div>;
 
   return (
-    <div className="mt-16 max-w-6xl mx-auto relative">
-      {/* 모든 배경 이미지들을 절대 위치로 배치 */}
-      <img
-        src="/src/assets/image/community/community_dot.svg"
-        alt="도트 이미지"
-        className="absolute"
-        style={{
-          left: '-40px',
-          top: '280px',
-          zIndex: '-1',
-        }}
-      />
-      <img
-        src="/src/assets/image/community/community_green_circle.svg"
-        alt="초록 원 이미지"
-        className="absolute"
-        style={{
-          right: '-120px',
-          top: '-10px',
-          zIndex: '-1',
-        }}
-      />
-      <img
-        src="/src/assets/image/community/community_yellow_green.svg"
-        alt="노란초록 이미지"
-        className="absolute"
-        style={{
-          left: '-200px',
-          top: '-160px',
-          width: '500px',
-          height: '500px',
-          zIndex: '-1',
-        }}
-      />
-
+    <div className="mt-16 max-w-6xl mx-auto">
       {/* 제목을 박스 밖으로 뺌 */}
       <h1 className="text-3xl font-bold text-center text-[#00a173] mb-6">
         커뮤니티

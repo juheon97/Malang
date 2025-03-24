@@ -1,18 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { PostService, CommentService } from '../../api';
+import usePostStore from '../../store/postStore';
+import useCommentStore from '../../store/commentStore';
 
 const CommunityDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [post, setPost] = useState(null);
-  const [comments, setComments] = useState([]);
+
+  // Post 스토어에서 상태와 액션 가져오기
+  const {
+    currentPost: post,
+    loading: postLoading,
+    error: postError,
+    fetchPostById,
+    updatePost,
+    deletePost,
+    updateLikes,
+    removeImage,
+    resetCurrentPost,
+  } = usePostStore();
+
+  // Comment 스토어에서 상태와 액션 가져오기
+  const {
+    comments,
+    loading: commentLoading,
+    addComment,
+    updateComment,
+    deleteComment,
+    addReply,
+    fetchComments,
+    resetComments,
+  } = useCommentStore();
+
+  // 로컬 상태
   const [comment, setComment] = useState('');
   const [replyContent, setReplyContent] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editCommentContent, setEditCommentContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -27,72 +51,30 @@ const CommunityDetail = () => {
 
   // 게시글 및 댓글 데이터 불러오기
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const postResponse = await PostService.getPostById(id);
-        setPost(postResponse.data);
-        setEditTitle(postResponse.data.title);
-        setEditContent(postResponse.data.content);
+    fetchPostById(id);
+    fetchComments(id);
 
-        const commentsResponse = await CommentService.getCommentsByPostId(id);
-        setComments(commentsResponse.data);
-      } catch (err) {
-        console.error('데이터 로딩 오류:', err);
-        setError('게시글을 불러오는 중 오류가 발생했습니다.');
-
-        // 백엔드 연동 전 테스트용 더미 데이터
-        const dummyPost = {
-          id: parseInt(id),
-          category: '시각장애',
-          title: '시각장애 관련 질문입니다',
-          content: '시각장애인을 위한 기능은 어떻게 사용하나요?',
-          date: '25.03.17',
-          likes: 5,
-          authorId: 1, // 현재 사용자와 같은 ID로 설정
-          authorName: '익명의 리뷰어',
-        };
-
-        setPost(dummyPost);
-        setEditTitle(dummyPost.title);
-        setEditContent(dummyPost.content);
-
-        setComments([
-          {
-            id: 1,
-            postId: parseInt(id),
-            authorId: 2,
-            authorName: '다른 사용자',
-            content: '도움이 필요하시면 연락주세요!',
-            date: '25.03.17',
-            replies: [
-              {
-                id: 101,
-                commentId: 1,
-                authorId: 1,
-                authorName: '익명의 리뷰어',
-                content: '감사합니다! 연락드릴게요.',
-                date: '25.03.18',
-              },
-            ],
-          },
-        ]);
-      } finally {
-        setLoading(false);
-      }
+    // 컴포넌트 언마운트 시 상태 초기화
+    return () => {
+      resetCurrentPost();
+      resetComments();
     };
+  }, [id, fetchPostById, fetchComments, resetCurrentPost, resetComments]);
 
-    fetchData();
-  }, [id]);
+  // 게시글 데이터가 로드되면 수정 폼 초기화
+  useEffect(() => {
+    if (post) {
+      setEditTitle(post.title);
+      setEditContent(post.content);
+    }
+  }, [post]);
 
   // 좋아요 버튼 클릭 핸들러
   const handleLikeClick = async () => {
     try {
       const updatedLikes = post.likes + 1;
-      await PostService.updateLikes(id, updatedLikes);
-      setPost({ ...post, likes: updatedLikes });
+      await updateLikes(id, updatedLikes);
     } catch (err) {
-      console.error('좋아요 업데이트 오류:', err);
       alert('좋아요 업데이트 중 오류가 발생했습니다.');
     }
   };
@@ -124,19 +106,9 @@ const CommunityDetail = () => {
         replies: [],
       };
 
-      const response = await CommentService.createComment(id, commentData);
-
-      const newComment = {
-        ...response.data,
-        id:
-          response.data.id ||
-          Date.now() + Math.random().toString(36).substr(2, 9),
-      };
-
-      setComments(prevComments => [...prevComments, newComment]);
+      await addComment(id, commentData);
       setComment('');
     } catch (err) {
-      console.error('댓글 작성 오류:', err);
       alert('댓글 작성 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
@@ -160,22 +132,13 @@ const CommunityDetail = () => {
     if (!editCommentContent.trim()) return;
 
     try {
-      await CommentService.updateComment(commentId, {
+      await updateComment(commentId, {
         content: editCommentContent,
       });
-
-      setComments(prevComments =>
-        prevComments.map(comment =>
-          comment.id === commentId
-            ? { ...comment, content: editCommentContent }
-            : comment,
-        ),
-      );
 
       setEditingCommentId(null);
       setEditCommentContent('');
     } catch (err) {
-      console.error('댓글 수정 오류:', err);
       alert('댓글 수정 중 오류가 발생했습니다.');
     }
   };
@@ -185,13 +148,8 @@ const CommunityDetail = () => {
     if (!window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) return;
 
     try {
-      await CommentService.deleteComment(commentId);
-
-      setComments(prevComments =>
-        prevComments.filter(comment => comment.id !== commentId),
-      );
+      await deleteComment(commentId);
     } catch (err) {
-      console.error('댓글 삭제 오류:', err);
       alert('댓글 삭제 중 오류가 발생했습니다.');
     }
   };
@@ -216,16 +174,14 @@ const CommunityDetail = () => {
     }
 
     try {
-      const response = await PostService.updatePost(id, {
+      await updatePost(id, {
         title: editTitle,
         content: editContent,
       });
 
-      setPost({ ...post, title: editTitle, content: editContent });
       setIsEditing(false);
       alert('게시글이 수정되었습니다.');
     } catch (err) {
-      console.error('게시글 수정 오류:', err);
       alert('게시글 수정 중 오류가 발생했습니다.');
     }
   };
@@ -235,12 +191,18 @@ const CommunityDetail = () => {
     if (!window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) return;
 
     try {
-      await PostService.deletePost(id);
+      await deletePost(id);
       alert('게시글이 삭제되었습니다.');
       navigate('/community');
     } catch (err) {
-      console.error('게시글 삭제 오류:', err);
       alert('게시글 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 이미지 삭제 핸들러
+  const handleRemoveImage = index => {
+    if (window.confirm('이미지를 삭제하시겠습니까?')) {
+      removeImage(index);
     }
   };
 
@@ -278,82 +240,29 @@ const CommunityDetail = () => {
         date: currentDate,
       };
 
-      // 실제 API 호출 (백엔드 연동 시 구현)
-      // const response = await CommentService.createReply(commentId, replyData);
-
-      // 임시 구현 (백엔드 연동 전)
-      const newReply = {
-        ...replyData,
-        id: Date.now() + Math.random().toString(36).substr(2, 9),
-      };
-
-      setComments(prevComments =>
-        prevComments.map(comment =>
-          comment.id === commentId
-            ? {
-                ...comment,
-                replies: [...(comment.replies || []), newReply],
-              }
-            : comment,
-        ),
-      );
-
+      await addReply(commentId, replyData);
       setReplyingTo(null);
       setReplyContent('');
     } catch (err) {
-      console.error('답글 작성 오류:', err);
       alert('답글 작성 중 오류가 발생했습니다.');
     }
   };
 
-  if (loading) return <div className="text-center py-10">로딩 중...</div>;
-  if (error)
-    return <div className="text-center py-10 text-red-500">{error}</div>;
+  if (postLoading || commentLoading)
+    return <div className="text-center py-10">로딩 중...</div>;
+  if (postError)
+    return <div className="text-center py-10 text-red-500">{postError}</div>;
   if (!post)
     return <div className="text-center py-10">게시글을 찾을 수 없습니다.</div>;
 
   const isAuthor = currentUser.id === post.authorId;
 
   return (
-    <div className="mt-16 max-w-6xl mx-auto relative">
-      {/* 배경 이미지들 */}
-      <img
-        src="/src/assets/image/community/community_dot.svg"
-        alt="도트 이미지"
-        className="absolute"
-        style={{
-          left: '-40px',
-          top: '280px',
-          zIndex: '-1',
-        }}
-      />
-      <img
-        src="/src/assets/image/community/community_green_circle.svg"
-        alt="초록 원 이미지"
-        className="absolute"
-        style={{
-          right: '-120px',
-          top: '-10px',
-          zIndex: '-1',
-        }}
-      />
-      <img
-        src="/src/assets/image/community/community_yellow_green.svg"
-        alt="노란초록 이미지"
-        className="absolute"
-        style={{
-          left: '-200px',
-          top: '-160px',
-          width: '500px',
-          height: '500px',
-          zIndex: '-1',
-        }}
-      />
-
+    <div className="mt-16 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold text-center text-[#00a173] mb-6">
         커뮤니티
       </h1>
-
+    
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="p-6">
           {isEditing ? (
@@ -369,6 +278,77 @@ const CommunityDetail = () => {
                 onChange={e => setEditContent(e.target.value)}
                 className="w-full h-64 px-4 py-3 bg-white border border-[#e0e7e0] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8ed7af] resize-none"
               />
+
+              {/* 첨부 이미지 표시 및 삭제 기능 */}
+              {(post.fileUrls || post.fileUrl) && (
+                <div className="mt-4 border border-[#e0e7e0] rounded-lg p-4 bg-gray-50">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-medium text-gray-700">첨부된 이미지</h4>
+                  </div>
+                  <div className="relative">
+                    {Array.isArray(post.fileUrls) ? (
+                      post.fileUrls.map((url, index) => (
+                        <div key={index} className="relative mb-2">
+                          <img
+                            src={url}
+                            alt={`첨부 이미지 ${index + 1}`}
+                            className="max-w-full rounded-lg shadow-sm mx-auto"
+                            style={{ maxHeight: '200px' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="relative mb-2">
+                        <img
+                          src={post.fileUrls || post.fileUrl}
+                          alt="첨부 이미지"
+                          className="max-w-full rounded-lg shadow-sm mx-auto"
+                          style={{ maxHeight: '200px' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(0)}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end gap-2 mt-4">
                 <button
                   onClick={handleEditCancel}
@@ -401,17 +381,39 @@ const CommunityDetail = () => {
 
               <div className="min-h-[200px] mb-8 text-gray-700">
                 {post.content}
+
+                {/* 첨부 이미지가 있으면 표시 */}
+                {(post.fileUrls || post.fileUrl) && (
+                  <div className="mt-4 grid grid-cols-1 gap-4">
+                    {Array.isArray(post.fileUrls) ? (
+                      post.fileUrls.map((url, index) => (
+                        <img
+                          key={index}
+                          src={url}
+                          alt={`첨부 이미지 ${index + 1}`}
+                          className="max-w-full rounded-lg shadow-md mx-auto"
+                          style={{ maxHeight: '400px' }}
+                        />
+                      ))
+                    ) : (
+                      <img
+                        src={post.fileUrls || post.fileUrl}
+                        alt="첨부 이미지"
+                        className="max-w-full rounded-lg shadow-md mx-auto"
+                        style={{ maxHeight: '400px' }}
+                      />
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-between items-center mb-8">
-                <div>
-                  <button
-                    onClick={() => navigate('/community')}
-                    className="px-4 py-2 bg-[#8ed7af] text-white rounded-full hover:bg-[#7bc89e] transition-colors shadow-md hover:shadow-lg"
-                  >
-                    목록보기
-                  </button>
-                </div>
+                <button
+                  onClick={() => navigate('/community')}
+                  className="px-4 py-2 bg-[#8ed7af] text-white rounded-full hover:bg-[#7bc89e] transition-colors shadow-md hover:shadow-lg"
+                >
+                  목록보기
+                </button>
 
                 {isAuthor && (
                   <div className="flex gap-2">
@@ -419,13 +421,13 @@ const CommunityDetail = () => {
                       onClick={handleEditStart}
                       className="px-4 py-2 bg-[#8ed7af] text-white rounded-full hover:bg-[#7bc89e] transition-colors shadow-md hover:shadow-lg"
                     >
-                      수정하기
+                      수정
                     </button>
                     <button
                       onClick={handleDeletePost}
                       className="px-4 py-2 bg-[#8ed7af] text-white rounded-full hover:bg-[#7bc89e] transition-colors shadow-md hover:shadow-lg"
                     >
-                      삭제하기
+                      삭제
                     </button>
                   </div>
                 )}
@@ -504,6 +506,7 @@ const CommunityDetail = () => {
                     </>
                   )}
 
+                  {/* 답글 작성 폼 */}
                   {replyingTo === comment.id && (
                     <div className="mt-3 ml-4">
                       <div className="flex gap-2">
@@ -516,13 +519,13 @@ const CommunityDetail = () => {
                         />
                         <button
                           onClick={() => handleReplySubmit(comment.id)}
-                          className="px-3 py-1 bg-[#8ed7af] text-white rounded-lg hover:bg-[#7bc89e] transition-colors"
+                          className="px-3 py-1 bg-[#8ed7af] text-white rounded-lg hover:bg-[#7bc89e] transition-colors shadow-sm hover:shadow-md"
                         >
                           등록
                         </button>
                         <button
                           onClick={handleReplyCancel}
-                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors shadow-sm hover:shadow-md"
                         >
                           취소
                         </button>
@@ -530,6 +533,7 @@ const CommunityDetail = () => {
                     </div>
                   )}
 
+                  {/* 답글 목록 */}
                   {comment.replies && comment.replies.length > 0 && (
                     <div className="mt-4 ml-4 space-y-2">
                       {comment.replies.map(reply => (
@@ -575,6 +579,7 @@ const CommunityDetail = () => {
             </form>
           </div>
 
+          {/* 좋아요 버튼 */}
           <div className="flex justify-center mt-8">
             <button
               onClick={handleLikeClick}
