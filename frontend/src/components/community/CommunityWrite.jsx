@@ -1,13 +1,38 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PostService } from '../../api';
+import usePostStore from '../../store/postStore';
 
 const CommunityWrite = () => {
+  const navigate = useNavigate();
+  const { createPost } = usePostStore();
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('시각장애');
+  const [file, setFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
+
+  // 파일 선택 핸들러
+  const handleFileChange = e => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+
+      // 이미지 미리보기 생성
+      const reader = new FileReader();
+      reader.onload = () => {
+        setFilePreview(reader.result);
+      };
+      reader.readAsDataURL(selectedFile);
+    }
+  };
+
+  // 파일 제거 핸들러
+  const handleRemoveFile = () => {
+    setFile(null);
+    setFilePreview(null);
+  };
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -29,6 +54,7 @@ const CommunityWrite = () => {
         .replace(/\. /g, '.')
         .replace(/\.$/, '');
 
+      // 게시글 데이터 구성
       const postData = {
         title,
         content,
@@ -39,9 +65,12 @@ const CommunityWrite = () => {
         likes: 0,
       };
 
-      const response = await PostService.createPost(postData);
+      // 파일이 있는 경우 URL 추가
+      if (filePreview) {
+        postData.fileUrl = filePreview;
+      }
 
-      console.log('게시글 작성 성공:', response.data);
+      await createPost(postData);
       alert('게시글이 성공적으로 등록되었습니다.');
       navigate('/community');
     } catch (error) {
@@ -54,7 +83,7 @@ const CommunityWrite = () => {
 
   return (
     <div className="mt-16 max-w-4xl mx-auto p-6 bg-gradient-to-br from-[#f5fdf5] to-[#e6f7f0] rounded-lg shadow-lg relative">
-      {/* 모든 배경 이미지들을 절대 위치로 배치 - 조정된 위치 */}
+      {/* 배경 이미지들 (기존 코드 유지) */}
       <img
         src="/src/assets/image/community/community_dot.svg"
         alt="도트 이미지"
@@ -141,6 +170,71 @@ const CommunityWrite = () => {
           className="w-full h-64 px-4 py-3 bg-white border border-[#e0e7e0] rounded-lg shadow-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8ed7af] resize-none"
           required
         />
+
+        {/* 파일 업로드 영역 */}
+        <div className="bg-white p-4 border border-[#e0e7e0] rounded-lg shadow-md">
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-medium text-gray-700">
+              이미지 첨부
+            </label>
+            {filePreview && (
+              <button
+                type="button"
+                onClick={handleRemoveFile}
+                className="text-sm text-red-500 hover:text-red-700"
+              >
+                삭제
+              </button>
+            )}
+          </div>
+
+          {filePreview ? (
+            <div className="mb-3">
+              <img
+                src={filePreview}
+                alt="미리보기"
+                className="max-h-40 rounded-lg mx-auto"
+              />
+            </div>
+          ) : (
+            <div
+              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer mb-3"
+              onClick={() => document.getElementById('file-upload').click()}
+            >
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 48 48"
+              >
+                <path
+                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <p className="mt-1 text-sm text-gray-500">
+                클릭하여 이미지를 업로드하세요
+              </p>
+              <p className="mt-1 text-xs text-gray-400">
+                PNG, JPG, GIF 파일 (최대 10MB)
+              </p>
+            </div>
+          )}
+
+          <input
+            id="file-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+
+          <div className="text-xs text-gray-500">
+            * 이미지는 게시글 내용에 표시됩니다.
+          </div>
+        </div>
 
         {/* 등록하기 버튼 */}
         <div className="flex justify-center">
