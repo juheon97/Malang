@@ -11,11 +11,13 @@ const VideoControls = ({
   isSignLanguageOn = false,
   toggleVoiceTranslation,
   toggleSignLanguage,
+  onLeaveChannel, // 새로운 prop 추가
 }) => {
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
       <div className="p-4 flex items-center justify-between">
         <div className="flex space-x-4">
+          {/* 마이크 버튼 */}
           <button
             onClick={toggleMic}
             className={`w-12 h-12 flex items-center justify-center rounded-full ${
@@ -57,6 +59,7 @@ const VideoControls = ({
               </div>
             )}
           </button>
+          {/* 카메라 버튼 */}
           <button
             onClick={toggleCamera}
             className={`w-12 h-12 flex items-center justify-center rounded-full ${
@@ -131,10 +134,13 @@ const VideoControls = ({
 
           {/* 나가기 버튼 */}
           <button
-            onClick={() => {
-              leaveSession();
-              window.location.href = '/counsel-channel';
-            }}
+            onClick={
+              onLeaveChannel ||
+              (() => {
+                leaveSession();
+                window.location.href = '/counsel-channel';
+              })
+            }
             className="w-12 h-12 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200"
           >
             <svg
