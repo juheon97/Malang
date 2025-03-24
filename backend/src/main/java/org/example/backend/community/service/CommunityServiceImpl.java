@@ -84,6 +84,7 @@ public class CommunityServiceImpl implements CommunityService {
                 .category(community.getCommunityCategory())
                 .title(community.getTitle())
                 .created_at(community.getCreatedAt())
+                .user_id(community.getUserId())
                 .likes(community.getLikes())
                 .is_liked(false) // 기능 구현 전까지 false로 설정
                 .build();
@@ -96,6 +97,21 @@ public class CommunityServiceImpl implements CommunityService {
         responseMap.put("data", dataMap);
 
         return responseMap;
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteArticle(Integer articleId, Long userId) {
+        Community community = communityRepository.findById(articleId)
+                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
+
+        // 임시로 null을 받아서 삭제를 진행함 나중에 jwt  토큰으로 userid보낼예정
+        if (userId != null && !community.getUserId().equals(userId)) {
+            return false; // 권한 없음
+        }
+
+        communityRepository.deleteById(articleId);
+        return true;
     }
 
     // 공통 응답 맵 생성 메서드

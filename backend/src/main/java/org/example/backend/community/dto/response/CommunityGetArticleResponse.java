@@ -16,6 +16,7 @@ public class CommunityGetArticleResponse {
     private String category;
     private String title;
     private LocalDateTime created_at;
+    private Long user_id;
     private Integer likes;
     private Boolean is_liked;
 }
