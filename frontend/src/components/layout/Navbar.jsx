@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import MallangLogo from '../../assets/image/Mallang_logo.svg';
+import MalangLogo from '../../assets/image/Malang_logo.svg';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -49,7 +49,7 @@ const Navbar = () => {
               {/* 로고 이미지에 고정 크기 적용 */}
               <div style={{ width: logoStyle.width, height: logoStyle.height }}>
                 <img
-                  src={MallangLogo}
+                  src={MalangLogo}
                   alt="말랑 로고"
                   style={logoStyle}
                   onLoad={() => {
