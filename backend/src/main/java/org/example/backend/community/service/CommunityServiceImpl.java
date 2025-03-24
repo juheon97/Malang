@@ -1,8 +1,10 @@
 package org.example.backend.community.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.community.dto.request.CommunityCreateRequest;
 import org.example.backend.community.dto.response.CommunityCreateResponse;
+import org.example.backend.community.dto.response.CommunityGetArticleResponse;
 import org.example.backend.community.dto.response.CommunityGetListsResponse;
 import org.example.backend.community.model.Community;
 import org.example.backend.community.repository.CommunityRepository;
@@ -68,6 +70,32 @@ public class CommunityServiceImpl implements CommunityService {
         Page<Community> communityPage = communityRepository.findByCategory(category, pageable);
 
         return createResponseMap(communityPage, page);
+    }
+
+    @Override
+    public Map<String, Object> getArticleById(Integer articleId, Long userId) {
+        // 게시글 조회
+        Community community = communityRepository.findByArticleId(articleId)
+                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다. ID: " + articleId));
+
+        // 응답 DTO 생성 - Builder 패턴 사용
+        CommunityGetArticleResponse articleResponse = CommunityGetArticleResponse.builder()
+                .article_id(community.getArticleId())
+                .category(community.getCommunityCategory())
+                .title(community.getTitle())
+                .created_at(community.getCreatedAt())
+                .likes(community.getLikes())
+                .is_liked(false) // 기능 구현 전까지 false로 설정
+                .build();
+
+        // 중첩 Map 구조로 응답 생성
+        Map<String, Object> dataMap = new HashMap<>();
+        dataMap.put("article", articleResponse);
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("status", "success");
+        responseMap.put("data", dataMap);
+
+        return responseMap;
     }
 
     // 공통 응답 맵 생성 메서드

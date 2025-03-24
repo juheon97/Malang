@@ -55,4 +55,15 @@ public class CommunityController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/article/{articleId}")
+    public ResponseEntity<Map<String, Object>> getArticleById(@PathVariable Integer articleId) {
+
+        // JWT 토큰이 준비 되면 진행
+        // Long userId = jwtTokenProvider.getUserIdFromToken();
+        Long userId = null;
+
+        Map<String, Object> response = communityService.getArticleById(articleId, userId);
+        return ResponseEntity.ok(response);
+    }
+
 }

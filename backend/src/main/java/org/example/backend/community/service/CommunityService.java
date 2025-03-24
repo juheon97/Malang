@@ -12,6 +12,6 @@ public interface CommunityService {
     Map<String, Object> getLatestArticles(int page, int size);
     Map<String, Object> getOldestArticles(int page, int size);
     Map<String, Object> getArticlesByCategory(String category, int page, int size);
-
+    Map<String, Object> getArticleById(Integer articleId, Long userId);
 
 }

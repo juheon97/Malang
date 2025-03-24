@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CommunityRepository extends JpaRepository<Community, Long> {
@@ -24,4 +25,7 @@ public interface CommunityRepository extends JpaRepository<Community, Long> {
     // 오래된순 정렬
     @Query("SELECT c FROM Community c ORDER BY c.createdAt")
     Page<Community> findAllOrderByCreatedAtAsc(Pageable pageable);
+
+    @Query("SELECT c FROM Community c WHERE c.articleId = :articleId")
+    Optional<Community> findByArticleId(@Param("articleId") Integer articleId);
 }
