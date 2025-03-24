@@ -7,16 +7,13 @@ import org.example.backend.community.dto.response.CommunityCreateResponse;
 import org.example.backend.community.service.CommunityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("api/community")
+@RequestMapping("/community")
 @RequiredArgsConstructor
 public class CommunityController {
 
@@ -32,4 +29,30 @@ public class CommunityController {
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
+    @GetMapping("/latest")
+    public ResponseEntity<Map<String, Object>> getLatestArticles(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue ="10") int size) {
+        Map<String, Object> response = communityService.getLatestArticles(page, size);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/oldest")
+    public ResponseEntity<Map<String, Object>> getOldestArticles(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Map<String, Object> response = communityService.getOldestArticles(page, size);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/category/{category}")
+    public ResponseEntity<Map<String, Object>> getArticlesByCategory(
+            @PathVariable String category,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Map<String, Object> response = communityService.getArticlesByCategory(category, page, size);
+        return ResponseEntity.ok(response);
+    }
+
 }
