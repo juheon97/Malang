@@ -16,6 +16,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * JWT 토큰을 검증하고 인증 정보를 설정하는 필터
@@ -25,6 +27,13 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
+    // 인증이 필요 없는 URL 패턴 목록
+    private static final List<String> AUTH_WHITELIST = Arrays.asList(
+            "/auth/login",
+            "/auth/signup",
+            "/auth/token/refresh"
+    );
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService userDetailsService;
@@ -41,6 +50,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
+     * 특정 요청 경로에 대해 필터를 적용하지 않도록 설정
+     *
+     * @param request 현재 HTTP 요청
+     * @return 필터를 적용하지 않을 경우 true, 적용할 경우 false
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath(); // getRequestURI() 대신 getServletPath() 사용
+
+        logger.debug("현재 요청 경로: {}", path);
+
+        // 정확한 경로 매칭을 위해 startsWith 사용
+        boolean shouldNotFilterResult = AUTH_WHITELIST.stream()
+                .anyMatch(pattern -> path.startsWith(pattern));
+
+        logger.debug("필터 제외 여부: {}", shouldNotFilterResult);
+
+        return shouldNotFilterResult;
+    }
+
+    /**
      * 요청이 들어올 때마다 JWT 토큰을 확인하고 유효한 경우 SecurityContext에 인증 정보 설정
      *
      * @param request HTTP 요청
@@ -52,6 +82,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+        String servletPath = request.getServletPath();
+        logger.debug("Request URI: {}, Servlet Path: {}", requestURI, servletPath);
+
         try {
             // HTTP 요청에서 JWT 토큰 추출
             String jwt = getJwtFromRequest(request);

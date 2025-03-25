@@ -114,6 +114,11 @@ public class SecurityConfig {
 
                 // HTTP 요청에 대한 권한 설정
                 .authorizeHttpRequests(auth -> auth
+                                // 개발 초기 단계에서는 모든 요청 허용 (테스트용)
+                                .anyRequest().permitAll()
+
+                        // 정상 동작 확인 후 아래 코드로 대체
+                        /*
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/public/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
@@ -123,19 +128,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/posts/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/posts/**").authenticated()
                         .anyRequest().authenticated()
+                        */
                 )
 
                 // 세션 관리 정책 설정 - 세션을 사용하지 않고 상태를 유지하지 않음
                 .sessionManagement(session -> session
                         // 세션 생성 정책을 STATELESS로 설정 - JWT 인증을 위한 설정
                         .sessionCreationPolicy(STATELESS)
-                        // 세션 고정 보호 활성화
-                        // JWT를 사용하므로 세션이 생성되지 않지만, 추가적인 보안을 위해 설정
-                        .sessionFixation().changeSessionId()
-                        // 최대 세션 수 제한 (JWT 사용 시 효과 없음)
-                        .maximumSessions(1)
-                        // 새 로그인 시 기존 세션 만료 (JWT 사용 시 효과 없음)
-                        .maxSessionsPreventsLogin(false)
                 )
 
                 // UserDetailsService 설정
@@ -151,10 +150,11 @@ public class SecurityConfig {
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             sendErrorResponse(response, HttpStatus.FORBIDDEN, "해당 리소스에 접근할 권한이 없습니다.");
                         })
-                )
+                );
 
-                // JWT 인증 필터 추가
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        // 개발 초기 단계에서는 JWT 인증 필터 비활성화 (테스트용)
+        // 정상 동작 확인 후 아래 코드 주석 해제
+        // http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
