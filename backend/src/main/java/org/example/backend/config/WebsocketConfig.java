@@ -13,7 +13,7 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/sub"); // 구독(subscribe) 요청을 처리할 prefix 설정, 클라이언트가 "/sub/..."로 시작하는 주제를 구독할 수 있음
-        registry.setApplicationDestinationPrefixes("/pub"); // 클라이언트에서 서버로 메시지를 발행할 때 사용할 prefix 설정, 클라이언트가 "/pub/..."로 메시지를 보내면 @MessageMapping이 처리함
+        registry.setApplicationDestinationPrefixes("/pub"); // 발행(publish)클라이언트에서 서버로 메시지를 발행할 때 사용할 prefix 설정, 클라이언트가 "/pub/..."로 메시지를 보내면 @MessageMapping이 처리함
     }
 
 
