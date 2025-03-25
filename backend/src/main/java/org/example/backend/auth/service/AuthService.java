@@ -23,6 +23,7 @@ import java.util.Optional;
 @Service
 public class AuthService {
 
+    private final RefreshTokenService refreshTokenService;
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
@@ -36,10 +37,14 @@ public class AuthService {
      * @param passwordEncoder 비밀번호 암호화 도구
      * @param jwtTokenProvider JWT 토큰 생성 도구
      */
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
+    public AuthService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtTokenProvider jwtTokenProvider,
+                       RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.refreshTokenService = refreshTokenService;
     }
 
     /**
@@ -111,6 +116,19 @@ public class AuthService {
         // JWT 토큰 생성
         JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto(user);
         logger.info("로그인 성공 및 토큰 발급: {}", user.getEmail());
+
+        // ✅ Redis에 RefreshToken 저장
+        refreshTokenService.save(
+                user.getId(),
+                jwtTokenDto.getRefreshToken(),
+                jwtTokenDto.getRefreshTokenExpiresIn()
+        );
+        logger.info("리프레시 토큰 정상 저장: userid : {}, refreshtoken : {}, refreshtokenexpiresin : {}",
+                user.getId(),
+                jwtTokenDto.getRefreshToken(),
+                jwtTokenDto.getRefreshTokenExpiresIn());
+
+        refreshTokenService.logCurrentTTL(user.getId());
 
         // 토큰 응답 객체 생성 및 반환
         return TokenResponse.from(jwtTokenDto, String.valueOf(user.getId()), user.getNickname());
