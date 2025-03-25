@@ -21,7 +21,7 @@ import java.util.Map;
  * 인증 관련 API 엔드포인트를 제공하는 컨트롤러
  */
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
