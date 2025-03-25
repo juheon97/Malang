@@ -11,6 +11,7 @@ public class TokenResponse {
     private String refreshToken;
     private String tokenType;
     private Long expiresIn;
+    private Long refreshTokenExpiresIn;
     private String userId;
     private String nickname;
 
@@ -32,6 +33,7 @@ public class TokenResponse {
         response.setRefreshToken(jwtTokenDto.getRefreshToken());
         response.setTokenType(jwtTokenDto.getTokenType());
         response.setExpiresIn(jwtTokenDto.getExpiresIn());
+        response.setRefreshTokenExpiresIn(jwtTokenDto.getRefreshTokenExpiresIn());
         response.setUserId(userId);
         response.setNickname(nickname);
         return response;
@@ -68,6 +70,14 @@ public class TokenResponse {
 
     public void setExpiresIn(Long expiresIn) {
         this.expiresIn = expiresIn;
+    }
+
+    public Long getRefreshTokenExpiresIn() {
+        return refreshTokenExpiresIn;
+    }
+
+    public void setRefreshTokenExpiresIn(Long refreshTokenExpiresIn) {
+        this.refreshTokenExpiresIn = refreshTokenExpiresIn;
     }
 
     public String getUserId() {

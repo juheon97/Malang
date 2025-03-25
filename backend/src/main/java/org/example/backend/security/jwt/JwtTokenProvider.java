@@ -130,7 +130,9 @@ public class JwtTokenProvider {
         return new JwtTokenDto(
                 accessToken,
                 refreshToken,
-                accessTokenValidityInMilliseconds / 1000);
+                JwtConfig.TOKEN_TYPE,
+                accessTokenValidityInMilliseconds / 1000,
+                refreshTokenValidityInMilliseconds / 1000);  // refreshToken 만료 시간 추가
     }
 
     /**
@@ -146,7 +148,9 @@ public class JwtTokenProvider {
         return new JwtTokenDto(
                 accessToken,
                 refreshToken,
-                accessTokenValidityInMilliseconds / 1000);
+                JwtConfig.TOKEN_TYPE,
+                accessTokenValidityInMilliseconds / 1000,
+                refreshTokenValidityInMilliseconds / 1000);  // refreshToken 만료 시간 추가
     }
 
     /**
@@ -176,7 +180,9 @@ public class JwtTokenProvider {
             return new JwtTokenDto(
                     newAccessToken,
                     refreshToken,  // 기존 리프레시 토큰 재사용
-                    accessTokenValidityInMilliseconds / 1000);
+                    JwtConfig.TOKEN_TYPE,
+                    accessTokenValidityInMilliseconds / 1000,
+                    refreshTokenValidityInMilliseconds / 1000);  // refreshToken 만료 시간 추가
         } catch (io.jsonwebtoken.ExpiredJwtException e) {
             throw new Exception("Expired refresh token");
         } catch (Exception e) {

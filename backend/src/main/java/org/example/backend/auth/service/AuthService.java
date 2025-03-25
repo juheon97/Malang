@@ -146,6 +146,7 @@ public class AuthService {
             response.setRefreshToken(jwtTokenDto.getRefreshToken());
             response.setTokenType(jwtTokenDto.getTokenType());
             response.setExpiresIn(jwtTokenDto.getExpiresIn());
+            response.setRefreshTokenExpiresIn(jwtTokenDto.getRefreshTokenExpiresIn());
             return response;
         }
     }
