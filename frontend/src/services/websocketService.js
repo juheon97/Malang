@@ -8,7 +8,7 @@ class WebSocketService {
     this.isConnected = false;
 
     // WebSocket 서버 연결 URL
-    this.brokerURL = 'wss://e027-14-46-141-204.ngrok-free.app/ws';
+    this.brokerURL = 'wss://backend.takustory.site/api/ws';
   }
 
   connect() {
