@@ -1,8 +1,16 @@
 package org.example.backend.auth.dto.request;
 
 import jakarta.validation.constraints.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class CounselorSignupRequest extends SignupRequest {
 
     @NotBlank(message = "이름은 필수 입력 항목입니다.")
@@ -29,11 +37,6 @@ public class CounselorSignupRequest extends SignupRequest {
     @NotNull(message = "자격증 여부는 필수 입력 항목입니다.")
     private Boolean hasCertification;
 
-    // 기본 생성자
-    public CounselorSignupRequest() {
-        super();
-    }
-
     // 모든 필드를 매개변수로 받는 생성자
     public CounselorSignupRequest(String email, String password, String nickname, String profileUrl,
                                   String name, String gender, Integer birthYear, Integer birthMonth,
@@ -44,55 +47,6 @@ public class CounselorSignupRequest extends SignupRequest {
         this.birthYear = birthYear;
         this.birthMonth = birthMonth;
         this.birthDay = birthDay;
-        this.hasCertification = hasCertification;
-    }
-
-    // Getter 및 Setter
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public Integer getBirthYear() {
-        return birthYear;
-    }
-
-    public void setBirthYear(Integer birthYear) {
-        this.birthYear = birthYear;
-    }
-
-    public Integer getBirthMonth() {
-        return birthMonth;
-    }
-
-    public void setBirthMonth(Integer birthMonth) {
-        this.birthMonth = birthMonth;
-    }
-
-    public Integer getBirthDay() {
-        return birthDay;
-    }
-
-    public void setBirthDay(Integer birthDay) {
-        this.birthDay = birthDay;
-    }
-
-    public Boolean getHasCertification() {
-        return hasCertification;
-    }
-
-    public void setHasCertification(Boolean hasCertification) {
         this.hasCertification = hasCertification;
     }
 

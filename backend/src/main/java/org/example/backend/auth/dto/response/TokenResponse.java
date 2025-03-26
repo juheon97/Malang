@@ -1,10 +1,16 @@
 package org.example.backend.auth.dto.response;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
 import org.example.backend.security.jwt.JwtTokenDto;
 
 /**
  * 인증 성공 시 클라이언트에게 반환하는 토큰 정보 DTO 클래스
  */
+@Getter
+@Setter
+@NoArgsConstructor
 public class TokenResponse {
 
     private String accessToken;
@@ -14,10 +20,6 @@ public class TokenResponse {
     private Long refreshTokenExpiresIn;
     private String userId;
     private String nickname;
-
-    // 기본 생성자
-    public TokenResponse() {
-    }
 
     /**
      * JwtTokenDto로부터 TokenResponse 객체 생성
@@ -37,62 +39,5 @@ public class TokenResponse {
         response.setUserId(userId);
         response.setNickname(nickname);
         return response;
-    }
-
-    // Getter 및 Setter
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
-    public String getTokenType() {
-        return tokenType;
-    }
-
-    public void setTokenType(String tokenType) {
-        this.tokenType = tokenType;
-    }
-
-    public Long getExpiresIn() {
-        return expiresIn;
-    }
-
-    public void setExpiresIn(Long expiresIn) {
-        this.expiresIn = expiresIn;
-    }
-
-    public Long getRefreshTokenExpiresIn() {
-        return refreshTokenExpiresIn;
-    }
-
-    public void setRefreshTokenExpiresIn(Long refreshTokenExpiresIn) {
-        this.refreshTokenExpiresIn = refreshTokenExpiresIn;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
     }
 }
