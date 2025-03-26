@@ -1,50 +1,94 @@
-// src/components/signup/SignupNormal.jsx
 import React from 'react';
 
 const SignupNormal = ({
-  name,
-  setName,
+  nickname,
+  setNickname,
   email,
   setEmail,
   password,
   setPassword,
+  confirmPassword,
+  setConfirmPassword,
   isVisuallyImpaired,
   setIsVisuallyImpaired,
+  fieldErrors = {},
 }) => {
   const handleVisualImpairmentChange = () => {
     setIsVisuallyImpaired(!isVisuallyImpaired);
   };
 
   return (
-    <form className="w-full max-w-[800px]">
+    <>
       <div className="mb-6 flex flex-col items-start">
-        <label className="w-full text-xl text-gray-800 mb-2">이름 :</label>
+        <label className="w-full text-xl text-gray-800 mb-2">닉네임 :</label>
         <input
           type="text"
-          className="w-4/5 py-3 px-4 border-[3px] border-gray-300 rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]"
-          value={name}
-          onChange={e => setName(e.target.value)}
+          className={`w-4/5 py-3 px-4 border-[3px] ${
+            fieldErrors.nickname ? 'border-red-500' : 'border-gray-300'
+          } rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]`}
+          value={nickname}
+          onChange={e => setNickname(e.target.value)}
         />
+        {fieldErrors.nickname && (
+          <span className="text-red-500 text-sm mt-1">
+            {fieldErrors.nickname}
+          </span>
+        )}
       </div>
 
       <div className="mb-6 flex flex-col items-start">
         <label className="w-full text-xl text-gray-800 mb-2">이메일 :</label>
         <input
           type="email"
-          className="w-4/5 py-3 px-4 border-[3px] border-gray-300 rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]"
+          className={`w-4/5 py-3 px-4 border-[3px] ${
+            fieldErrors.email ? 'border-red-500' : 'border-gray-300'
+          } rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]`}
           value={email}
           onChange={e => setEmail(e.target.value)}
         />
+        {fieldErrors.email && (
+          <span className="text-red-500 text-sm mt-1">{fieldErrors.email}</span>
+        )}
       </div>
 
       <div className="mb-6 flex flex-col items-start">
         <label className="w-full text-xl text-gray-800 mb-2">비밀번호 :</label>
         <input
           type="password"
-          className="w-4/5 py-3 px-4 border-[3px] border-gray-300 rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]"
+          className={`w-4/5 py-3 px-4 border-[3px] ${
+            fieldErrors.password ? 'border-red-500' : 'border-gray-300'
+          } rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]`}
           value={password}
           onChange={e => setPassword(e.target.value)}
         />
+        {fieldErrors.password && (
+          <span className="text-red-500 text-sm mt-1">
+            {fieldErrors.password}
+          </span>
+        )}
+        <p className="text-gray-500 text-sm mt-2">
+          비밀번호는 최소 8자 이상이며, 영문자, 숫자, 특수문자를 포함해야
+          합니다.
+        </p>
+      </div>
+
+      <div className="mb-6 flex flex-col items-start">
+        <label className="w-full text-xl text-gray-800 mb-2">
+          비밀번호 확인 :
+        </label>
+        <input
+          type="password"
+          className={`w-4/5 py-3 px-4 border-[3px] ${
+            fieldErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+          } rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]`}
+          value={confirmPassword}
+          onChange={e => setConfirmPassword(e.target.value)}
+        />
+        {fieldErrors.confirmPassword && (
+          <span className="text-red-500 text-sm mt-1">
+            {fieldErrors.confirmPassword}
+          </span>
+        )}
       </div>
 
       <div className="mb-6 flex flex-col items-start">
@@ -95,7 +139,14 @@ const SignupNormal = ({
           </div>
         </div>
       </div>
-    </form>
+
+      <div className="mb-6">
+        <p className="text-gray-600 text-sm">
+          * 시각장애 여부를 '예'로 선택하시면 화면 읽기 기능이 향상된 서비스를
+          이용하실 수 있습니다.
+        </p>
+      </div>
+    </>
   );
 };
 
