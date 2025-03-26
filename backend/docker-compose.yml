@@ -26,6 +26,12 @@ services:
     restart: always
     networks:
       - app-network
+    depends_on:
+      - backend-app1
+      - backend-app2
+      - frontend-app
+      - portainer
+      - jenkins
 
 volumes:
   redis_data:
