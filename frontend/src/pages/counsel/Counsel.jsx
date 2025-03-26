@@ -598,7 +598,7 @@ const Counsel = () => {
             {displayCounselors.map(counselor => (
               <div
                 key={counselor.id}
-                className="bg-white rounded-xl overflow-hidden transform transition-all duration-300 hover:scale-105 hover:-translate-y-1"
+                className="bg-white rounded-xl overflow-hidden transform transition-all duration-300 hover:scale-100 hover:-translate-y-1"
                 style={{
                   boxShadow:
                     '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
@@ -608,7 +608,7 @@ const Counsel = () => {
                 <div
                   className="relative p-5 text-center"
                   style={{
-                    background: `linear-gradient(135deg, #79E7B7 0%, #08976E 100%)`,
+                    background: `linear-gradient(135deg,rgb(173, 237, 209) 0%,rgb(40, 154, 122) 100%)`,
                     boxShadow: '0 4px 6px -1px rgba(8, 151, 110, 0.2)',
                   }}
                 >
@@ -782,25 +782,12 @@ const Counsel = () => {
                     </p>
                   </div>
 
-                  <div className="border-t border-gray-100 pt-1.5 mb-1">
-                    <div className="flex items-center justify-center">
-                      <div className="flex items-center text-green-500">
-                        <span className="w-2 h-2 bg-green-500 rounded-full mr-2 shadow-sm"></span>
-                        <span className="text-xs">
-                          {counselor.isAvailable
-                            ? '현재 상담 가능 상태입니다.'
-                            : '현재 상담이 불가능합니다.'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* 상담 요청 버튼 */}
                   <button
                     className="w-1/2 mx-auto block text-white py-2 rounded-full font-medium transition duration-200 transform hover:scale-105 mt-auto"
                     style={{
                       background: counselor.isAvailable
-                        ? 'linear-gradient(to right, #79E7B7, #08976E)'
+                        ? 'linear-gradient(to right,rgb(125, 233, 188),rgb(64, 193, 126))'
                         : 'linear-gradient(to right, #9CA3AF, #6B7280)',
                       boxShadow: counselor.isAvailable
                         ? '0 4px 6px -1px rgba(8, 151, 110, 0.3), 0 2px 4px -1px rgba(8, 151, 110, 0.1)'

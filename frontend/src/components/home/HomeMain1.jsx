@@ -1,4 +1,3 @@
-// src/components/home/HomeMain1.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext'; // AuthContext 불러오기
@@ -19,7 +18,7 @@ import MainDot2 from '../../assets/image/homemain1/Main1_dot2.svg';
 
 const HomeMain1 = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth(); // 현재 로그인한 사용자 정보 가져오기
+  const { currentUser, isLoading } = useAuth(); // 로딩 상태도 함께 가져오기
 
   return (
     <div
@@ -136,28 +135,36 @@ const HomeMain1 = () => {
         </p>
 
         {/* 로그인 상태에 따라 버튼 표시 여부 결정 */}
-        {!currentUser ? (
-          <div className={styles.heroButtons}>
-            <button
-              className={styles.homeSignupBtn}
-              onClick={() => navigate('/Signup')}
-            >
-              회원가입
-            </button>
-            <button
-              className={styles.loginBtn}
-              onClick={() => navigate('/login')}
-            >
-              로그인
-            </button>
-          </div>
-        ) : (
-          // 로그인된 경우 버튼 영역의 공간은 유지하되 버튼은 숨김
-          <div className={styles.heroButtons} style={{ visibility: 'hidden' }}>
-            <button className={styles.homeSignupBtn}>회원가입</button>
-            <button className={styles.loginBtn}>로그인</button>
-          </div>
-        )}
+        {/* 로딩 중에는 버튼을 숨기고, 로딩 완료 후 로그인 상태에 따라 표시 */}
+        <div
+          className={styles.heroButtons}
+          style={{
+            visibility: isLoading
+              ? 'hidden'
+              : !currentUser
+                ? 'visible'
+                : 'hidden',
+            // 높이를 유지하면서 투명하게 처리
+            height: isLoading || !!currentUser ? '48px' : 'auto',
+          }}
+        >
+          {!isLoading && !currentUser && (
+            <>
+              <button
+                className={styles.homeSignupBtn}
+                onClick={() => navigate('/Signup')}
+              >
+                회원가입
+              </button>
+              <button
+                className={styles.loginBtn}
+                onClick={() => navigate('/login')}
+              >
+                로그인
+              </button>
+            </>
+          )}
+        </div>
       </div>
       {/* 녹색 원 이미지를 hero-section에 절대 위치로 배치 및 애니메이션 추가 */}
       <img
