@@ -5,7 +5,6 @@ import org.example.backend.common.exception.ErrorResponse;
 import org.example.backend.security.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -86,7 +85,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         // CORS 설정
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", " http://J12D110.p.ssafy.io:5176"));
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:5173",
+                "http://J12D110.p.ssafy.io:5176",
+                "https://*.ngrok-free.app"  // 이건 반드시 allowedOriginPatterns 로만 가능
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
@@ -114,21 +117,18 @@ public class SecurityConfig {
 
                 // HTTP 요청에 대한 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                                // 개발 초기 단계에서는 모든 요청 허용 (테스트용)
-                                .anyRequest().permitAll()
-
-                        // 정상 동작 확인 후 아래 코드로 대체
-                        /*
-                        .requestMatchers("/auth/**").permitAll()
+                        // 인증 관련 엔드포인트는 모든 사용자 접근 허용
+                        .requestMatchers("/auth/login", "/auth/signup", "/auth/signup/counselor", "/auth/token/refresh").permitAll()
+                        // 공개 리소스는 모든 사용자 접근 허용
                         .requestMatchers("/public/**").permitAll()
+                        // Swagger UI 및 API 문서 접근 허용
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // 정적 리소스 접근 허용
                         .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/posts/**").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/posts/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/posts/**").authenticated()
+                        // Community 모든 요청은 인증 필요 (GET 포함)
+                        .requestMatchers("/community/**").authenticated()
+                        // 기타 모든 요청은 인증 필요
                         .anyRequest().authenticated()
-                        */
                 )
 
                 // 세션 관리 정책 설정 - 세션을 사용하지 않고 상태를 유지하지 않음
@@ -152,9 +152,8 @@ public class SecurityConfig {
                         })
                 );
 
-        // 개발 초기 단계에서는 JWT 인증 필터 비활성화 (테스트용)
-        // 정상 동작 확인 후 아래 코드 주석 해제
-        // http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        // JWT 인증 필터 활성화
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
