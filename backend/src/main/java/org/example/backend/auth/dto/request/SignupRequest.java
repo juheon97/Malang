@@ -4,10 +4,19 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.ToString;
 
 /**
  * 회원가입 요청 시 클라이언트로부터 전달받는 데이터를 담는 DTO 클래스
  */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class SignupRequest {
 
     @NotBlank(message = "이메일은 필수 입력 항목입니다.")
@@ -26,58 +35,6 @@ public class SignupRequest {
 
     // 프로필 URL (선택 사항)
     private String profileUrl;
-
-    // 기본 생성자
-    public SignupRequest() {
-    }
-
-    // 필수 필드를 매개변수로 받는 생성자
-    public SignupRequest(String email, String password, String nickname) {
-        this.email = email;
-        this.password = password;
-        this.nickname = nickname;
-    }
-
-    // 모든 필드를 매개변수로 받는 생성자
-    public SignupRequest(String email, String password, String nickname, String profileUrl) {
-        this.email = email;
-        this.password = password;
-        this.nickname = nickname;
-        this.profileUrl = profileUrl;
-    }
-
-    // Getter 및 Setter
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    public String getProfileUrl() {
-        return profileUrl;
-    }
-
-    public void setProfileUrl(String profileUrl) {
-        this.profileUrl = profileUrl;
-    }
 
     @Override
     public String toString() {
