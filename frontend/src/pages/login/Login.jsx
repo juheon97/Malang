@@ -83,7 +83,7 @@ const Login = () => {
   };
 
   const handleLogin = async e => {
-    e.preventDefault();
+    e.preventDefault(); // 폼 제출의 기본 동작 방지 (페이지 새로고침 방지)
     setError('');
     setFieldErrors({});
 
@@ -168,7 +168,7 @@ const Login = () => {
             Log in
           </h1>
 
-          <form className="w-full" onSubmit={handleLogin}>
+          <form className="w-full" onSubmit={handleLogin} noValidate>
             {/* 에러 메시지 표시 */}
             {error && (
               <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
