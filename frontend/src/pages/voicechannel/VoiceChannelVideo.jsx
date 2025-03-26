@@ -114,6 +114,7 @@ function VoiceChannelVideo() {
             currentUserId={currentUserId}
           />
         </div>
+
         <VideoControls
           isMicOn={isMicOn}
           isCameraOn={isCameraOn}

@@ -132,7 +132,7 @@ const VoiceChannel = () => {
     setShowWaitingModal(false);
     console.log('입장 요청 취소');
 
-    // 접근성 모드
+    // 접근성 모드에서 포커스 복원
     if (isAccessibleMode && previousFocusRef.current) {
       previousFocusRef.current.focus();
     }
@@ -143,13 +143,13 @@ const VoiceChannel = () => {
     setShowPasswordModal(false);
     setShowWaitingModal(false);
 
-    // 접근성 모드
+    // 접근성 모드에서 포커스 복원
     if (isAccessibleMode && previousFocusRef.current) {
       previousFocusRef.current.focus();
     }
   };
 
-  // 원형 그라데이션
+  // 원형 그라데이션 (원래 코드 유지)
   const pageStyle = {
     backgroundImage: `
       radial-gradient(circle at 10% 30%, rgba(121, 231, 183, 0.2) 0%, rgba(255, 255, 255, 0) 15%),
@@ -217,7 +217,7 @@ const VoiceChannel = () => {
             </p>
           )}
 
-          {/* 검색창 */}
+          {/* 검색창 - 기존 스타일 유지 */}
           <div className="mb-12 flex justify-left">
             <div className="bg-white p-2 rounded-xl shadow-md w-full max-w-md">
               <div className="relative">
@@ -396,7 +396,7 @@ const VoiceChannel = () => {
                 )}
               </div>
             ) : (
-              // 일반 모드용 채널 목록
+              // 일반 모드용 채널 목록 - 원래 그리드 유지
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {filteredChannels.map(channel => (
                   <div
