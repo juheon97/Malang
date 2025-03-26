@@ -1,3 +1,4 @@
+// src/components/community/CommunityWrite.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import usePostStore from '../../store/postStore';
@@ -82,42 +83,8 @@ const CommunityWrite = () => {
   };
 
   return (
-    <div className="mt-16 max-w-4xl mx-auto p-6 bg-gradient-to-br from-[#f5fdf5] to-[#e6f7f0] rounded-lg shadow-lg relative">
-      {/* 배경 이미지들 (기존 코드 유지) */}
-      <img
-        src="/src/assets/image/community/community_dot.svg"
-        alt="도트 이미지"
-        className="absolute"
-        style={{
-          left: '-168px',
-          top: '280px',
-          zIndex: '-1',
-        }}
-      />
-      <img
-        src="/src/assets/image/community/community_green_circle.svg"
-        alt="초록 원 이미지"
-        className="absolute"
-        style={{
-          right: '-248px',
-          top: '-10px',
-          zIndex: '-1',
-        }}
-      />
-      <img
-        src="/src/assets/image/community/community_yellow_green.svg"
-        alt="노란초록 이미지"
-        className="absolute"
-        style={{
-          left: '-328px',
-          top: '-160px',
-          width: '500px',
-          height: '500px',
-          zIndex: '-1',
-        }}
-      />
-
-      <h1 className="text-3xl font-bold text-center text-[#00a173] mb-8 relative">
+    <div className="max-w-4xl mx-auto p-6 bg-gradient-to-br from-[#f5fdf5] to-[#e6f7f0] rounded-lg shadow-lg">
+      <h1 className="text-3xl font-bold text-center text-[#00a173] mb-8">
         커뮤니티
       </h1>
 
