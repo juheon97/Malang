@@ -1,10 +1,15 @@
 package org.example.backend.auth.service;
 
+import org.example.backend.auth.dto.request.CounselorSignupRequest;
 import org.example.backend.auth.dto.request.LoginRequest;
 import org.example.backend.auth.dto.request.SignupRequest;
 import org.example.backend.auth.dto.response.TokenResponse;
+import org.example.backend.auth.model.Counselor;
+import org.example.backend.auth.model.CounselorProfile;
 import org.example.backend.auth.model.Role;
 import org.example.backend.auth.model.User;
+import org.example.backend.auth.repository.CounselorProfileRepository;
+import org.example.backend.auth.repository.CounselorRepository;
 import org.example.backend.auth.repository.UserRepository;
 import org.example.backend.security.jwt.JwtTokenDto;
 import org.example.backend.security.jwt.JwtTokenProvider;
@@ -30,21 +35,31 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
+    private final CounselorRepository counselorRepository;
+    private final CounselorProfileRepository counselorProfileRepository;
+
     /**
      * 생성자를 통한 의존성 주입
      *
      * @param userRepository 사용자 정보 접근 저장소
      * @param passwordEncoder 비밀번호 암호화 도구
      * @param jwtTokenProvider JWT 토큰 생성 도구
+     * @param refreshTokenService 리프레시 토큰 서비스
+     * @param counselorRepository 상담사 정보 접근 저장소
+     * @param counselorProfileRepository 상담사 프로필 정보 접근 저장소
      */
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtTokenProvider jwtTokenProvider,
-                       RefreshTokenService refreshTokenService) {
+                       RefreshTokenService refreshTokenService,
+                       CounselorRepository counselorRepository,
+                       CounselorProfileRepository counselorProfileRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenService = refreshTokenService;
+        this.counselorRepository = counselorRepository;
+        this.counselorProfileRepository = counselorProfileRepository;
     }
 
     /**
@@ -64,11 +79,11 @@ public class AuthService {
             throw new IllegalArgumentException("이미 등록된 이메일입니다.");
         }
 
-        // 닉네임 중복 검사
-        if (userRepository.existsByNickname(signupRequest.getNickname())) {
-            logger.error("이미 사용 중인 닉네임: {}", signupRequest.getNickname());
-            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
-        }
+//        // 닉네임 중복 검사
+//        if (userRepository.existsByNickname(signupRequest.getNickname())) {
+//            logger.error("이미 사용 중인 닉네임: {}", signupRequest.getNickname());
+//            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+//        }
 
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
@@ -89,6 +104,75 @@ public class AuthService {
         return savedUser;
     }
 
+    /**
+     * 상담사 회원가입 처리
+     *
+     * @param request 상담사 회원가입 요청 데이터
+     * @return 가입된 상담사 정보와 사용자 정보
+     * @throws IllegalArgumentException 유효하지 않은 요청 데이터인 경우
+     */
+    @Transactional
+    public Counselor signupCounselor(CounselorSignupRequest request) {
+        logger.info("상담사 회원가입 처리 시작: {}", request.getEmail());
+
+        // 이메일 중복 검사
+        if (userRepository.existsByEmail(request.getEmail())) {
+            logger.error("이미 등록된 이메일: {}", request.getEmail());
+            throw new IllegalArgumentException("이미 등록된 이메일입니다.");
+        }
+
+//        // 닉네임 중복 검사
+//        if (userRepository.existsByNickname(request.getNickname())) {
+//            logger.error("이미 사용 중인 닉네임: {}", request.getNickname());
+//            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+//        }
+
+        // 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+
+        // 사용자 엔티티 생성 (상담사 역할 부여)
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(encodedPassword)
+                .nickname(request.getNickname())
+                .profileUrl(request.getProfileUrl())
+                .role(Role.ROLE_COUNSELOR.getValue()) // 상담사 역할 부여
+                .build();
+
+        // 사용자 정보 저장
+        User savedUser = userRepository.save(user);
+        logger.info("사용자 정보 저장 완료: {}", savedUser.getEmail());
+
+        // UUID 생성 (상담사 ID)
+        String counselorId = java.util.UUID.randomUUID().toString();
+
+        // 상담사 엔티티 생성
+        Counselor counselor = Counselor.builder()
+                .id(counselorId)
+                .user(savedUser)
+                .name(request.getName())
+                .gender(request.getGender())
+                .birthdate(request.getBirthdate())
+                .build();
+
+        // 상담사 정보 저장
+        Counselor savedCounselor = counselorRepository.save(counselor);
+        logger.info("상담사 정보 저장 완료: {}", savedCounselor.getId());
+
+        // 상담사 프로필 엔티티 생성 (자격증 정보 포함)
+        CounselorProfile counselorProfile = CounselorProfile.builder()
+                .id(counselorId)
+                .user(savedUser)
+                .certifications(request.getCertificationString()) // Y 또는 N
+                .status(0) // 기본 상태 (0)
+                .build();
+
+        // 상담사 프로필 정보 저장
+        CounselorProfile savedProfile = counselorProfileRepository.save(counselorProfile);
+        logger.info("상담사 프로필 정보 저장 완료: {}", savedProfile.getId());
+
+        return savedCounselor;
+    }
     /**
      * 로그인 처리
      *

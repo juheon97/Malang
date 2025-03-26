@@ -1,9 +1,12 @@
 package org.example.backend.auth.controller;
 
 import jakarta.validation.Valid;
+import org.example.backend.auth.dto.request.CounselorSignupRequest;
 import org.example.backend.auth.dto.request.LoginRequest;
 import org.example.backend.auth.dto.request.SignupRequest;
+import org.example.backend.auth.dto.response.CounselorSignupResponse;
 import org.example.backend.auth.dto.response.TokenResponse;
+import org.example.backend.auth.model.Counselor;
 import org.example.backend.auth.model.User;
 import org.example.backend.auth.service.AuthService;
 import org.example.backend.security.jwt.JwtConfig;
@@ -75,6 +78,46 @@ public class AuthController {
         }
     }
 
+
+    /**
+     * 상담사 회원가입 API 엔드포인트
+     *
+     * @param request 상담사 회원가입 요청 데이터
+     * @return 회원가입 결과
+     */
+    @PostMapping("/signup/counselor")
+    public ResponseEntity<?> signupCounselor(@Valid @RequestBody CounselorSignupRequest request) {
+        logger.info("상담사 회원가입 요청 수신: {}", request.getEmail());
+
+        try {
+            // 상담사 회원가입 처리
+            Counselor counselor = authService.signupCounselor(request);
+
+            // 성공 응답 생성
+            CounselorSignupResponse response = CounselorSignupResponse.from(
+                    counselor,
+                    request.getHasCertification(),
+                    "상담사 회원가입이 성공적으로 완료되었습니다."
+            );
+
+            logger.info("상담사 회원가입 요청 처리 완료: {}", response.getEmail());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            // 중복 이메일, 닉네임 등 검증 오류
+            logger.error("상담사 회원가입 실패: {}", e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+        } catch (Exception e) {
+            // 기타 서버 오류
+            logger.error("상담사 회원가입 중 예외 발생: {}", e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "상담사 회원가입 처리 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+
     /**
      * 로그인 API 엔드포인트
      *
@@ -109,7 +152,7 @@ public class AuthController {
     /**
      * 토큰 갱신 API 엔드포인트
      *
-     * @param request 요청 객체 (헤더에서 리프레시 토큰 추출)
+     * @paramrequest 요청 객체 (헤더에서 리프레시 토큰 추출)
      * @return 새로운 액세스 토큰
      */
     @PostMapping("/token/refresh")
