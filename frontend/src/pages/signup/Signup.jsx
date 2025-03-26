@@ -1,58 +1,202 @@
-// src/components/signup/Signup.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SignupNormal from '../../components/signup/SignupNormal';
 import SignupCounselor from '../../components/signup/SignupCounselor';
-// Signup 컴포넌트에서 사용하는 circle 이미지들
+import authApi from '../../api/authApi';
+import {
+  validatePassword,
+  validateEmail,
+  validateNickname,
+} from '../../utils/authUtils';
+
+// 배경 이미지 import
 import greenCircle from '../../assets/image/signup/signup_green_circle.svg';
 import redCircle from '../../assets/image/signup/signup_red_circle.svg';
 import yellowCircle from '../../assets/image/signup/signup_yellow_circle.svg';
 
 const Signup = () => {
-  const [userType, setUserType] = useState('일반인 사용자');
+  const navigate = useNavigate();
+  const [userType, setUserType] = useState('normal'); // 'normal' 또는 'counselor'
 
-  // 공통 상태 (이름, 이메일, 비밀번호 필드용)
-  const [name, setName] = useState('');
+  // 공통 정보
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
-  // 일반인 사용자 상태
-  const [isVisuallyImpaired, setIsVisuallyImpaired] = useState(true);
+  // 일반 사용자 정보
+  const [nickname, setNickname] = useState('');
+  const [isVisuallyImpaired, setIsVisuallyImpaired] = useState(false);
 
-  // 상담사 상태
+  // 상담사 정보
+  const [name, setName] = useState('');
   const [gender, setGender] = useState('남');
   const [birthYear, setBirthYear] = useState(1990);
   const [birthMonth, setBirthMonth] = useState(1);
   const [birthDay, setBirthDay] = useState(1);
-  const [hasCertification, setHasCertification] = useState(true);
+  const [hasCertification, setHasCertification] = useState(false);
+
+  // 폼 상태
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  // 이미 로그인한 사용자는 홈으로 리다이렉트
+  useEffect(() => {
+    const token = sessionStorage.getItem('token');
+    if (token) {
+      navigate('/');
+    }
+  }, [navigate]);
+
+  // 폼 유효성 검사
+  const validateForm = () => {
+    const errors = {};
+    let isValid = true;
+
+    // 이메일 검사
+    if (!email.trim()) {
+      errors.email = '이메일을 입력해주세요.';
+      isValid = false;
+    } else if (!validateEmail(email)) {
+      errors.email = '유효한 이메일 형식이 아닙니다.';
+      isValid = false;
+    }
+
+    // 비밀번호 검사
+    if (!password.trim()) {
+      errors.password = '비밀번호를 입력해주세요.';
+      isValid = false;
+    } else if (!validatePassword(password)) {
+      errors.password =
+        '비밀번호는 최소 8자 이상이며, 영문자, 숫자, 특수문자를 포함해야 합니다.';
+      isValid = false;
+    }
+
+    // 비밀번호 확인 검사
+    if (password !== confirmPassword) {
+      errors.confirmPassword = '비밀번호가 일치하지 않습니다.';
+      isValid = false;
+    }
+
+    // 사용자 유형별 추가 검사
+    if (userType === 'normal') {
+      if (!nickname.trim()) {
+        errors.nickname = '닉네임을 입력해주세요.';
+        isValid = false;
+      } else if (!validateNickname(nickname)) {
+        errors.nickname = '닉네임은 2~20자 사이여야 합니다.';
+        isValid = false;
+      }
+    } else {
+      if (!name.trim()) {
+        errors.name = '이름을 입력해주세요.';
+        isValid = false;
+      }
+    }
+
+    setFieldErrors(errors);
+    return isValid;
+  };
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+    setError('');
+    setFieldErrors({});
+
+    // 폼 유효성 검사
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      let response;
+
+      if (userType === 'normal') {
+        // 일반 사용자 회원가입
+        const userData = {
+          nickname,
+          user_email: email,
+          password,
+          isVisuallyImpaired,
+        };
+
+        response = await authApi.registerUser(userData);
+      } else {
+        // 상담사 회원가입
+        // 생년월일을 YYYY-MM-DD 형식으로 포맷팅
+        const formattedBirthDate = `${birthYear}-${String(birthMonth).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}`;
+
+        const userData = {
+          counselor_name: name,
+          user_email: email,
+          password: password,
+          counselor_gender: gender === '남' ? 'M' : 'F', // 성별 포맷 변환
+          counselor_birthdate: formattedBirthDate, // 포맷팅된 생년월일 사용
+          certification: hasCertification,
+        };
+
+        response = await authApi.registerCounselor(userData);
+      }
+
+      console.log('회원가입 성공:', response.data);
+
+      // 회원가입 성공 시 로그인 페이지로 이동
+      alert(
+        `${userType === 'normal' ? '일반회원' : '상담사'} 회원가입이 완료되었습니다.`,
+      );
+      navigate('/login');
+    } catch (error) {
+      console.error('회원가입 실패:', error);
+
+      // 서버 에러 메시지 처리
+      if (error.response && error.response.data) {
+        // 필드 에러 처리
+        if (error.response.data.fieldErrors) {
+          setFieldErrors(error.response.data.fieldErrors);
+        } else {
+          setError(error.response.data.message || '회원가입에 실패했습니다.');
+        }
+      } else {
+        setError(
+          '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleUserTypeChange = type => {
-    // 현재 선택된 타입과 다른 경우에만 상태 초기화
-    if (userType !== type) {
-      setUserType(type);
+    const newType = type === '일반인 사용자' ? 'normal' : 'counselor';
+    if (userType !== newType) {
+      setUserType(newType);
 
-      // 타입별 상태 초기화
-      if (type === '일반인 사용자') {
-        // 일반인 사용자로 변경 시 일반인 상태 초기화
-        setIsVisuallyImpaired(true);
+      // 기존 입력값 초기화
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setError('');
+      setFieldErrors({});
+
+      if (newType === 'normal') {
+        setNickname('');
+        setIsVisuallyImpaired(false);
       } else {
-        // 상담사로 변경 시 상담사 상태 초기화
+        setName('');
         setGender('남');
         setBirthYear(1990);
         setBirthMonth(1);
         setBirthDay(1);
-        setHasCertification(true);
+        setHasCertification(false);
       }
-
-      // 공통 입력 필드도 초기화
-      setName('');
-      setEmail('');
-      setPassword('');
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col relative bg-white">
-      {/* 배경 원형 이미지들 - 절대적인 위치(px)로 수정 */}
+      {/* 배경 원형 이미지들 */}
       <img
         src={greenCircle}
         alt="Green Circle"
@@ -69,71 +213,380 @@ const Signup = () => {
         className="absolute -top-[150px] -right-[50px] z-0"
       />
 
-      <div className="max-w-[1200px] m-0 py-10 px-5 flex-grow relative z-10">
+      <div className="max-w-[1200px] ml-10 py-10 flex-grow relative z-10">
         <h1 className="text-[#00775c] text-4xl font-bold mb-5">회원가입</h1>
         <div className="w-full h-px bg-gray-200 mb-8"></div>
 
+        {/* 에러 메시지 표시 */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+
         <div className="flex gap-3 mb-8">
-          <button
+          <button // src/pages/signup/Signup.jsx (계속)
             className={`py-2.5 px-5 rounded-full cursor-pointer outline-none text-xl min-w-[120px] text-center whitespace-nowrap border-[4px] ${
-              userType === '일반인 사용자'
+              userType === 'normal'
                 ? 'border-[#92e4d1] text-black shadow-md bg-white'
                 : 'border-transparent text-gray-500 bg-white'
             }`}
             onClick={() => handleUserTypeChange('일반인 사용자')}
+            type="button"
           >
             일반인 사용자
           </button>
           <button
             className={`py-2.5 px-5 rounded-full cursor-pointer outline-none text-xl min-w-[120px] text-center whitespace-nowrap border-[4px] ${
-              userType === '상담사'
+              userType === 'counselor'
                 ? 'border-[#92e4d1] text-black shadow-md bg-white'
                 : 'border-transparent text-gray-500 bg-white'
             }`}
             onClick={() => handleUserTypeChange('상담사')}
+            type="button"
           >
             상담사
           </button>
         </div>
 
-        {userType === '일반인 사용자' ? (
-          <SignupNormal
-            name={name}
-            setName={setName}
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            isVisuallyImpaired={isVisuallyImpaired}
-            setIsVisuallyImpaired={setIsVisuallyImpaired}
-          />
-        ) : (
-          <SignupCounselor
-            name={name}
-            setName={setName}
-            email={email}
-            setEmail={setEmail}
-            password={password}
-            setPassword={setPassword}
-            gender={gender}
-            setGender={setGender}
-            birthYear={birthYear}
-            setBirthYear={setBirthYear}
-            birthMonth={birthMonth}
-            setBirthMonth={setBirthMonth}
-            birthDay={birthDay}
-            setBirthDay={setBirthDay}
-            hasCertification={hasCertification}
-            setHasCertification={setHasCertification}
-          />
-        )}
+        <form onSubmit={handleSubmit} className="w-full max-w-[800px]">
+          {userType === 'normal' ? (
+            <SignupNormal
+              nickname={nickname}
+              setNickname={setNickname}
+              email={email}
+              setEmail={setEmail}
+              password={password}
+              setPassword={setPassword}
+              confirmPassword={confirmPassword}
+              setConfirmPassword={setConfirmPassword}
+              isVisuallyImpaired={isVisuallyImpaired}
+              setIsVisuallyImpaired={setIsVisuallyImpaired}
+              fieldErrors={fieldErrors}
+            />
+          ) : (
+            <SignupCounselor
+              name={name}
+              setName={setName}
+              email={email}
+              setEmail={setEmail}
+              password={password}
+              setPassword={setPassword}
+              confirmPassword={confirmPassword}
+              setConfirmPassword={setConfirmPassword}
+              gender={gender}
+              setGender={setGender}
+              birthYear={birthYear}
+              setBirthYear={setBirthYear}
+              birthMonth={birthMonth}
+              setBirthMonth={setBirthMonth}
+              birthDay={birthDay}
+              setBirthDay={setBirthDay}
+              hasCertification={hasCertification}
+              setHasCertification={setHasCertification}
+              fieldErrors={fieldErrors}
+            />
+          )}
 
-        <button className="bg-[#00775c] text-white border-none rounded-3xl py-3 px-10 text-xl font-semibold cursor-pointer mt-5 absolute bottom-10 right-10 hover:bg-[#005e49]">
-          회원가입
-        </button>
+          <div className="flex justify-between items-center mt-8">
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              className="text-[#00775c] hover:underline"
+            >
+              이미 계정이 있으신가요? 로그인
+            </button>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`bg-[#00775c] text-white border-none rounded-3xl py-3 px-10 text-xl font-semibold cursor-pointer ${
+                isSubmitting
+                  ? 'opacity-70 cursor-not-allowed'
+                  : 'hover:bg-[#005e49]'
+              }`}
+            >
+              {isSubmitting ? '처리 중...' : '회원가입'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
 };
 
 export default Signup;
+
+// // src/pages/signup/Signup.jsx
+// import React, { useState, useEffect } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import SignupNormal from '../../components/signup/SignupNormal';
+// import SignupCounselor from '../../components/signup/SignupCounselor';
+// import authApi from '../../api/authApi';
+// // 배경 이미지 import
+// import greenCircle from '../../assets/image/signup/signup_green_circle.svg';
+// import redCircle from '../../assets/image/signup/signup_red_circle.svg';
+// import yellowCircle from '../../assets/image/signup/signup_yellow_circle.svg';
+
+// const Signup = () => {
+//   const navigate = useNavigate();
+//   const [userType, setUserType] = useState('normal'); // 'normal' 또는 'counselor'
+
+//   // 공통 정보
+//   const [email, setEmail] = useState('');
+//   const [password, setPassword] = useState('');
+
+//   // 일반 사용자 정보
+//   const [nickname, setNickname] = useState('');
+//   const [isVisuallyImpaired, setIsVisuallyImpaired] = useState(false);
+
+//   // 상담사 정보
+//   const [name, setName] = useState('');
+//   const [gender, setGender] = useState('남');
+//   const [birthYear, setBirthYear] = useState(1990);
+//   const [birthMonth, setBirthMonth] = useState(1);
+//   const [birthDay, setBirthDay] = useState(1);
+//   const [hasCertification, setHasCertification] = useState(false);
+
+//   // navbar 높이를 저장할 상태
+//   const [navbarHeight, setNavbarHeight] = useState(0);
+//   const [error, setError] = useState('');
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+
+//   // 컴포넌트 마운트 시 navbar 높이를 측정
+//   useEffect(() => {
+//     const navbar = document.querySelector('nav');
+//     if (navbar) {
+//       setNavbarHeight(navbar.offsetHeight);
+//     }
+//   }, []);
+
+//   // 폼 유효성 검사
+//   const validateForm = () => {
+//     if (userType === 'normal') {
+//       if (!nickname.trim()) {
+//         setError('닉네임을 입력해주세요.');
+//         return false;
+//       }
+//     } else {
+//       if (!name.trim()) {
+//         setError('이름을 입력해주세요.');
+//         return false;
+//       }
+//     }
+
+//     if (!email.trim()) {
+//       setError('이메일을 입력해주세요.');
+//       return false;
+//     }
+
+//     if (!password.trim()) {
+//       setError('비밀번호를 입력해주세요.');
+//       return false;
+//     }
+
+//     if (password.length < 6) {
+//       setError('비밀번호는 최소 6자 이상이어야 합니다.');
+//       return false;
+//     }
+
+//     // 이메일 형식 검사
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (!emailRegex.test(email)) {
+//       setError('유효한 이메일 주소를 입력해주세요.');
+//       return false;
+//     }
+
+//     return true;
+//   };
+
+//   const handleSubmit = async e => {
+//     e.preventDefault();
+//     setError('');
+
+//     // 폼 유효성 검사
+//     if (!validateForm()) {
+//       return;
+//     }
+
+//     setIsSubmitting(true);
+
+//     try {
+//       let response;
+
+//       if (userType === 'normal') {
+//         // 일반 사용자 회원가입
+//         const userData = {
+//           nickname,
+//           user_email: email,
+//           password,
+//           isVisuallyImpaired,
+//         };
+
+//         response = await authApi.registerUser(userData);
+//       } else {
+//         // 상담사 회원가입
+//         // 생년월일을 YYYY-MM-DD 형식으로 포맷팅
+//         const formattedBirthDate = `${birthYear}-${String(birthMonth).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}`;
+
+//         const userData = {
+//           role: 'counselor',
+//           counselor_name: name,
+//           user_email: email,
+//           password: password,
+//           counselor_gender: gender === '남' ? 'M' : 'F', // 성별 포맷 변환
+//           counselor_birthdate: formattedBirthDate, // 포맷팅된 생년월일 사용
+//           certification: hasCertification,
+//         };
+
+//         response = await authApi.registerCounselor(userData);
+//       }
+
+//       console.log('회원가입 성공:', response.data);
+
+//       // 회원가입 성공 시 로그인 페이지로 이동
+//       alert(
+//         `${userType === 'normal' ? '일반회원' : '상담사'} 회원가입이 완료되었습니다.`,
+//       );
+//       navigate('/login');
+//     } catch (error) {
+//       console.error('회원가입 실패:', error);
+
+//       // 서버 에러 메시지 처리
+//       if (error.response && error.response.data) {
+//         setError(error.response.data.message || '회원가입에 실패했습니다.');
+//       } else {
+//         setError(
+//           '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+//         );
+//       }
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+//   const handleUserTypeChange = type => {
+//     const newType = type === '일반인 사용자' ? 'normal' : 'counselor';
+//     if (userType !== newType) {
+//       setUserType(newType);
+
+//       // 기존 입력값 초기화
+//       setEmail('');
+//       setPassword('');
+
+//       if (newType === 'normal') {
+//         setNickname('');
+//         setIsVisuallyImpaired(false);
+//       } else {
+//         setName('');
+//         setGender('남');
+//         setBirthYear(1990);
+//         setBirthMonth(1);
+//         setBirthDay(1);
+//         setHasCertification(false);
+//       }
+//     }
+//   };
+
+//   return (
+//     <div className="min-h-screen flex flex-col relative bg-white">
+//       {/* 배경 원형 이미지들 */}
+//       <img
+//         src={greenCircle}
+//         alt="Green Circle"
+//         className="absolute -top-[250px] -right-[350px] z-0 w-[600px] h-[600px]"
+//       />
+//       <img
+//         src={redCircle}
+//         alt="Red Circle"
+//         className="absolute top-[300px] -right-[400px] z-0 w-[800px] h-[800px]"
+//       />
+//       <img
+//         src={yellowCircle}
+//         alt="Yellow Circle"
+//         className="absolute -top-[150px] -right-[50px] z-0"
+//       />
+
+//       <div className="max-w-[1200px] m-0 py-10 px-5 flex-grow relative z-10">
+//         <h1 className="text-[#00775c] text-4xl font-bold mb-5">회원가입</h1>
+//         <div className="w-full h-px bg-gray-200 mb-8"></div>
+
+//         {/* 에러 메시지 표시 */}
+//         {error && (
+//           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+//             {error}
+//           </div>
+//         )}
+
+//         <div className="flex gap-3 mb-8">
+//           <button
+//             className={`py-2.5 px-5 rounded-full cursor-pointer outline-none text-xl min-w-[120px] text-center whitespace-nowrap border-[4px] ${
+//               userType === 'normal'
+//                 ? 'border-[#92e4d1] text-black shadow-md bg-white'
+//                 : 'border-transparent text-gray-500 bg-white'
+//             }`}
+//             onClick={() => handleUserTypeChange('일반인 사용자')}
+//           >
+//             일반인 사용자
+//           </button>
+//           <button
+//             className={`py-2.5 px-5 rounded-full cursor-pointer outline-none text-xl min-w-[120px] text-center whitespace-nowrap border-[4px] ${
+//               userType === 'counselor'
+//                 ? 'border-[#92e4d1] text-black shadow-md bg-white'
+//                 : 'border-transparent text-gray-500 bg-white'
+//             }`}
+//             onClick={() => handleUserTypeChange('상담사')}
+//           >
+//             상담사
+//           </button>
+//         </div>
+
+//         {userType === 'normal' ? (
+//           <SignupNormal
+//             nickname={nickname}
+//             setNickname={setNickname}
+//             email={email}
+//             setEmail={setEmail}
+//             password={password}
+//             setPassword={setPassword}
+//             isVisuallyImpaired={isVisuallyImpaired}
+//             setIsVisuallyImpaired={setIsVisuallyImpaired}
+//           />
+//         ) : (
+//           <SignupCounselor
+//             name={name}
+//             setName={setName}
+//             email={email}
+//             setEmail={setEmail}
+//             password={password}
+//             setPassword={setPassword}
+//             gender={gender}
+//             setGender={setGender}
+//             birthYear={birthYear}
+//             setBirthYear={setBirthYear}
+//             birthMonth={birthMonth}
+//             setBirthMonth={setBirthMonth}
+//             birthDay={birthDay}
+//             setBirthDay={setBirthDay}
+//             hasCertification={hasCertification}
+//             setHasCertification={setHasCertification}
+//           />
+//         )}
+
+//         <button
+//           onClick={handleSubmit}
+//           disabled={isSubmitting}
+//           className={`bg-[#00775c] text-white border-none rounded-3xl py-3 px-10 text-xl font-semibold cursor-pointer mt-5 absolute bottom-10 right-10 ${
+//             isSubmitting
+//               ? 'opacity-70 cursor-not-allowed'
+//               : 'hover:bg-[#005e49]'
+//           }`}
+//         >
+//           {isSubmitting ? '처리 중...' : '회원가입'}
+//         </button>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default Signup;
