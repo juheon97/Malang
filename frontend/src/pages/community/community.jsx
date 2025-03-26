@@ -34,8 +34,8 @@ const Community = () => {
         alt="노란초록 이미지"
         className="fixed"
         style={{
-          left: '-200px',
-          top: '-160px',
+          left: '-5px',
+          top: '-60px',
           width: '500px',
           height: '500px',
           zIndex: '-1',
@@ -48,12 +48,12 @@ const Community = () => {
     <div className="mt-16 relative">
       {/* 공통 배경 이미지 */}
       {backgroundImages}
-      
+
       {/* 라우팅 설정 */}
       <Routes>
         <Route path="/" element={<CommunityList />} />
-        <Route path="/:id" element={<CommunityDetail />} />
         <Route path="/write" element={<CommunityWrite />} />
+        <Route path="/:id" element={<CommunityDetail />} />
         <Route path="*" element={<Navigate to="/community" />} />
       </Routes>
     </div>

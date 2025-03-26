@@ -8,5 +8,5 @@ export default defineConfig({
     port: 5176,
     host: true,
     allowedHosts: ["j12d110.p.ssafy.io", "all"]
-  }
+  },
 })
