@@ -11,11 +11,7 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\""
   },
   "dependencies": {
-<<<<<<< HEAD
-    "axios": "^1.8.3",
-=======
     "axios": "^1.8.4",
->>>>>>> origin/frontend
     "openvidu-browser": "^2.31.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

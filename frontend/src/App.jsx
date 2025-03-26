@@ -15,6 +15,7 @@ import CounselChannelRoom from './pages/counselchannel/CounselChannelRoom';
 import CounselChannelVideo from './pages/counselchannel/CounselChannelVideo';
 import VoiceChange from './pages/VoiceChange';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import CommunityWrite from './components/community/CommunityWrite';
 
 function App() {
   return (
@@ -31,8 +32,6 @@ function App() {
             <Route path="/counsel-channel" element={<Counsel />} />
             <Route path="/voice-channel" element={<VoiceChannel />} />
             <Route path="/voice-channel-room" element={<VoiceChannelRoom />} />
-            <Route path="/community" element={<CommunityList />} />
-            <Route path="/community/:id" element={<CommunityDetail />} />
 
             {/* 보호된 라우트 - 인증 필요 */}
             <Route
