@@ -15,7 +15,7 @@ const VideoControls = ({
 }) => {
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-      <div className="p-4 flex items-center justify-between">
+      <div className="p-2 flex items-center justify-between">
         <div className="flex space-x-4">
           {/* 마이크 버튼 */}
           <button
