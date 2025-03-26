@@ -11,7 +11,9 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\""
   },
   "dependencies": {
+    "@stomp/stompjs": "^7.1.0",
     "axios": "^1.8.3",
+    "openvidu-browser": "^2.31.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.3.0",
