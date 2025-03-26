@@ -26,13 +26,11 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/Signup" element={<Signup />} />
-<<<<<<< HEAD
             <Route path="/mypage" element={<Mypage />} />
             <Route path="/community/*" element={<Community />} />
             <Route path="/counsel-channel" element={<Counsel />} />
             <Route path="/voice-channel" element={<VoiceChannel />} />
             <Route path="/voice-channel-room" element={<VoiceChannelRoom />} />
-=======
             <Route path="/community" element={<CommunityList />} />
             <Route path="/community/:id" element={<CommunityDetail />} />
 
@@ -77,7 +75,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
->>>>>>> origin/frontend
             <Route
               path="/voice-channel-video"
               element={
