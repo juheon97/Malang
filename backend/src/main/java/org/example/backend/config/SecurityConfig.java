@@ -91,7 +91,7 @@ public class SecurityConfig {
                 "https://*.ngrok-free.app"  // 이건 반드시 allowedOriginPatterns 로만 가능
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Upgrade", "Connection"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
@@ -129,6 +129,8 @@ public class SecurityConfig {
                         .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                         // Community 모든 요청은 인증 필요 (GET 포함)
                         .requestMatchers("/community/**").authenticated()
+                        // WebScoket 관련 엔드포인트 접근 허용
+                        .requestMatchers("/ws/**", "/sub/**", "/pub/**").permitAll()
                         // 기타 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
