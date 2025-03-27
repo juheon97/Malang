@@ -101,14 +101,9 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Override
     @Transactional
-    public boolean deleteArticle(Integer articleId, Long userId) {
+    public boolean deleteArticle(Integer articleId) {
         Community community = communityRepository.findById(articleId)
                 .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
-
-        // 임시로 null을 받아서 삭제를 진행함 나중에 jwt  토큰으로 userid보낼예정
-        if (userId != null && !community.getUserId().equals(userId)) {
-            return false; // 권한 없음
-        }
 
         communityRepository.deleteById(articleId);
         return true;
