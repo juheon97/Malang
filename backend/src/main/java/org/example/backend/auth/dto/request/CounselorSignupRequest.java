@@ -41,7 +41,7 @@ public class CounselorSignupRequest extends SignupRequest {
     public CounselorSignupRequest(String email, String password, String nickname, String profileUrl,
                                   String name, String gender, Integer birthYear, Integer birthMonth,
                                   Integer birthDay, Boolean hasCertification) {
-        super(email, password, nickname, profileUrl);
+        super(email, password, nickname, profileUrl, null);
         this.name = name;
         this.gender = gender;
         this.birthYear = birthYear;

@@ -95,6 +95,7 @@ public class AuthService {
                 .nickname(signupRequest.getNickname())
                 .profileUrl(signupRequest.getProfileUrl())
                 .role(Role.ROLE_USER.getValue()) // 기본적으로 일반 사용자 역할 부여
+                .disabilityStatus(signupRequest.getDisabilityStatus()) // 시각장애 여부 추가
                 .build();
 
         // 사용자 정보 저장
@@ -137,6 +138,7 @@ public class AuthService {
                 .nickname(request.getNickname())
                 .profileUrl(request.getProfileUrl())
                 .role(Role.ROLE_COUNSELOR.getValue()) // 상담사 역할 부여
+                .disabilityStatus(null) // 상담사는 시각장애 여부 해당 없음
                 .build();
 
         // 사용자 정보 저장

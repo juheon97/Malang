@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class Counselor {
 
     @Id
-    @Column(name = "counselor_id", length = 36)
+    @Column(name = "counselor_id", columnDefinition = "char(36)")
     private String id;
 
     @OneToOne
