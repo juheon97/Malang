@@ -53,11 +53,6 @@ function CounselChannelRoom() {
 
       <div className="w-full max-w-4xl bg-[#EFF5F2] rounded-xl p-6 shadow-xl border border-[#e0f5e9] relative">
         {/* 상단 배지 */}
-        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] text-white px-6 py-2 rounded-full shadow-md">
-          <span className="font-semibold">
-            새로운 상담 공간을 만들어보세요!
-          </span>
-        </div>
 
         <div className="flex flex-col md:flex-row gap-6 mt-8">
           {/* 방 유형 선택 */}
@@ -256,63 +251,6 @@ function CounselChannelRoom() {
                 </div>
               </div>
 
-              {/* 방 설정 추가 옵션 */}
-              <div className="mb-8 bg-[#f9fcfa] p-4 rounded-lg border border-[#e0e0e0]">
-                <p className="flex items-center text-sm font-medium text-gray-700 mb-3">
-                  <svg
-                    className="w-5 h-5 mr-2 text-[#3FB06C]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                    ></path>
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    ></path>
-                  </svg>
-                  추가 설정
-                </p>
-
-                <div className="flex flex-wrap gap-3">
-                  <label className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-200 cursor-pointer hover:border-[#5CCA88] transition-all">
-                    <input
-                      type="checkbox"
-                      className="form-checkbox text-[#3FB06C] rounded"
-                    />
-                    <span className="text-sm text-gray-700">비밀번호 설정</span>
-                  </label>
-
-                  <label className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-200 cursor-pointer hover:border-[#5CCA88] transition-all">
-                    <input
-                      type="checkbox"
-                      className="form-checkbox text-[#3FB06C] rounded"
-                    />
-                    <span className="text-sm text-gray-700">
-                      입장 승인 필요
-                    </span>
-                  </label>
-
-                  <label className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-200 cursor-pointer hover:border-[#5CCA88] transition-all">
-                    <input
-                      type="checkbox"
-                      className="form-checkbox text-[#3FB06C] rounded"
-                    />
-                    <span className="text-sm text-gray-700">
-                      채팅 기능 활성화
-                    </span>
-                  </label>
-                </div>
-              </div>
-
               <div className="flex justify-end">
                 <button
                   type="submit"
@@ -359,8 +297,7 @@ function CounselChannelRoom() {
             <p>
               <span className="font-medium text-gray-700">도움말:</span> 상담
               채널을 생성하면 상담사님만의 공간이 만들어집니다. 최대 4명까지
-              참여할 수 있으며, 필요에 따라 비밀번호를 설정하여 보안을 강화할 수
-              있습니다.
+              참여할 수 있으며, 입장 요청을 수락 혹은 거절할 수 있습니다.
             </p>
           </div>
         </div>
