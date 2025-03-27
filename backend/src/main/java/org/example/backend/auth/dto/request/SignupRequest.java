@@ -36,6 +36,9 @@ public class SignupRequest {
     // 프로필 URL (선택 사항)
     private String profileUrl;
 
+    // 시각장애 여부 (선택 사항)
+    private Boolean disabilityStatus;
+
     @Override
     public String toString() {
         return "SignupRequest{" +
@@ -43,6 +46,7 @@ public class SignupRequest {
                 ", password='[PROTECTED]'" +
                 ", nickname='" + nickname + '\'' +
                 ", profileUrl='" + profileUrl + '\'' +
+                ", disabilityStatus=" + disabilityStatus +
                 '}';
     }
 }

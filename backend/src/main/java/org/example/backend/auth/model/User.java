@@ -33,13 +33,19 @@ public class User extends BaseTimeEntity {
     @Column(name = "user_nickname", nullable = false)
     private String nickname;
 
+    // 시각장애 여부 필드 추가
+    @Column(name = "disability_status")
+    private Boolean disabilityStatus;
+
+
     @Builder
-    public User(String email, String password, String profileUrl, String role, String nickname) {
+    public User(String email, String password, String profileUrl, String role, String nickname, Boolean disabilityStatus) {
         this.email = email;
         this.password = password;
         this.profileUrl = profileUrl;
         this.role = role;
         this.nickname = nickname;
+        this.disabilityStatus = disabilityStatus;
     }
 
     public void updateProfile(String profileUrl, String nickname) {
