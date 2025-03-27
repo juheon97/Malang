@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function CounselChannelRoom() {
@@ -7,9 +7,20 @@ function CounselChannelRoom() {
     roomName: '',
     password: '',
     description: '',
-    maxUsers: '4',
+    maxUsers: '1', // 일반상담 기본값 1로 변경
     roomType: '일반상담', // 기본 방 유형
   });
+
+  // 방 타입에 따른 최대 인원 처리
+  useEffect(() => {
+    // 일반상담은 최대 1명, 그룹상담은 최대 3명으로 설정
+    const maxAllowed = formData.roomType === '일반상담' ? 1 : 3;
+
+    // 현재 설정된 인원수가 허용 범위를 벗어나면 조정
+    if (parseInt(formData.maxUsers) > maxAllowed) {
+      setFormData(prev => ({ ...prev, maxUsers: maxAllowed.toString() }));
+    }
+  }, [formData.roomType]);
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -17,9 +28,10 @@ function CounselChannelRoom() {
   };
 
   const increaseMaxUsers = () => {
+    const maxAllowed = formData.roomType === '일반상담' ? 1 : 3;
     setFormData(prev => ({
       ...prev,
-      maxUsers: Math.min(parseInt(prev.maxUsers) + 1, 4).toString(),
+      maxUsers: Math.min(parseInt(prev.maxUsers) + 1, maxAllowed).toString(),
     }));
   };
 
@@ -27,6 +39,17 @@ function CounselChannelRoom() {
     setFormData(prev => ({
       ...prev,
       maxUsers: Math.max(parseInt(prev.maxUsers) - 1, 1).toString(),
+    }));
+  };
+
+  // 방 타입 변경 핸들러
+  const handleRoomTypeChange = roomType => {
+    const maxAllowed = roomType === '일반상담' ? 1 : 3;
+    setFormData(prev => ({
+      ...prev,
+      roomType,
+      // 방 타입에 맞게 최대 인원 자동 조정
+      maxUsers: Math.min(parseInt(prev.maxUsers), maxAllowed).toString(),
     }));
   };
 
@@ -60,21 +83,54 @@ function CounselChannelRoom() {
             <h3 className="text-gray-700 font-semibold mb-4">방 유형</h3>
 
             <div className="space-y-3">
-              <div className="flex items-center bg-gradient-to-b from-[#E0FEE0] to-[#B0DAAF] rounded-lg shadow-md p-3 cursor-pointer transition-transform hover:scale-105">
-                <div className="text-green-600 mr-2">✓</div>
-                <span className="text-sm font-semibold text-gray-700">
+              <div
+                className={`flex items-center ${
+                  formData.roomType === '일반상담'
+                    ? 'bg-gradient-to-b from-[#E0FEE0] to-[#B0DAAF]'
+                    : 'bg-white border border-gray-200'
+                } rounded-lg shadow-md p-3 cursor-pointer transition-transform hover:scale-105`}
+                onClick={() => handleRoomTypeChange('일반상담')}
+              >
+                <div
+                  className={
+                    formData.roomType === '일반상담'
+                      ? 'text-green-600'
+                      : 'text-gray-400'
+                  }
+                  mr-2
+                >
+                  {formData.roomType === '일반상담' ? '✓' : '○'}
+                </div>
+                <span
+                  className={`text-sm ${formData.roomType === '일반상담' ? 'font-semibold text-gray-700' : 'text-gray-600'}`}
+                >
                   일반 상담
                 </span>
               </div>
 
-              <div className="flex items-center bg-white border border-gray-200 rounded-lg p-3 cursor-pointer transition-all hover:bg-[#f0f9f4] hover:shadow-md">
-                <div className="text-gray-400 mr-2">○</div>
-                <span className="text-sm text-gray-600">그룹 상담</span>
-              </div>
-
-              <div className="flex items-center bg-white border border-gray-200 rounded-lg p-3 cursor-pointer transition-all hover:bg-[#f0f9f4] hover:shadow-md">
-                <div className="text-gray-400 mr-2">○</div>
-                <span className="text-sm text-gray-600">특화 상담</span>
+              <div
+                className={`flex items-center ${
+                  formData.roomType === '그룹상담'
+                    ? 'bg-gradient-to-b from-[#E0FEE0] to-[#B0DAAF]'
+                    : 'bg-white border border-gray-200'
+                } rounded-lg p-3 cursor-pointer transition-all hover:bg-[#f0f9f4] hover:shadow-md`}
+                onClick={() => handleRoomTypeChange('그룹상담')}
+              >
+                <div
+                  className={
+                    formData.roomType === '그룹상담'
+                      ? 'text-green-600'
+                      : 'text-gray-400'
+                  }
+                  mr-2
+                >
+                  {formData.roomType === '그룹상담' ? '✓' : '○'}
+                </div>
+                <span
+                  className={`text-sm ${formData.roomType === '그룹상담' ? 'font-semibold text-gray-700' : 'text-gray-600'}`}
+                >
+                  그룹 상담
+                </span>
               </div>
             </div>
 
@@ -84,7 +140,9 @@ function CounselChannelRoom() {
                 <span className="block font-medium text-[#3FB06C] mb-1">
                   TIP
                 </span>
-                방 유형에 따라 필요한 설정이 달라질 수 있어요.
+                {formData.roomType === '일반상담'
+                  ? '일반 상담은 1:1 상담으로 제한됩니다.'
+                  : '그룹 상담은 최대 3명까지 참여할 수 있습니다.'}
               </p>
             </div>
           </div>
@@ -198,63 +256,37 @@ function CounselChannelRoom() {
                     <div className="flex flex-col">
                       <button
                         type="button"
-                        className="text-xs px-2 text-gray-500 hover:text-[#3FB06C] leading-none"
+                        className={`text-xs px-2 ${parseInt(formData.maxUsers) >= (formData.roomType === '일반상담' ? 1 : 3) ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-[#3FB06C]'} leading-none`}
                         onClick={increaseMaxUsers}
+                        disabled={
+                          parseInt(formData.maxUsers) >=
+                          (formData.roomType === '일반상담' ? 1 : 3)
+                        }
                       >
                         ▲
                       </button>
                       <button
                         type="button"
-                        className="text-xs text-gray-500 hover:text-[#3FB06C] leading-none"
+                        className={`text-xs ${parseInt(formData.maxUsers) <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-[#3FB06C]'} leading-none`}
                         onClick={decreaseMaxUsers}
+                        disabled={parseInt(formData.maxUsers) <= 1}
                       >
                         ▼
                       </button>
                     </div>
                   </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="roomType"
-                    className="block font-semibold text-base text-gray-600 mb-3 flex items-center"
-                  >
-                    <svg
-                      className="w-5 h-5 mr-2 text-[#3FB06C]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                      ></path>
-                    </svg>
-                    상담 카테고리
-                  </label>
-                  <select
-                    id="roomType"
-                    name="roomType"
-                    value={formData.roomType}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5CCA88] transition-all bg-white"
-                  >
-                    <option value="일반상담">일반 상담</option>
-                    <option value="가족상담">가족 상담</option>
-                    <option value="학업상담">학업 상담</option>
-                    <option value="대인관계">대인관계</option>
-                    <option value="직장생활">직장 생활</option>
-                  </select>
+                  <div className="mt-2 text-xs text-gray-500">
+                    {formData.roomType === '일반상담'
+                      ? '일반 상담은 최대 1명까지 가능합니다.'
+                      : '그룹 상담은 최대 3명까지 가능합니다.'}
+                  </div>
                 </div>
               </div>
 
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white font-semibold shadow-lg px-14 py-3 rounded-2xl text-base transition-all transform hover:scale-105 flex items-center"
+                  className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white font-semibold shadow-lg px-5 py-3 rounded-2xl text-base transition-all transform hover:scale-105 flex items-center"
                 >
                   <svg
                     className="w-5 h-5 mr-2"
@@ -296,8 +328,9 @@ function CounselChannelRoom() {
             </svg>
             <p>
               <span className="font-medium text-gray-700">도움말:</span> 상담
-              채널을 생성하면 상담사님만의 공간이 만들어집니다. 최대 4명까지
-              참여할 수 있으며, 입장 요청을 수락 혹은 거절할 수 있습니다.
+              채널을 생성하면 상담사님만의 공간이 만들어집니다. 일반 상담은
+              1:1로, 그룹 상담은 최대 3명까지 참여할 수 있으며, 입장 요청을 수락
+              혹은 거절할 수 있습니다.
             </p>
           </div>
         </div>
