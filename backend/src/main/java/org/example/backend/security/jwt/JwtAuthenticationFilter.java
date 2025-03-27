@@ -32,7 +32,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final List<String> AUTH_WHITELIST = Arrays.asList(
             "/auth/login",
             "/auth/signup",
-            "/auth/token/refresh"
+            "/auth/token/refresh",
+            "/ws/**",
+            "/ws/info"
     );
 
     private final JwtTokenProvider jwtTokenProvider;

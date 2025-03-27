@@ -1,14 +1,29 @@
 package org.example.backend.config;
 
+import org.example.backend.security.jwt.JwtTokenProvider;  // 제공하신 JWT 클래스
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    private final JwtTokenProvider jwtTokenProvider;
+
+    public WebsocketConfig(JwtTokenProvider jwtTokenProvider) {
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -22,6 +37,42 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/ws") // WebSocket 연결 엔드포인트 경로 설정 ("/ws")
-                .setAllowedOrigins("*"); // 모든 도메인에서의 연결을 허용 (CORS 설정), 실제 운영 환경에서는 보안을 위해 특정 도메인만 허용하는 것이 좋음
+                .setAllowedOriginPatterns("http://localhost:5173", "https://j12d110.p.ssafy.io", "https://*.ngrok-free.app")
+                .withSockJS();
+
+
+    }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(new ChannelInterceptor() {
+            @Override
+            public Message<?> preSend(Message<?> message, MessageChannel channel) {
+                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+
+                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    String authorizationHeader = accessor.getFirstNativeHeader("Authorization");
+
+                    if (authorizationHeader != null) {
+                        String token = jwtTokenProvider.resolveToken(authorizationHeader);
+
+                        if (token != null && jwtTokenProvider.validateToken(token)) {
+                            // 토큰에서 사용자 정보 추출
+                            String email = jwtTokenProvider.getEmailFromToken(token);
+                            Long userId = jwtTokenProvider.getUserIdFromToken(token);
+                            String auth = jwtTokenProvider.getAuthFromToken(token);
+
+                            // 사용자 정보를 웹소켓 세션에 저장
+                            accessor.setUser(() -> email);
+
+                            // 추가 정보 저장 (필요한 경우)
+                            accessor.getSessionAttributes().put("userId", userId);
+                            accessor.getSessionAttributes().put("auth", auth);
+                        }
+                    }
+                }
+                return message;
+            }
+        });
     }
 }
