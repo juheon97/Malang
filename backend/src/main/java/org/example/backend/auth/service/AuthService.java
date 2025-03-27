@@ -254,4 +254,36 @@ public class AuthService {
             return response;
         }
     }
+
+    /**
+     * 로그아웃 처리
+     * 사용자의 액세스 토큰을 무효화하고 리프레시 토큰을 Redis에서 삭제합니다.
+     *
+     * @param token JWT 액세스 토큰
+     * @throws IllegalArgumentException 유효하지 않은 토큰인 경우
+     */
+    @Transactional
+    public void logout(String token) {
+        logger.info("로그아웃 처리 시작");
+
+        // 토큰이 유효한지 검증
+        if (!jwtTokenProvider.validateToken(token)) {
+            logger.error("유효하지 않은 토큰으로 로그아웃 시도");
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+
+        try {
+            // 토큰에서 사용자 ID 추출
+            Long userId = jwtTokenProvider.getUserIdFromToken(token);
+            logger.debug("로그아웃 처리 중인 사용자 ID: {}", userId);
+
+            // Redis에서 리프레시 토큰 삭제
+            refreshTokenService.delete(userId);
+
+            logger.info("사용자 ID {} 로그아웃 처리 완료", userId);
+        } catch (Exception e) {
+            logger.error("로그아웃 처리 중 오류 발생: {}", e.getMessage());
+            throw new RuntimeException("로그아웃 처리 중 오류가 발생했습니다.", e);
+        }
+    }
 }
