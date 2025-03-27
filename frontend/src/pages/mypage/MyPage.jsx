@@ -34,53 +34,51 @@ const MyPage = () => {
       const storedUser = sessionStorage.getItem('user');
       console.log('세션 스토리지 user:', storedUser);
 
-      const mockCounselors = sessionStorage.getItem('mockCounselors');
-      console.log('세션 스토리지 mockCounselors:', mockCounselors);
-
       const mockUsers = sessionStorage.getItem('mockUsers');
       console.log('세션 스토리지 mockUsers:', mockUsers);
     }
   }, [currentUser]);
 
-  // 추가: sessionStorage에서 직접 상담사 정보 가져오기
+  // mockUsers에서 상담사 정보 가져오기
   useEffect(() => {
     if (currentUser?.id) {
-      // sessionStorage에서 mockCounselors 확인
       try {
-        const storedCounselors = JSON.parse(
-          sessionStorage.getItem('mockCounselors') || '[]',
-        );
-        const foundCounselor = storedCounselors.find(
-          c => c.id === currentUser.id || c.id === parseInt(currentUser.id),
-        );
+        // 먼저 세션 스토리지에서 user 정보 확인
+        const storedUser = JSON.parse(sessionStorage.getItem('user') || '{}');
+        console.log('현재 로그인된 유저 정보:', storedUser);
 
-        if (foundCounselor) {
-          console.log('세션스토리지에서 찾은 상담사 정보:', foundCounselor);
-          setUserDetails(foundCounselor);
-        } else {
-          console.log('상담사 정보를 찾을 수 없음:', currentUser.id);
-        }
+        // 기본 정보라도 설정
+        setUserDetails({
+          id: storedUser.id || currentUser.id,
+          name: storedUser.username || currentUser.username,
+          role: storedUser.role || currentUser.role,
+          // 아래는 백엔드 API에서 따로 받아와야 하는 정보일 수 있음
+          gender: 'M', // 기본값
+          birth_date: '정보 없음', // 기본값
+        });
 
-        // mockUsers에서도 확인
+        // 그 다음 mockUsers에서도 확인 (혹시 있을 경우)
         const storedUsers = JSON.parse(
           sessionStorage.getItem('mockUsers') || '[]',
         );
 
-        // user_id 또는 user_id를 숫자로 변환하여 비교
-        const foundUser = storedUsers.find(
-          u =>
-            u.user_id === currentUser.id ||
-            u.user_id === parseInt(currentUser.id),
-        );
+        if (storedUsers && storedUsers.length > 0) {
+          const foundUser = storedUsers.find(
+            u => u.user_id.toString() === currentUser.id.toString(),
+          );
 
-        if (foundUser) {
-          console.log('세션스토리지에서 찾은 사용자 정보:', foundUser);
-          if (!userDetails) {
-            setUserDetails(foundUser);
+          if (foundUser) {
+            console.log('mockUsers에서 찾은 정보:', foundUser);
+            setUserDetails(prev => ({
+              ...prev,
+              ...foundUser,
+              gender: foundUser.gender,
+              birth_date: foundUser.birth_date,
+            }));
           }
         }
       } catch (error) {
-        console.error('세션스토리지에서 정보 가져오기 실패:', error);
+        console.error('정보 가져오기 실패:', error);
       }
     }
   }, [currentUser]);
@@ -173,14 +171,13 @@ const MyPage = () => {
           c => c.id === currentUser.id || c.id === parseInt(currentUser.id),
         );
 
-        // 생년월일과 성별에 대한 데이터 소스 결정
-        const birthDate =
-          userDetails?.birth_date || currentUser?.birth_date || '';
-        const gender = userDetails?.gender || currentUser?.gender || 'M';
+        // userDetails에서 생년월일과 성별 정보 가져오기
+        const birthDate = userDetails?.birth_date || '';
+        const gender = userDetails?.gender || 'M';
 
         const updatedCounselor = {
           id: currentUser.id,
-          name: currentUser.username || '상담사',
+          name: currentUser.username || userDetails?.counselor_name || '상담사',
           title: '심리 상담 전문가',
           specialty: profile.speciality,
           bio: profile.bio,
@@ -192,7 +189,7 @@ const MyPage = () => {
             existingIndex >= 0
               ? storedCounselors[existingIndex].review_count
               : 0,
-          status: isActive ? '가능' : '불가능', // 로그인 상태에 따라 결정
+          status: 'available', // 기본값 설정
           profile_url: profile.profile_url,
           satisfaction:
             existingIndex >= 0
@@ -246,13 +243,13 @@ const MyPage = () => {
   const isCounselor = () => {
     if (!currentUser) return false;
 
-    // 역할 정보 확인 방법 다각화
+    // 여러 가지 방법으로 역할 확인
+    // 1. currentUser에서 직접 확인
     if (typeof currentUser.role === 'string') {
-      // 대소문자 구분 없이 'counselor'를 포함하는지 확인
       return currentUser.role.toLowerCase().includes('counselor');
     }
 
-    // 세션 스토리지에서 찾은 상담사 정보 확인
+    // 2. userDetails에서 확인
     if (userDetails && userDetails.role) {
       return userDetails.role.toLowerCase().includes('counselor');
     }
@@ -302,7 +299,7 @@ const MyPage = () => {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-800 mb-2">마이페이지</h1>
         <p className="text-gray-600">
-          상담사 정보를 관리하고 프로필을 업데이트하세요.
+          정보를 관리하고 프로필을 업데이트하세요.
         </p>
       </div>
 
@@ -404,15 +401,12 @@ const MyPage = () => {
                   />
                 </div>
 
-                <h2 className="text-xl font-bold text-gray-800 mb-1">
+                <h2 className="text-xl font-bold text-gray-800 mb-4">
                   {currentUser?.username ||
                     currentUser?.counselor_name ||
                     userDetails?.name ||
                     '상담사'}
                 </h2>
-                <p className="text-[#00a173] font-medium mb-6">
-                  심리 상담 전문가
-                </p>
 
                 <div className="w-full space-y-4">
                   <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
