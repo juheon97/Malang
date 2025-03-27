@@ -54,4 +54,26 @@ public class CounselorProfile {
         this.reviewCount = reviewCount;
         this.status = status != null ? status : 0; // 기본값 0 설정
     }
+
+    /**
+     * 프로필 정보 업데이트
+     * @param specialty 전문 분야
+     * @param years 경력
+     * @param certifications 자격증 여부 (Y/N)
+     * @param bio 자기소개
+     */
+    public void updateProfile(String specialty, String years, String certifications, String bio) {
+        if (specialty != null) {
+            this.specialty = specialty;
+        }
+        if (years != null) {
+            this.years = years;
+        }
+        if (certifications != null) {
+            this.certifications = certifications;
+        }
+        if (bio != null) {
+            this.bio = bio;
+        }
+    }
 }
