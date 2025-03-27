@@ -19,7 +19,7 @@ public class CommunityController {
 
     private final CommunityService communityService;
 
-    @PostMapping("/write")
+    @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> createArticle(@RequestBody CommunityCreateRequest request) {
         CommunityCreateResponse createResponse = communityService.createCommunity(request);
 
@@ -30,7 +30,7 @@ public class CommunityController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @GetMapping("/latest")
+    @GetMapping("/get/latest")
     public ResponseEntity<Map<String, Object>> getLatestArticles(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -38,7 +38,7 @@ public class CommunityController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/oldest")
+    @GetMapping("/get/oldest")
     public ResponseEntity<Map<String, Object>> getOldestArticles(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -46,7 +46,7 @@ public class CommunityController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/category/{category}")
+    @GetMapping("/get/{category}")
     public ResponseEntity<Map<String, Object>> getArticlesByCategory(
             @PathVariable String category,
             @RequestParam(defaultValue = "1") int page,
