@@ -31,4 +31,17 @@ public interface CommunityRepository extends JpaRepository<Community, Integer> {
     @Query("SELECT c FROM Community c WHERE c.articleId = :articleId")
     Optional<Community> findByArticleId(@Param("articleId") Integer articleId);
 
+    // 수정용
+    @Transactional
+    @Modifying
+    @Query("UPDATE Community c SET c.communityCategory = :category, c.title = :title, c.content = :content WHERE c.articleId = :articleId AND c.userId = :userId")
+    int updateByArticleIdAndUserId(
+            @Param("articleId") Integer articleId,
+            @Param("category") String category,
+            @Param("title") String title,
+            @Param("content") String content,
+            @Param("userId") Long userId
+    );
+
+
 }

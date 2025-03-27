@@ -2,7 +2,9 @@ package org.example.backend.community.controller;
 
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend.community.dto.request.CommunityArticleUpdateRequest;
 import org.example.backend.community.dto.request.CommunityCreateRequest;
+import org.example.backend.community.dto.response.CommunityArticleUpdateResponse;
 import org.example.backend.community.dto.response.CommunityCreateResponse;
 import org.example.backend.community.service.CommunityService;
 import org.springframework.http.HttpStatus;
@@ -58,13 +60,46 @@ public class CommunityController {
     @GetMapping("/article/{articleId}")
     public ResponseEntity<Map<String, Object>> getArticleById(@PathVariable Integer articleId) {
 
-        // JWT 토큰이 준비 되면 진행
-        // Long userId = jwtTokenProvider.getUserIdFromToken();
         Long userId = null;
 
         Map<String, Object> response = communityService.getArticleById(articleId, userId);
         return ResponseEntity.ok(response);
     }
+    @PutMapping("/article/{articleId}")
+    public ResponseEntity<Map<String, Object>> updateArticle(
+            @PathVariable Integer articleId,
+            @RequestBody CommunityArticleUpdateRequest request) {
+
+        try {
+            // 서비스 호출하여 게시글 업데이트
+            CommunityArticleUpdateResponse updateResponse = communityService.updateArticle(articleId, request);
+
+            // 응답 데이터 구성
+            Map<String, Object> dataMap = new HashMap<>();
+            dataMap.put("article", updateResponse);
+
+            Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("status", "success");
+            responseMap.put("data", dataMap);
+
+            return ResponseEntity.ok(responseMap);
+
+        } catch (IllegalArgumentException e) {
+            // 사용자 권한 오류 (작성자가 아닌 경우)
+            Map<String, Object> errorMap = new HashMap<>();
+            errorMap.put("status", "error");
+            errorMap.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap);
+
+        } catch (Exception e) {
+            // 기타 서버 오류
+            Map<String, Object> errorMap = new HashMap<>();
+            errorMap.put("status", "error");
+            errorMap.put("message", "게시글 업데이트 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap);
+        }
+    }
+
 
     @DeleteMapping("/article/{articleId}")
     public ResponseEntity<?> deleteArticle(@PathVariable Integer articleId) {
