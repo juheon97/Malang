@@ -119,6 +119,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 인증 관련 엔드포인트는 모든 사용자 접근 허용
                         .requestMatchers("/auth/login", "/auth/signup", "/auth/signup/counselor", "/auth/token/refresh").permitAll()
+                        // 로그아웃은 인증된 사용자만 접근 허용
+                        .requestMatchers("/auth/logout").authenticated()
                         // 공개 리소스는 모든 사용자 접근 허용
                         .requestMatchers("/public/**").permitAll()
                         // Swagger UI 및 API 문서 접근 허용

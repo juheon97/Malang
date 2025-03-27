@@ -186,4 +186,49 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
     }
+
+    /**
+     * 로그아웃 API 엔드포인트
+     * JWT 토큰을 무효화하고 리프레시 토큰을 삭제합니다.
+     *
+     * @param authorizationHeader Authorization 헤더 (Bearer 토큰)
+     * @return 로그아웃 결과 응답
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String authorizationHeader) {
+        logger.info("로그아웃 요청 수신");
+
+        try {
+            // Authorization 헤더에서 JWT 토큰 추출
+            if (authorizationHeader == null || !authorizationHeader.startsWith(JwtConfig.TOKEN_PREFIX)) {
+                logger.error("로그아웃 요청 처리 실패: 유효한 토큰 형식이 아님");
+                throw new IllegalArgumentException("유효한 토큰이 필요합니다. 'Bearer ' 접두사가 포함되어야 합니다.");
+            }
+
+            String token = authorizationHeader.substring(JwtConfig.TOKEN_PREFIX.length());
+
+            // 로그아웃 처리
+            authService.logout(token);
+
+            // 성공 응답 반환
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "로그아웃이 성공적으로 처리되었습니다.");
+
+            logger.info("로그아웃 요청 처리 완료");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            // 유효하지 않은 토큰 형식
+            logger.error("로그아웃 실패 (잘못된 형식): {}", e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        } catch (Exception e) {
+            // 기타 서버 오류
+            logger.error("로그아웃 중 예외 발생: {}", e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "로그아웃 처리 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
 }
