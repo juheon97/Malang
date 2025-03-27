@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-//import axios from 'axios';
+import axios from 'axios';
 import mockApi from '../../api/mockApi';
 import { useAuth } from '../../contexts/AuthContext'; // AuthContext import
 
@@ -103,7 +103,7 @@ function VoiceChannelForm() {
       console.log('채널 생성 성공:', response.data);
 
       // OpenVidu 세션 생성 요청
-      const sessionResponse = await axios.post(
+      const sessionResponse = await mockApi.post(
         '/api/openvidu/sessions',
         {
           sessionId: response.data.data.channel_id,
@@ -120,7 +120,7 @@ function VoiceChannelForm() {
       console.log('OpenVidu 세션 생성 성공:', sessionResponse.data);
 
       // 토큰 생성 요청
-      const tokenResponse = await axios.post(
+      const tokenResponse = await mockApi.post(
         `/api/openvidu/sessions/${response.data.data.channel_id}/connections`,
         {
           role: 'PUBLISHER', // 방 생성자는 PUBLISHER 역할

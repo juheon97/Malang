@@ -93,4 +93,16 @@ mockApi.interceptors.response.use(
   },
 );
 
+// // OpenVidu 세션 생성 API
+// if (url.includes('/api/openvidu/sessions') && method === 'post') {
+//   mockResponse = {
+//     id: requestData.sessionId || `mock-session-${Date.now()}`,
+//     sessionId:
+//       requestData.customSessionId ||
+//       requestData.sessionId ||
+//       `mock-session-${Date.now()}`,
+//     createdAt: new Date().toISOString(),
+//   };
+// }
+
 export default mockApi;
