@@ -2,7 +2,9 @@ package org.example.backend.community.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.example.backend.community.dto.request.CommunityArticleUpdateRequest;
 import org.example.backend.community.dto.request.CommunityCreateRequest;
+import org.example.backend.community.dto.response.CommunityArticleUpdateResponse;
 import org.example.backend.community.dto.response.CommunityCreateResponse;
 import org.example.backend.community.dto.response.CommunityGetArticleResponse;
 import org.example.backend.community.dto.response.CommunityGetListsResponse;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +110,34 @@ public class CommunityServiceImpl implements CommunityService {
 
         communityRepository.deleteById(articleId);
         return true;
+    }
+
+    @Override
+    @Transactional
+    public CommunityArticleUpdateResponse updateArticle(Integer articleId, CommunityArticleUpdateRequest request) {
+        // 게시글이 존재하는지 확인
+        Community community = communityRepository.findByArticleId(articleId)
+                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다. ID: " + articleId));
+
+        // 업데이트 실행
+        int updatedCount = communityRepository.updateByArticleIdAndUserId(
+                articleId,
+                request.getCommunity_category(),
+                request.getTitle(),
+                request.getContent(),
+                Long.valueOf(request.getUser_id())
+        );
+
+        // 업데이트가 성공했는지 확인
+        if (updatedCount == 0) {
+            throw new IllegalArgumentException("게시글 업데이트에 실패했습니다. 작성자만 수정할 수 있습니다.");
+        }
+
+        // 현재 시간 기준으로 응답 생성
+        return CommunityArticleUpdateResponse.builder()
+                .article_id(articleId)
+                .updated_at(LocalDateTime.now())
+                .build();
     }
 
     // 공통 응답 맵 생성 메서드
