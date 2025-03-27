@@ -1,36 +1,79 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import VideoLayout from '../../components/video/VideoLayout';
 import ChatBox from '../../components/video/ChatBox';
 import VideoControls from '../../components/video/VideoControls';
-import useOpenVidu from '../../hooks/useOpenvidu';
+import useOpenVidu from '../../hooks/useOpenVidu';
 import useChat from '../../hooks/useChat';
+import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext';
 
 function VoiceChannelVideo() {
+  const { channelId } = useParams(); // URL에서 channelId 추출
+  const { currentUser, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
   // 상태 관리
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
-  const [currentUserId] = useState('user1');
   const [isVoiceTranslationOn, setIsVoiceTranslationOn] = useState(false);
   const [isSignLanguageOn, setIsSignLanguageOn] = useState(false);
-  const [roomInfo] = useState({
-    name: '보이스 채널',
-    maxParticipants: 4,
-  });
-  const navigate = useNavigate();
+  const [channelInfo, setChannelInfo] = useState(null);
+  const [connectionError, setConnectionError] = useState('');
 
   // 초기화 여부 추적
   const hasJoined = useRef(false);
 
+  // 인증 확인
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', {
+        state: { from: `/voice-channel-video/${channelId}` },
+      });
+    }
+  }, [isAuthenticated, navigate, channelId]);
+
+  // 채널 정보 가져오기
+  useEffect(() => {
+    const fetchChannelInfo = async () => {
+      try {
+        const token = sessionStorage.getItem('token');
+        if (!token) {
+          throw new Error('인증 토큰이 없습니다.');
+        }
+
+        const response = await axios.get(`/api/channels/${channelId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.data && response.data.data) {
+          setChannelInfo(response.data.data);
+          return response.data.data;
+        } else {
+          throw new Error('채널 정보가 올바르지 않습니다.');
+        }
+      } catch (error) {
+        console.error('채널 정보 가져오기 실패:', error);
+        setConnectionError('채널 정보를 가져오는데 실패했습니다.');
+        return null;
+      }
+    };
+    if (isAuthenticated && channelId) {
+      fetchChannelInfo();
+    }
+  }, [channelId, isAuthenticated]);
+
   // 커스텀 훅 사용
-  const {
-    participants,
-    connectionError,
-    joinSession,
-    leaveSession,
-    toggleAudio,
-    toggleVideo,
-  } = useOpenVidu('session1', 'randomNickname', isMicOn, isCameraOn);
+  const { participants, joinSession, leaveSession, toggleAudio, toggleVideo } =
+    useOpenVidu(
+      channelId,
+      currentUser?.username || 'Guest',
+      isMicOn,
+      isCameraOn,
+    );
 
   const {
     messages,
@@ -39,19 +82,21 @@ function VoiceChannelVideo() {
     handleSendMessage,
     handleKeyDown,
     chatContainerRef,
-  } = useChat(currentUserId);
+  } = useChat(currentUser?.id || 'guest');
 
   // 세션 참여
   useEffect(() => {
-    if (!hasJoined.current) {
+    if (isAuthenticated && channelId && !hasJoined.current) {
       hasJoined.current = true;
       joinSession();
     }
 
     return () => {
-      leaveSession();
+      if (hasJoined.current) {
+        leaveSession();
+      }
     };
-  }, []);
+  }, [channelId, isAuthenticated]);
 
   // 토글 함수
   const toggleMic = () => {
@@ -82,10 +127,39 @@ function VoiceChannelVideo() {
     </>
   );
 
-  const handleLeaveChannel = () => {
-    leaveSession();
-    navigate('/voice-channel');
+  const handleLeaveChannel = async () => {
+    try {
+      leaveSession();
+
+      // 채널 퇴장 API 호출
+      if (isAuthenticated) {
+        const token = sessionStorage.getItem('token');
+        await axios.post(
+          `/api/channels/${channelId}/leave`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+      }
+
+      navigate('/voice-channel');
+    } catch (error) {
+      console.error('채널 퇴장 실패:', error);
+    }
   };
+
+  // 인증 로딩 중이거나 인증되지 않은 경우 로딩 표시
+  if (!isAuthenticated) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        인증이 필요합니다...
+      </div>
+    );
+  }
 
   return (
     <div
@@ -112,7 +186,12 @@ function VoiceChannelVideo() {
             </svg>
           </div>
           <div>
-            <h1 className="font-bold text-gray-800">{roomInfo.name}</h1>
+            <h1 className="font-bold text-gray-800">
+              {channelInfo?.channel_name || '음성 채널'}
+            </h1>
+            <p className="text-sm text-gray-500">
+              참여자: {participants.length}/{channelInfo?.max_player || 4}
+            </p>
           </div>
         </div>
       </div>
@@ -134,7 +213,7 @@ function VoiceChannelVideo() {
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            화상 연결 중 오류가 발생했습니다.
+            {connectionError}
           </div>
           <button
             onClick={joinSession}
@@ -163,7 +242,7 @@ function VoiceChannelVideo() {
           handleSendMessage={handleSendMessage}
           handleKeyDown={handleKeyDown}
           chatContainerRef={chatContainerRef}
-          currentUserId={currentUserId}
+          currentUserId={currentUser?.id || 'guest'}
         />
       </div>
 

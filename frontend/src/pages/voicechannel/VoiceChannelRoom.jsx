@@ -104,7 +104,7 @@ function VoiceChannelForm() {
 
       // OpenVidu 세션 생성 요청
       const sessionResponse = await mockApi.post(
-        '/api/openvidu/sessions',
+        '/openvidu/api/sessions',
         {
           sessionId: response.data.data.channel_id,
           customSessionId: response.data.data.channel_id,
@@ -121,7 +121,7 @@ function VoiceChannelForm() {
 
       // 토큰 생성 요청
       const tokenResponse = await mockApi.post(
-        `/api/openvidu/sessions/${response.data.data.channel_id}/connections`,
+        `/openvidu/api/sessions/${response.data.data.channel_id}/connection`,
         {
           role: 'PUBLISHER', // 방 생성자는 PUBLISHER 역할
           data: JSON.stringify({

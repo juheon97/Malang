@@ -2,9 +2,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { OpenVidu } from 'openvidu-browser';
 import axios from 'axios';
+//import mockApi from '../api/mockApi';
 
 export default function useOpenVidu(
-  sessionId,
+  channelId,
   userName,
   audioEnabled = true,
   videoEnabled = true,
@@ -14,6 +15,7 @@ export default function useOpenVidu(
   const [publisher, setPublisher] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [connectionError, setConnectionError] = useState('');
+  const [channelInfo, setChannelInfo] = useState(null);
 
   // 초기화 상태 추적
   const initialized = useRef(false);
@@ -22,18 +24,45 @@ export default function useOpenVidu(
   // 서버 URL
   const APPLICATION_SERVER_URL = 'http://localhost:5000/';
 
+  // 채널 정보 가져오기
+  const fetchChannelInfo = async () => {
+    try {
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다.');
+      }
+
+      const response = await axios.get(`/api/channels/${channelId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      setChannelInfo(response.data.data);
+      return response.data.data;
+    } catch (error) {
+      console.error('채널 정보 가져오기 실패:', error);
+      setConnectionError('채널 정보를 가져오는데 실패했습니다.');
+      throw error;
+    }
+  };
+
   // 세션 참여
   const joinSession = async () => {
     if (initialized.current) return;
 
     try {
       initialized.current = true;
-      console.log(`세션 참여: ${sessionId}`);
+      console.log(`세션 참여: ${channelId}`);
 
-      // 1. OpenVidu 객체 생성
+      // 1. 채널 정보 가져오기
+      await fetchChannelInfo();
+      console.log('채널 정보:', channelId);
+      // 2. OpenVidu 객체 생성
       const ov = new OpenVidu();
 
-      // 2. 먼저 미디어 장치 접근 권한 요청
+      // 3. 먼저 미디어 장치 접근 권한 요청
       try {
         await navigator.mediaDevices.getUserMedia({
           audio: audioEnabled,
@@ -59,11 +88,11 @@ export default function useOpenVidu(
         return; // 미디어 접근 실패 시 세션 연결 중단
       }
 
-      // 3. 세션 초기화
+      // 4. 세션 초기화
       const mySession = ov.initSession();
       setSession(mySession);
 
-      // 4. 이벤트 리스너 설정
+      // 5. 이벤트 리스너 설정
       mySession.on('streamCreated', event => {
         const streamId = event.stream.streamId;
         const connectionId = event.stream.connection.connectionId;
@@ -79,7 +108,7 @@ export default function useOpenVidu(
         const subscriber = mySession.subscribe(event.stream, undefined);
         subscribedStreams.current.add(streamId);
 
-        // // 참가자 목록에 추가
+        // 참가자 목록에 추가
         setParticipants(prev => {
           if (prev.some(p => p.id === connectionId)) return prev;
 
@@ -116,11 +145,19 @@ export default function useOpenVidu(
         console.log('세션 재연결 성공');
       });
 
-      // 5. 토큰 획득 및 세션 연결
-      const token = await getToken(sessionId);
-      await mySession.connect(token, { clientData: userName });
+      // 6. sessionStorage에서 토큰 가져오기
+      const token = sessionStorage.getItem('openviduToken');
 
-      // 6. 자신의 카메라 스트림 발행 (오류 처리 개선)
+      if (!token) {
+        // 토큰이 없으면 서버에서 새로 발급
+        const newToken = await getToken(channelId);
+        await mySession.connect(newToken, { clientData: userName });
+      } else {
+        // 저장된 토큰 사용
+        await mySession.connect(token, { clientData: userName });
+      }
+
+      // 7. 자신의 카메라 스트림 발행 (오류 처리 개선)
       try {
         const publisher = await ov.initPublisherAsync(undefined, {
           audioSource: audioEnabled ? undefined : false,
@@ -136,7 +173,7 @@ export default function useOpenVidu(
         await mySession.publish(publisher);
         setPublisher(publisher);
 
-        // 7. 자신을 참가자 목록에 추가
+        // 8. 자신을 참가자 목록에 추가
         setParticipants(prev => {
           if (prev.some(p => p.id === mySession.connection.connectionId))
             return prev;
@@ -229,11 +266,30 @@ export default function useOpenVidu(
   };
 
   // 세션 종료
-  const leaveSession = () => {
+  const leaveSession = async () => {
     if (!session) return;
 
     try {
-      // 모든 구독 해제
+      // 1. 채널 퇴장 API 호출
+      const token = sessionStorage.getItem('token');
+      if (token) {
+        try {
+          await axios.post(
+            `/api/channels/${channelId}/leave`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            },
+          );
+        } catch (error) {
+          console.error('채널 퇴장 API 호출 실패:', error);
+        }
+      }
+
+      // 2. 모든 구독 해제
       participants.forEach(p => {
         if (!p.isSelf && p.stream) {
           try {
@@ -242,22 +298,27 @@ export default function useOpenVidu(
         }
       });
 
-      // 발행 중지
+      // 3. 발행 중지
       if (publisher) {
         try {
           session.unpublish(publisher);
         } catch (e) {}
       }
 
-      // 세션 연결 해제
+      // 4. 세션 연결 해제
       session.disconnect();
 
-      // 상태 초기화
+      // 5. 상태 초기화
       setSession(null);
       setPublisher(null);
       setParticipants([]);
+      setChannelInfo(null);
       subscribedStreams.current.clear();
       initialized.current = false;
+
+      // 6. sessionStorage에서 세션 정보 제거
+      sessionStorage.removeItem('openviduSessionId');
+      sessionStorage.removeItem('openviduToken');
     } catch (error) {
       console.error('세션 종료 오류:', error);
     }
@@ -275,37 +336,38 @@ export default function useOpenVidu(
   // 토큰 획득
   const getToken = async sessionId => {
     try {
-      const sessionData = await createSession(sessionId);
-      return await createToken(sessionData);
+      // 1. 실제 환경에서는 서버에서 토큰을 발급받음
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다.');
+      }
+
+      // 2. 모의 API를 사용하여 OpenVidu 토큰 발급
+      const response = await axios.post(
+        `/openvidu/api/sessions/${sessionId}/connection`,
+        {
+          role: 'PUBLISHER',
+          data: JSON.stringify({
+            clientData: userName,
+          }),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      // 3. 발급받은 토큰을 sessionStorage에 저장
+      const openviduToken = response.data.token;
+      sessionStorage.setItem('openviduToken', openviduToken);
+
+      return openviduToken;
     } catch (error) {
       console.error('토큰 획득 오류:', error);
       throw error;
     }
-  };
-
-  // 세션 생성
-  const createSession = async sessionId => {
-    try {
-      const response = await axios.post(
-        `${APPLICATION_SERVER_URL}api/sessions`,
-        { customSessionId: sessionId },
-        { headers: { 'Content-Type': 'application/json' } },
-      );
-      return response.data;
-    } catch (error) {
-      if (error.response?.status === 409) return sessionId;
-      throw error;
-    }
-  };
-
-  // 토큰 생성
-  const createToken = async sessionId => {
-    const response = await axios.post(
-      `${APPLICATION_SERVER_URL}api/sessions/${sessionId}/connections`,
-      {},
-      { headers: { 'Content-Type': 'application/json' } },
-    );
-    return response.data;
   };
 
   // 컴포넌트 언마운트 시 정리
@@ -319,6 +381,7 @@ export default function useOpenVidu(
     session,
     participants,
     connectionError,
+    channelInfo,
     joinSession,
     leaveSession,
     toggleAudio,

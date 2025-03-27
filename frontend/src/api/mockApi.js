@@ -47,10 +47,33 @@ mockApi.interceptors.response.use(
             created_at: new Date().toISOString(),
           },
         };
+      } // mockApi.js 파일의 응답 인터셉터 내부에 추가
+      else if (url.match(/\/api\/channels\/.*/) && method === 'get') {
+        const channelId = url.split('/channels/')[1];
+        mockResponse = {
+          status: 'success',
+          data: {
+            channel_id: channelId,
+            channel_name: '모의 채널',
+            channel_description: '이것은 모의 채널입니다',
+            password: false,
+            max_player: 4,
+            current_players: 1,
+            members: [
+              {
+                user_id: '1',
+                nickname: '사용자1',
+                joined_at: new Date().toISOString(),
+              },
+            ],
+            is_owner: true,
+            created_at: new Date().toISOString(),
+          },
+        };
       }
 
       // OpenVidu 세션 생성 API
-      else if (url.includes('/api/openvidu/sessions') && method === 'post') {
+      else if (url.includes('/openvidu/api/sessions') && method === 'post') {
         mockResponse = {
           id: requestData.sessionId,
           sessionId: requestData.customSessionId || requestData.sessionId,
@@ -67,7 +90,10 @@ mockApi.interceptors.response.use(
         mockResponse = {
           id: `mock-connection-${Date.now()}`,
           connectionId: `mock-connection-${Date.now()}`,
-          sessionId,
+          sessionId:
+            requestData.customSessionId ||
+            requestData.sessionId ||
+            `mock-session-${Date.now()}`,
           token: `mock-openvidu-token-${Date.now()}`,
           role: requestData.role || 'PUBLISHER',
           data: requestData.data,
