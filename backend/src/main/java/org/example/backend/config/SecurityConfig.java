@@ -117,8 +117,8 @@ public class SecurityConfig {
 
                 // HTTP 요청에 대한 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        // 인증 관련 엔드포인트는 모든 사용자 접근 허용
-                        .requestMatchers("/auth/login", "/auth/signup", "/auth/signup/counselor", "/auth/token/refresh").permitAll()
+                        // 인증 관련 엔드포인트는 모든 사용자 접근 허용 + Security 예외를 추가 - swagger
+                        .requestMatchers("/auth/login", "/auth/signup", "/auth/signup/counselor", "/auth/token/refresh", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs/**", "/webjars/**").permitAll()
                         // 로그아웃은 인증된 사용자만 접근 허용
                         .requestMatchers("/auth/logout").authenticated()
                         // 공개 리소스는 모든 사용자 접근 허용
