@@ -217,7 +217,7 @@ public class AuthService {
         refreshTokenService.logCurrentTTL(user.getId());
 
         // 토큰 응답 객체 생성 및 반환
-        return TokenResponse.from(jwtTokenDto, String.valueOf(user.getId()), user.getNickname());
+        return TokenResponse.from(jwtTokenDto, String.valueOf(user.getId()), user.getNickname(), user.getDisabilityStatus());
     }
 
     /**
@@ -242,7 +242,7 @@ public class AuthService {
         Optional<User> userOptional = userRepository.findByEmail(email);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            return TokenResponse.from(jwtTokenDto, String.valueOf(user.getId()), user.getNickname());
+            return TokenResponse.from(jwtTokenDto, String.valueOf(user.getId()), user.getNickname(), user.getDisabilityStatus());
         } else {
             // 사용자 정보 없이 기본 응답 반환
             TokenResponse response = new TokenResponse();

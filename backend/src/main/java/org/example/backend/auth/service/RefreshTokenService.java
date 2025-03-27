@@ -24,7 +24,7 @@ public class RefreshTokenService {
 
     //refresh token 만료 TTL 시간 로그 메서드
     public void logCurrentTTL(Long userId) {
-        String key = "refreshToken:" + userId;
+        String key = KEY_PREFIX + userId;
         Long ttl = redisTemplate.getExpire(key);
         System.out.println("🟢 Redis TTL of key [" + key + "] = " + "remain " + ttl + " seconds");
     }
