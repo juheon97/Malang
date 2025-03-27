@@ -83,10 +83,10 @@ public class CommunityServiceImpl implements CommunityService {
                 .article_id(community.getArticleId())
                 .category(community.getCommunityCategory())
                 .title(community.getTitle())
+                .content(community.getContent())
                 .created_at(community.getCreatedAt())
                 .user_id(community.getUserId())
                 .likes(community.getLikes())
-                .is_liked(false) // 기능 구현 전까지 false로 설정
                 .build();
 
         // 중첩 Map 구조로 응답 생성
