@@ -130,7 +130,7 @@ public class SecurityConfig {
                         // Community 모든 요청은 인증 필요 (GET 포함)
                         .requestMatchers("/community/**").authenticated()
                         // WebScoket 관련 엔드포인트 접근 허용
-                        .requestMatchers("/ws/**", "/sub/**", "/pub/**").permitAll()
+                        .requestMatchers("/ws/**", "/sub/**", "/pub/**", "/ws/info/**").permitAll()
                         // 기타 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
