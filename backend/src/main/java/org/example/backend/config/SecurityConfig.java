@@ -87,7 +87,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:5173",
-                "http://J12D110.p.ssafy.io:5176",
+                "https://j12d110.p.ssafy.io",
                 "https://*.ngrok-free.app"  // 이건 반드시 allowedOriginPatterns 로만 가능
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
