@@ -68,21 +68,7 @@ public class CommunityController {
 
     @DeleteMapping("/article/{articleId}")
     public ResponseEntity<?> deleteArticle(@PathVariable Integer articleId) {
-
-        // JWT 토큰에서 사용자 ID 추출 -> JWT가 완성되면 진행할 예정
-        // Long userId = jwtTokenProvider.getUserIdFromToken(token.replace("Bearer ", ""));
-        //임시용
-        Long userId = null;
-
-        // 서비스 메서드 호출 시 사용자 ID도 함께 전달
-        boolean isDeleted = communityService.deleteArticle(articleId, userId);
-
-//        if (isDeleted) {
-//            return ResponseEntity.ok().body("게시글이 삭제되었습니다.");
-//        } else {
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("삭제 권한이 없습니다.");
-//        }
-
+        communityService.deleteArticle(articleId);
         return ResponseEntity.ok().body("Deleted article " + articleId);
     }
 }
