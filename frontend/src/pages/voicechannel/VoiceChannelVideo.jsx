@@ -33,38 +33,38 @@ function VoiceChannelVideo() {
     }
   }, [isAuthenticated, navigate, channelId]);
 
-  // 채널 정보 가져오기
-  useEffect(() => {
-    const fetchChannelInfo = async () => {
-      try {
-        const token = sessionStorage.getItem('token');
-        if (!token) {
-          throw new Error('인증 토큰이 없습니다.');
-        }
+  // // 채널 정보 가져오기
+  // useEffect(() => {
+  //   const fetchChannelInfo = async () => {
+  //     try {
+  //       const token = sessionStorage.getItem('token');
+  //       if (!token) {
+  //         throw new Error('인증 토큰이 없습니다.');
+  //       }
 
-        const response = await axios.get(`/channels/voice/${channelId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+  //       const response = await axios.get(`/channels/voice/${channelId}`, {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           'Content-Type': 'application/json',
+  //         },
+  //       });
 
-        if (response.data && response.data.data) {
-          setChannelInfo(response.data.data);
-          return response.data.data;
-        } else {
-          throw new Error('채널 정보가 올바르지 않습니다.');
-        }
-      } catch (error) {
-        console.error('채널 정보 가져오기 실패:', error);
-        setConnectionError('채널 정보를 가져오는데 실패했습니다.');
-        return null;
-      }
-    };
-    if (isAuthenticated && channelId) {
-      fetchChannelInfo();
-    }
-  }, [channelId, isAuthenticated]);
+  //       if (response.data && response.data.data) {
+  //         setChannelInfo(response.data.data);
+  //         return response.data.data;
+  //       } else {
+  //         throw new Error('채널 정보가 올바르지 않습니다.');
+  //       }
+  //     } catch (error) {
+  //       console.error('채널 정보 가져오기 실패:', error);
+  //       setConnectionError('채널 정보를 가져오는데 실패했습니다.');
+  //       return null;
+  //     }
+  //   };
+  //   if (isAuthenticated && channelId) {
+  //     fetchChannelInfo();
+  //   }
+  // }, [channelId, isAuthenticated]);
 
   // 커스텀 훅 사용
   const { participants, joinSession, leaveSession, toggleAudio, toggleVideo } =

@@ -6,7 +6,7 @@ import openviduApi from '../../api/openViduApi';
 
 import mockApi from '../../api/mockApi';
 
-function VoiceChannelForm() {
+function VoiceChannelRoom() {
   const navigate = useNavigate();
   const { currentUser, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
@@ -57,7 +57,6 @@ function VoiceChannelForm() {
     setIsLoading(true);
     setError(null);
 
-    console.log('음성채널 생성 데이터:', formData);
     // API 명세서에 맞게 데이터 변환
     const apiRequestData = {
       channelName: formData.roomName,
@@ -379,4 +378,4 @@ function VoiceChannelForm() {
   );
 }
 
-export default VoiceChannelForm;
+export default VoiceChannelRoom;
