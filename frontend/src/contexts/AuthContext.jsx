@@ -114,6 +114,8 @@ export const AuthProvider = ({ children }) => {
         JSON.stringify({
           id: userId, // 이메일 또는 고유 id
           username: nickname, // ✅ 사용자 닉네임
+          role: role, // 역할 정보 추가
+          disabilityStatus: disabilityStatus,
         }),
       );
 
