@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import VideoLayout from '../../components/video/VideoLayout';
 import ChatBox from '../../components/video/ChatBox';
 import VideoControls from '../../components/video/VideoControls';
-import useOpenVidu from '../../hooks/useOpenVidu';
+import useOpenVidu from '../../hooks/useOpenvidu';
 import useChat from '../../hooks/useChat';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
@@ -42,7 +42,7 @@ function VoiceChannelVideo() {
           throw new Error('인증 토큰이 없습니다.');
         }
 
-        const response = await axios.get(`/api/channels/${channelId}`, {
+        const response = await axios.get(`/channels/voice/${channelId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -187,11 +187,11 @@ function VoiceChannelVideo() {
           </div>
           <div>
             <h1 className="font-bold text-gray-800">
-              {channelInfo?.channel_name || '음성 채널'}
+              {channelInfo?.channelName || '음성 채널'}
             </h1>
-            <p className="text-sm text-gray-500">
+            {/* <p className="text-sm text-gray-500">
               참여자: {participants.length}/{channelInfo?.max_player || 4}
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
@@ -227,12 +227,12 @@ function VoiceChannelVideo() {
       {/* 메인 컨텐츠 - 영상과 채팅 */}
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
         {/* 영상 영역 */}
-        <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
+        {/* <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
           <VideoLayout
             participants={participants}
             renderParticipantInfo={renderParticipantInfo}
           />
-        </div>
+        </div> */}
 
         {/* ChatBox 컴포넌트 사용 */}
         <ChatBox

@@ -45,6 +45,8 @@ mockApi.interceptors.response.use(
             max_player: requestData.max_player,
             category: 1,
             created_at: new Date().toISOString(),
+            sessionId: `mock-session-${Date.now()}`, // OpenVidu 세션 ID 추가
+            token: `mock-openvidu-token-${Date.now()}`, // OpenVidu 연결 토큰 추가
           },
         };
       } // mockApi.js 파일의 응답 인터셉터 내부에 추가
