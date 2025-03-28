@@ -10,6 +10,9 @@ import org.example.backend.auth.model.Counselor;
 import org.example.backend.auth.model.User;
 import org.example.backend.auth.service.AuthService;
 import org.example.backend.security.jwt.JwtConfig;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -25,6 +28,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "로그인")
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
