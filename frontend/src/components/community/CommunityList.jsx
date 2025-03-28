@@ -5,31 +5,86 @@ import usePostStore from '../../store/postStore';
 
 const CommunityList = () => {
   const navigate = useNavigate();
-  const { posts, loading, error, fetchPosts } = usePostStore();
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = 3; // 실제로는 API 응답에서 받아와야 함
+  const { 
+    posts, 
+    loading, 
+    error, 
+    totalPages, 
+    currentPage, 
+    category,
+    sort,
+    fetchPosts,
+    setSortOrder,
+    setCategory
+  } = usePostStore();
+
+  // 카테고리 옵션
+  const categories = [
+    { value: null, label: '전체' },
+    { value: '시각장애', label: '시각장애' },
+    { value: '구음장애', label: '구음장애' },
+    { value: '청각장애', label: '청각장애' }
+  ];
 
   useEffect(() => {
-    fetchPosts(currentPage);
-  }, [currentPage, fetchPosts]);
+    fetchPosts(currentPage, 10, category, sort);
+  }, [fetchPosts, currentPage, category, sort]);
+
+  useEffect(() => {
+    // 초기 데이터 로딩
+    fetchPosts(1, 10, null, 'latest');
+  }, []);
 
   const handlePageChange = page => {
     if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
+    fetchPosts(page, 10, category, sort);
+  };
+
+  const handleCategoryChange = (e) => {
+    const newCategory = e.target.value === '전체' ? null : e.target.value;
+    setCategory(newCategory);
+  };
+
+  const handleSortChange = (e) => {
+    setSortOrder(e.target.value);
   };
 
   if (loading) return <div className="text-center py-10">로딩 중...</div>;
-  if (error)
-    return <div className="text-center py-10 text-red-500">{error}</div>;
+  if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
 
   return (
     <div className="mt-16 max-w-6xl mx-auto">
-      {/* 제목을 박스 밖으로 뺌 */}
       <h1 className="text-3xl font-bold text-center text-[#00a173] mb-6">
         커뮤니티
       </h1>
 
-      {/* 테이블과 페이지네이션, 글쓰기 버튼을 하나의 박스에 넣음 */}
+      {/* 필터링 및 정렬 옵션 */}
+      <div className="mb-4 flex justify-between">
+        <div>
+          <select 
+            value={category || '전체'} 
+            onChange={handleCategoryChange}
+            className="px-3 py-2 border border-[#e0e7e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8ed7af]"
+          >
+            {categories.map(cat => (
+              <option key={cat.label} value={cat.value || '전체'}>
+                {cat.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <select 
+            value={sort} 
+            onChange={handleSortChange}
+            className="px-3 py-2 border border-[#e0e7e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8ed7af]"
+          >
+            <option value="latest">최신순</option>
+            <option value="popular">인기순</option>
+          </select>
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="overflow-hidden px-24 pt-12">
           <table className="w-full border-collapse">
@@ -86,14 +141,12 @@ const CommunityList = () => {
             </tbody>
           </table>
         </div>
+        
         {/* 페이지네이션과 글쓰기 버튼 */}
         <div className="flex items-center py-4 px-24">
-          {/* 왼쪽 여백 공간 */}
           <div className="flex-1"></div>
 
-          {/* 페이지네이션 (중앙) */}
           <div className="flex items-center space-x-2">
-            {/* 이전 페이지 버튼 */}
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
@@ -118,7 +171,6 @@ const CommunityList = () => {
               </svg>
             </button>
 
-            {/* 페이지 번호 버튼 */}
             {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
               <button
                 key={page}
@@ -133,7 +185,6 @@ const CommunityList = () => {
               </button>
             ))}
 
-            {/* 다음 페이지 버튼 */}
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
@@ -159,7 +210,6 @@ const CommunityList = () => {
             </button>
           </div>
 
-          {/* 글쓰기 버튼 (오른쪽) */}
           <div className="flex-1 flex justify-end">
             <button
               onClick={() => navigate('/community/write')}
