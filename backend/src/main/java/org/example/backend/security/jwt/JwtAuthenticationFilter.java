@@ -34,7 +34,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/auth/signup",
             "/auth/token/refresh",
             "/ws/**",
-            "/ws/info"
+            "/ws/info",
+            
+            "/swagger-ui.html",      // Swagger UI 메인 페이지
+            "/swagger-ui/**",      // Swagger UI 리소스 (css, js 등)
+            "/v3/api-docs",        // OpenAPI 명세 기본 경로 (단일 파일)
+            "/v3/api-docs/**",     // OpenAPI 명세 하위 경로 (그룹, 설정 등 포함)
+            "/swagger-resources/**", // Swagger 리소스 (필요시)
+            "/webjars/**"          // Webjar 리소스 (필요시)
     );
 
     private final JwtTokenProvider jwtTokenProvider;

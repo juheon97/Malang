@@ -118,7 +118,7 @@ public class SecurityConfig {
                 // HTTP 요청에 대한 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         // 인증 관련 엔드포인트는 모든 사용자 접근 허용 + Security 예외를 추가 - swagger
-                        .requestMatchers("/auth/login", "/auth/signup", "/auth/signup/counselor", "/auth/token/refresh", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/v2/api-docs/**", "/webjars/**").permitAll()
+                        .requestMatchers("/auth/login", "/auth/signup", "/auth/signup/counselor", "/auth/token/refresh", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/api-docs/**", "/webjars/**").permitAll()
                         // 로그아웃은 인증된 사용자만 접근 허용
                         .requestMatchers("/auth/logout").authenticated()
                         // 공개 리소스는 모든 사용자 접근 허용
@@ -131,6 +131,8 @@ public class SecurityConfig {
                         .requestMatchers("/community/**").authenticated()
                         // 상담사 프로필 API는 ROLE_COUNSELOR 권한이 있는 사용자만 접근 가능
                         .requestMatchers("/counselor/profile/**").hasAuthority("ROLE_COUNSELOR")
+                        // 상담 채널 API는 ROLE_COUNSELOR 권한이 있는 사용자만 접근 가능 - 수정 부분
+                        .requestMatchers("/channels/counseling/**").hasAuthority("ROLE_COUNSELOR")
                         // WebScoket 관련 엔드포인트 접근 허용
                         .requestMatchers("/ws/**", "/sub/**", "/pub/**", "/ws/info/**").permitAll()
                         // 기타 모든 요청은 인증 필요
