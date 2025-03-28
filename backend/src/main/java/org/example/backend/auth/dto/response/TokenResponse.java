@@ -21,6 +21,7 @@ public class TokenResponse {
     private String userId;
     private String nickname;
     private Boolean disabilityStatus; // 시각장애 여부 필드 추가
+    private String role;
 
     /**
      * JwtTokenDto로부터 TokenResponse 객체 생성
@@ -31,7 +32,7 @@ public class TokenResponse {
      * @param disabilityStatus 시각장애 여부
      * @return TokenResponse 객체
      */
-    public static TokenResponse from(JwtTokenDto jwtTokenDto, String userId, String nickname, Boolean disabilityStatus) {
+    public static TokenResponse from(JwtTokenDto jwtTokenDto, String userId, String nickname, Boolean disabilityStatus, String role) {
         TokenResponse response = new TokenResponse();
         response.setAccessToken(jwtTokenDto.getAccessToken());
         response.setRefreshToken(jwtTokenDto.getRefreshToken());
@@ -41,6 +42,7 @@ public class TokenResponse {
         response.setUserId(userId);
         response.setNickname(nickname);
         response.setDisabilityStatus(disabilityStatus);
+        response.setRole(role); // 역할 정보 설정
         return response;
     }
 }
