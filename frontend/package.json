@@ -11,11 +11,15 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\""
   },
   "dependencies": {
-    "axios": "^1.8.3",
+    "@stomp/stompjs": "^7.1.0",
+    "axios": "^1.8.4",
+    "lottie-react": "^2.4.1",
     "openvidu-browser": "^2.31.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.3.0",
+    "sockjs": "^0.3.24",
+    "sockjs-client": "^1.6.1",
     "tailwindcss": "^3.3.5",
     "zustand": "^5.0.3"
   },

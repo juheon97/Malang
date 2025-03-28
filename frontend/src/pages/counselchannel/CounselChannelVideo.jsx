@@ -1,14 +1,11 @@
-// CounselChannelVideo.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import EntryRequestList from '../../components/common/EntryRequestList';
+import { useNavigate } from 'react-router-dom';
 import VideoLayout from '../../components/video/VideoLayout';
 import ChatBox from '../../components/video/ChatBox';
 import VideoControls from '../../components/video/VideoControls';
-
 import useOpenVidu from '../../hooks/useOpenvidu';
 import useParticipantControls from '../../hooks/useParticipantControls';
 import useChat from '../../hooks/useChat';
-import useEntryRequests from '../../hooks/useEntryRequests';
 
 function CounselChannelVideo() {
   // 상태 관리
@@ -18,14 +15,16 @@ function CounselChannelVideo() {
   const [isHost] = useState(true);
   const [isVoiceTranslationOn, setIsVoiceTranslationOn] = useState(false);
   const [isSignLanguageOn, setIsSignLanguageOn] = useState(false);
+  const [roomInfo] = useState({
+    name: '마음 건강 상담실',
+    maxParticipants: 4,
+  });
+  const navigate = useNavigate();
 
   // 초기화 여부 추적
   const hasJoined = useRef(false);
 
   // 커스텀 훅 사용
-  const { entryRequests, handleAcceptRequest, handleRejectRequest } =
-    useEntryRequests();
-
   const {
     participants,
     connectionError,
@@ -92,39 +91,27 @@ function CounselChannelVideo() {
   // 참가자 정보 렌더링
   const renderParticipantInfo = participant => (
     <>
-      <div className="absolute bottom-2 right-2 bg-gray-700 bg-opacity-70 text-white px-2 py-1 rounded text-xs flex items-center">
+      <div className="absolute bottom-2 left-2 bg-black bg-opacity-30 text-white px-2 py-1 rounded text-xs">
         {participant.name}
         {participant.isSelf && ' (나)'}
-        {!participant.canSpeak && (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 ml-1 text-red-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-            />
-          </svg>
-        )}
       </div>
+    </>
+  );
 
-      {isHost && !participant.isSelf && (
-        <div className="absolute top-2 right-2">
-          <button
-            onClick={() => toggleParticipantControls(participant.id)}
-            className="bg-gray-700 bg-opacity-70 text-white p-1 rounded-full"
-          >
+  const handleLeaveChannel = () => {
+    leaveSession();
+    navigate('/counsel-channel');
+  };
+
+  return (
+    <div
+      className="flex flex-col h-full bg-[#f5fdf5]"
+      style={{ minHeight: 'calc(100vh - 75px)' }}
+    >
+      {/* 방 정보 헤더 */}
+      <div className="flex items-center justify-between p-4 rounded-lg bg-white m-4 mb-0 shadow-sm">
+        <div className="flex items-center">
+          <div className="w-10 h-10 rounded-full bg-[#00a173] flex items-center justify-center text-white mr-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -136,129 +123,78 @@ function CounselChannelVideo() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
             </svg>
-          </button>
-
-          {participantControls[participant.id]?.showControls && (
-            <div className="absolute top-10 right-0 bg-white shadow-lg rounded-md p-2 z-10 w-40">
-              <button
-                onClick={() => toggleParticipantSpeaking(participant.id)}
-                className="w-full text-left px-2 py-1 text-sm hover:bg-gray-100 rounded flex items-center"
-              >
-                {participantControls[participant.id]?.canSpeak ? (
-                  <>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-2 text-red-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
-                      />
-                    </svg>
-                    발언권 제거
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-2 text-green-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                      />
-                    </svg>
-                    발언권 부여
-                  </>
-                )}
-              </button>
-            </div>
-          )}
+          </div>
+          <div>
+            <h1 className="font-bold text-gray-800">{roomInfo.name}</h1>
+          </div>
         </div>
-      )}
-    </>
-  );
+      </div>
 
-  const handleLeaveChannel = () => {
-    leaveSession();
-    window.location.href = '/counsel-channel';
-  };
-
-  return (
-    <div className="w-full bg-gradient-to-b from-[#EAF2EE] to-[#C6E1D8] rounded-xl pt-8 pb-4 px-4">
+      {/* 에러 메시지 */}
       {connectionError && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex items-center justify-between">
-          <span>{connectionError}</span>
+        <div className="mx-4 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between text-sm">
+          <div className="flex items-center text-red-600">
+            <svg
+              className="h-5 w-5 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            화상 연결 중 오류가 발생했습니다.
+          </div>
           <button
             onClick={joinSession}
-            className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs"
+            className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
           >
             재연결
           </button>
         </div>
       )}
 
-      {entryRequests.length > 0 && (
-        <EntryRequestList
-          entryRequests={entryRequests}
-          onAccept={handleAcceptRequest}
-          onReject={handleRejectRequest}
-        />
-      )}
-
-      <div className="w-full max-w-6xl mx-auto">
-        <div className="flex flex-col lg:flex-row gap-4 mb-4 h-full">
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden lg:flex-1">
-            <div className="p-4 bg-[#F8F9FA]">
-              <VideoLayout
-                participants={participants}
-                renderParticipantInfo={renderParticipantInfo}
-              />
-            </div>
-          </div>
-
-          <ChatBox
-            messages={messages}
-            newMessage={newMessage}
-            setNewMessage={setNewMessage}
-            handleSendMessage={handleSendMessage}
-            handleKeyDown={handleKeyDown}
-            chatContainerRef={chatContainerRef}
-            currentUserId={currentUserId}
+      {/* 메인 컨텐츠 - 영상과 채팅 */}
+      <div className="flex flex-1 overflow-hidden p-4 gap-4">
+        {/* 영상 영역 */}
+        <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
+          <VideoLayout
+            participants={participants}
+            renderParticipantInfo={renderParticipantInfo}
           />
         </div>
 
-        <VideoControls
-          isMicOn={isMicOn}
-          isCameraOn={isCameraOn}
-          toggleMic={toggleMic}
-          toggleCamera={toggleCamera}
-          isVoiceTranslationOn={isVoiceTranslationOn}
-          isSignLanguageOn={isSignLanguageOn}
-          toggleVoiceTranslation={toggleVoiceTranslation}
-          toggleSignLanguage={toggleSignLanguage}
-          onLeaveChannel={handleLeaveChannel}
+        {/* ChatBox 컴포넌트 사용 */}
+        <ChatBox
+          messages={messages}
+          newMessage={newMessage}
+          setNewMessage={setNewMessage}
+          handleSendMessage={handleSendMessage}
+          handleKeyDown={handleKeyDown}
+          chatContainerRef={chatContainerRef}
+          currentUserId={currentUserId}
         />
       </div>
+
+      {/* VideoControls 컴포넌트 사용 */}
+      <VideoControls
+        isMicOn={isMicOn}
+        isCameraOn={isCameraOn}
+        toggleMic={toggleMic}
+        toggleCamera={toggleCamera}
+        isVoiceTranslationOn={isVoiceTranslationOn}
+        isSignLanguageOn={isSignLanguageOn}
+        toggleVoiceTranslation={toggleVoiceTranslation}
+        toggleSignLanguage={toggleSignLanguage}
+        onLeaveChannel={handleLeaveChannel}
+      />
     </div>
   );
 }

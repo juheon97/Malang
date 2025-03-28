@@ -13,6 +13,7 @@ const CommunityWrite = () => {
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
 
   // 파일 선택 핸들러
   const handleFileChange = e => {
@@ -35,48 +36,69 @@ const CommunityWrite = () => {
     setFilePreview(null);
   };
 
+  // 폼 유효성 검사
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!title.trim()) {
+      newErrors.title = '제목은 필수 입력 항목입니다.';
+    }
+    
+    if (!content.trim()) {
+      newErrors.content = '내용은 필수 입력 항목입니다.';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
 
-    if (!title.trim() || !content.trim()) {
-      alert('제목과 내용을 모두 입력해주세요.');
+    // 폼 유효성 검사
+    if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const currentDate = new Date()
-        .toLocaleDateString('ko-KR', {
-          year: '2-digit',
-          month: '2-digit',
-          day: '2-digit',
-        })
-        .replace(/\. /g, '.')
-        .replace(/\.$/, '');
+      // 현재 사용자 정보 (실제로는 인증 시스템에서 가져와야 함)
+      const currentUser = {
+        id: 1,
+        username: '익명의 리뷰어'
+      };
 
       // 게시글 데이터 구성
       const postData = {
         title,
         content,
         category,
-        date: currentDate,
-        authorId: 1,
-        authorName: '익명의 리뷰어',
-        likes: 0,
+        authorId: currentUser.id,
+        authorName: currentUser.username,
       };
-
+      
       // 파일이 있는 경우 URL 추가
       if (filePreview) {
         postData.fileUrl = filePreview;
       }
 
-      await createPost(postData);
+      const response = await createPost(postData);
+      
+      // 성공 메시지 표시
       alert('게시글이 성공적으로 등록되었습니다.');
+      
+      // 게시글 목록 페이지로 이동
       navigate('/community');
     } catch (error) {
       console.error('게시글 작성 실패:', error);
-      alert('게시글 등록 중 오류가 발생했습니다.');
+      
+      // 에러 메시지 표시
+      if (error.response && error.response.data && error.response.data.details) {
+        setErrors(error.response.data.details);
+      } else {
+        alert('게시글 등록 중 오류가 발생했습니다.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -120,23 +142,35 @@ const CommunityWrite = () => {
         </div>
 
         {/* 제목 입력 */}
-        <input
-          type="text"
-          placeholder="제목을 입력해주세요."
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          className="w-full px-4 py-3 bg-white border border-[#e0e7e0] rounded-lg shadow-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8ed7af]"
-          required
-        />
+        <div>
+          <input
+            type="text"
+            placeholder="제목을 입력해주세요."
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            className={`w-full px-4 py-3 bg-white border ${
+              errors.title ? 'border-red-500' : 'border-[#e0e7e0]'
+            } rounded-lg shadow-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8ed7af]`}
+          />
+          {errors.title && (
+            <p className="mt-1 text-red-500 text-sm">{errors.title}</p>
+          )}
+        </div>
 
         {/* 내용 입력 */}
-        <textarea
-          placeholder="내용을 입력해주세요."
-          value={content}
-          onChange={e => setContent(e.target.value)}
-          className="w-full h-64 px-4 py-3 bg-white border border-[#e0e7e0] rounded-lg shadow-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8ed7af] resize-none"
-          required
-        />
+        <div>
+          <textarea
+            placeholder="내용을 입력해주세요."
+            value={content}
+            onChange={e => setContent(e.target.value)}
+            className={`w-full h-64 px-4 py-3 bg-white border ${
+              errors.content ? 'border-red-500' : 'border-[#e0e7e0]'
+            } rounded-lg shadow-md text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8ed7af] resize-none`}
+          />
+          {errors.content && (
+            <p className="mt-1 text-red-500 text-sm">{errors.content}</p>
+          )}
+        </div>
 
         {/* 파일 업로드 영역 */}
         <div className="bg-white p-4 border border-[#e0e7e0] rounded-lg shadow-md">

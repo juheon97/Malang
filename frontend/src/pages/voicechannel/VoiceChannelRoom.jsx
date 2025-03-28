@@ -10,24 +10,26 @@ function VoiceChannelForm() {
     maxUsers: '4',
   });
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const increaseMaxUsers = () => {
-    setFormData((prev) =>
-      ({ ...prev, maxUsers: Math.min(parseInt(prev.maxUsers) + 1, 4).toString() })
-    );
+    setFormData(prev => ({
+      ...prev,
+      maxUsers: Math.min(parseInt(prev.maxUsers) + 1, 4).toString(),
+    }));
   };
 
   const decreaseMaxUsers = () => {
-    setFormData((prev) =>
-      ({ ...prev, maxUsers: Math.max(parseInt(prev.maxUsers) - 1, 1).toString() })
-    );
+    setFormData(prev => ({
+      ...prev,
+      maxUsers: Math.max(parseInt(prev.maxUsers) - 1, 1).toString(),
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
     console.log('음성채널 생성 데이터:', formData);
     // API 호출 로직 추가
@@ -43,7 +45,9 @@ function VoiceChannelForm() {
             <h3 className="text-gray-700 font-semibold mb-4">방 유형</h3>
             <div className="flex items-center bg-gradient-to-b from-[#E0FEE0] to-[#B0DAAF] rounded-lg shadow-md p-2 cursor-pointer">
               <div className="text-green-600 mr-2">✓</div>
-              <span className="text-sm font-semibold text-gray-700 ">음성채널</span>
+              <span className="text-sm font-semibold text-gray-700 ">
+                음성채널
+              </span>
             </div>
           </div>
 
@@ -59,7 +63,12 @@ function VoiceChannelForm() {
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 <div>
-                  <label htmlFor="roomName" className="block text-base font-semibold text-gray-600 mb-3">방 이름</label>
+                  <label
+                    htmlFor="roomName"
+                    className="block text-base font-semibold text-gray-600 mb-3"
+                  >
+                    방 이름
+                  </label>
                   <input
                     type="text"
                     id="roomName"
@@ -71,7 +80,12 @@ function VoiceChannelForm() {
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block font-semibold text-base text-gray-600 mb-3">비밀번호</label>
+                  <label
+                    htmlFor="password"
+                    className="block font-semibold text-base text-gray-600 mb-3"
+                  >
+                    비밀번호
+                  </label>
                   <input
                     type="password"
                     id="password"
@@ -84,7 +98,12 @@ function VoiceChannelForm() {
               </div>
 
               <div className="mb-8">
-                <label htmlFor="description" className="block font-semibold text-base text-gray-600 mb-3">방 설명 (선택사항)</label>
+                <label
+                  htmlFor="description"
+                  className="block font-semibold text-base text-gray-600 mb-3"
+                >
+                  방 설명 (선택사항)
+                </label>
                 <input
                   type="text"
                   id="description"
@@ -97,20 +116,31 @@ function VoiceChannelForm() {
 
               <div className="flex justify-between items-end mb-2">
                 <div>
-                  <label htmlFor="maxUsers" className="block font-semibold text-base text-gray-600 mb-3">최대 인원</label>
+                  <label
+                    htmlFor="maxUsers"
+                    className="block font-semibold text-base text-gray-600 mb-3"
+                  >
+                    최대 인원
+                  </label>
                   <div className="flex bg-white items-center border border-gray-200 rounded-xl p-1.5 w-fit ">
-                    <span className="mr-3 text-base px-2 py-1">{formData.maxUsers}명</span>
+                    <span className="mr-3 text-base px-2 py-1">
+                      {formData.maxUsers}명
+                    </span>
                     <div className="flex flex-col">
                       <button
                         type="button"
                         className="text-xs px-2 text-gray-500 hover:text-gray-700 leading-none"
                         onClick={increaseMaxUsers}
-                      >▲</button>
+                      >
+                        ▲
+                      </button>
                       <button
                         type="button"
                         className="text-xs text-gray-500 hover:text-gray-700 leading-none"
                         onClick={decreaseMaxUsers}
-                      >▼</button>
+                      >
+                        ▼
+                      </button>
                     </div>
                   </div>
                 </div>

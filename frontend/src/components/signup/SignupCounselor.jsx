@@ -1,4 +1,3 @@
-// src/components/signup/SignupCounselor.jsx
 import React from 'react';
 
 const SignupCounselor = ({
@@ -8,6 +7,8 @@ const SignupCounselor = ({
   setEmail,
   password,
   setPassword,
+  confirmPassword,
+  setConfirmPassword,
   gender,
   setGender,
   birthYear,
@@ -18,6 +19,7 @@ const SignupCounselor = ({
   setBirthDay,
   hasCertification,
   setHasCertification,
+  fieldErrors = {},
 }) => {
   const handleGenderChange = selectedGender => {
     setGender(selectedGender);
@@ -39,36 +41,93 @@ const SignupCounselor = ({
     }
   };
 
+  // 현재 연도 계산
+  const currentYear = new Date().getFullYear();
+
+  // 선택한 월에 따른 최대 일수 계산
+  const getMaxDaysInMonth = (year, month) => {
+    return new Date(year, month, 0).getDate();
+  };
+
+  const maxDays = getMaxDaysInMonth(birthYear, birthMonth);
+
+  // 날짜가 유효한지 확인하고 필요시 조정
+  React.useEffect(() => {
+    if (birthDay > maxDays) {
+      setBirthDay(maxDays);
+    }
+  }, [birthMonth, birthYear, birthDay, maxDays, setBirthDay]);
+
   return (
-    <form className="w-full max-w-[800px]">
+    <>
       <div className="mb-6 flex flex-col items-start">
         <label className="w-full text-xl text-gray-800 mb-2">이름 :</label>
         <input
           type="text"
-          className="w-4/5 py-3 px-4 border-[3px] border-gray-300 rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]"
+          className={`w-4/5 py-3 px-4 border-[3px] ${
+            fieldErrors.name ? 'border-red-500' : 'border-gray-300'
+          } rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]`}
           value={name}
           onChange={e => setName(e.target.value)}
         />
+        {fieldErrors.name && (
+          <span className="text-red-500 text-sm mt-1">{fieldErrors.name}</span>
+        )}
       </div>
 
       <div className="mb-6 flex flex-col items-start">
         <label className="w-full text-xl text-gray-800 mb-2">이메일 :</label>
         <input
           type="email"
-          className="w-4/5 py-3 px-4 border-[3px] border-gray-300 rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]"
+          className={`w-4/5 py-3 px-4 border-[3px] ${
+            fieldErrors.email ? 'border-red-500' : 'border-gray-300'
+          } rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]`}
           value={email}
           onChange={e => setEmail(e.target.value)}
         />
+        {fieldErrors.email && (
+          <span className="text-red-500 text-sm mt-1">{fieldErrors.email}</span>
+        )}
       </div>
 
       <div className="mb-6 flex flex-col items-start">
         <label className="w-full text-xl text-gray-800 mb-2">비밀번호 :</label>
         <input
           type="password"
-          className="w-4/5 py-3 px-4 border-[3px] border-gray-300 rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]"
+          className={`w-4/5 py-3 px-4 border-[3px] ${
+            fieldErrors.password ? 'border-red-500' : 'border-gray-300'
+          } rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]`}
           value={password}
           onChange={e => setPassword(e.target.value)}
         />
+        {fieldErrors.password && (
+          <span className="text-red-500 text-sm mt-1">
+            {fieldErrors.password}
+          </span>
+        )}
+        <p className="text-gray-500 text-sm mt-2">
+          비밀번호는 최소 8자 이상이며, 영문자, 숫자, 특수문자를 포함해야
+          합니다.
+        </p>
+      </div>
+
+      <div className="mb-6 flex flex-col items-start">
+        <label className="w-full text-xl text-gray-800 mb-2">
+          비밀번호 확인 :
+        </label>
+        <input
+          type="password"
+          className={`w-4/5 py-3 px-4 border-[3px] ${
+            fieldErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+          } rounded-3xl outline-none text-xl focus:border-[#00a67d] focus:shadow-[0_0_5px_rgba(0,166,125,0.2)]`}
+          value={confirmPassword}
+          onChange={e => setConfirmPassword(e.target.value)}
+        />
+        {fieldErrors.confirmPassword && (
+          <span className="text-red-500 text-sm mt-1">
+            {fieldErrors.confirmPassword}
+          </span>
+        )}
       </div>
 
       <div className="mb-6 flex flex-col items-start">
@@ -133,14 +192,16 @@ const SignupCounselor = ({
                 <button
                   type="button"
                   className="bg-none border-none cursor-pointer text-sm text-black h-[15px] flex items-center justify-center p-0"
-                  onClick={() => incrementValue(setBirthYear, birthYear, 2023)}
+                  onClick={() =>
+                    incrementValue(setBirthYear, birthYear, currentYear)
+                  }
                 >
                   ▲
                 </button>
                 <button
                   type="button"
                   className="bg-none border-none cursor-pointer text-sm text-black h-[15px] flex items-center justify-center p-0"
-                  onClick={() => decrementValue(setBirthYear, birthYear, 1900)}
+                  onClick={() => decrementValue(setBirthYear, birthYear, 1920)}
                 >
                   ▼
                 </button>
@@ -189,7 +250,7 @@ const SignupCounselor = ({
                 <button
                   type="button"
                   className="bg-none border-none cursor-pointer text-sm text-black h-[15px] flex items-center justify-center p-0"
-                  onClick={() => incrementValue(setBirthDay, birthDay, 31)}
+                  onClick={() => incrementValue(setBirthDay, birthDay, maxDays)}
                 >
                   ▲
                 </button>
@@ -254,8 +315,11 @@ const SignupCounselor = ({
             </label>
           </div>
         </div>
+        <p className="text-gray-600 text-sm mt-2">
+          * 가입 후 마이페이지에서 자격증 정보를 추가할 수 있습니다.
+        </p>
       </div>
-    </form>
+    </>
   );
 };
 
