@@ -67,8 +67,14 @@ export const AuthProvider = ({ children }) => {
       console.log('Login response:', response.data);
 
       // 응답에서 필요한 데이터 추출
-      const { accessToken, refreshToken, token, userId, nickname } =
-        response.data;
+      const {
+        accessToken,
+        refreshToken,
+        token,
+        userId,
+        nickname,
+        disabilityStatus,
+      } = response.data;
 
       // JWT 토큰에서 role 정보 추출
       let role = undefined;
@@ -99,9 +105,20 @@ export const AuthProvider = ({ children }) => {
         id: userId,
         username: nickname,
         role: role, // JWT에서 추출한 역할 정보
+        disabilityStatus: disabilityStatus, // 시각장애 여부 추가
       };
 
+      // 사용자 정보 세션 스토리지에 저장
       sessionStorage.setItem('user', JSON.stringify(userInfo));
+
+      // 시각장애 여부를 userSettings에 저장 (UI 설정에 활용)
+      sessionStorage.setItem(
+        'userSettings',
+        JSON.stringify({
+          isVisuallyImpaired: disabilityStatus === true,
+        }),
+      );
+
       setCurrentUser(userInfo);
 
       return userInfo;
@@ -113,30 +130,58 @@ export const AuthProvider = ({ children }) => {
   };
 
   // 로그아웃 함수
-  const logout = () => {
-    // 현재 사용자가 상담사인 경우 활성 상태에서 제거
-    if (currentUser && currentUser.role === 'ROLE_COUNSELOR') {
-      try {
-        const activeUsers = JSON.parse(
-          sessionStorage.getItem('loggedInUsers') || '[]',
-        );
-        const updatedActiveUsers = activeUsers.filter(
-          id => id !== currentUser.id,
-        );
-        sessionStorage.setItem(
-          'loggedInUsers',
-          JSON.stringify(updatedActiveUsers),
-        );
-      } catch (err) {
-        console.error('활성 상태 업데이트 실패:', err);
-      }
-    }
+  const logout = async () => {
+    try {
+      // 백엔드 로그아웃 API 호출
+      await authApi.logout();
 
-    sessionStorage.removeItem('user');
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('refreshToken');
-    setCurrentUser(null);
-    navigate('/home');
+      // 현재 사용자가 상담사인 경우 활성 상태에서 제거
+      if (currentUser && currentUser.role === 'ROLE_COUNSELOR') {
+        try {
+          const activeUsers = JSON.parse(
+            sessionStorage.getItem('loggedInUsers') || '[]',
+          );
+          const updatedActiveUsers = activeUsers.filter(
+            id => id !== currentUser.id,
+          );
+          sessionStorage.setItem(
+            'loggedInUsers',
+            JSON.stringify(updatedActiveUsers),
+          );
+        } catch (err) {
+          console.error('활성 상태 업데이트 실패:', err);
+        }
+      }
+
+      // 세션 스토리지에서 사용자 정보와 토큰 제거
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('refreshToken');
+
+      setCurrentUser(null);
+
+      // 로그아웃 이벤트 발생 (다른 탭이나 컴포넌트에서 감지할 수 있도록)
+      const logoutEvent = new CustomEvent('auth:logout');
+      window.dispatchEvent(logoutEvent);
+
+      navigate('/');
+    } catch (error) {
+      console.error('로그아웃 오류:', error);
+
+      // 오류가 있어도 클라이언트에서는 로그아웃 처리
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('refreshToken');
+      sessionStorage.removeItem('userSettings');
+
+      setCurrentUser(null);
+
+      // 로그아웃 이벤트 발생
+      const logoutEvent = new CustomEvent('auth:logout');
+      window.dispatchEvent(logoutEvent);
+
+      navigate('/');
+    }
   };
 
   return (

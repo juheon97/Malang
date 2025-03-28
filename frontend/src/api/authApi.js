@@ -266,6 +266,7 @@ const mockApi = {
         nickname: user.user_nickname || user.counselor_name,
         role: user.role,
         token: accessToken, // 기존 코드와 호환성 유지
+        disabilityStatus: user.disability_status, // 시각장애 여부 추가
       },
     };
   },
@@ -294,6 +295,16 @@ const mockApi = {
       },
     };
   },
+
+  // 로그아웃
+  logout: async () => {
+    console.log('Mock: 로그아웃');
+    return {
+      data: {
+        message: '로그아웃이 성공적으로 처리되었습니다.',
+      },
+    };
+  },
 };
 
 // 환경 변수에 따라 실제 API 또는 모의 API 선택
@@ -307,6 +318,7 @@ const authApi = USE_MOCK_API
           password: userData.password,
           nickname: userData.nickname,
           profileUrl: null, // 선택적 필드
+          disabilityStatus: userData.isVisuallyImpaired, // 시각장애 여부 추가
         });
       },
 
@@ -351,6 +363,24 @@ const authApi = USE_MOCK_API
           {
             headers: {
               Authorization: `Bearer ${refreshToken}`,
+            },
+          },
+        );
+      },
+
+      // 로그아웃
+      logout: async () => {
+        const token = sessionStorage.getItem('token');
+        if (!token) {
+          throw new Error('로그인 상태가 아닙니다.');
+        }
+
+        return api.post(
+          '/auth/logout',
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
             },
           },
         );
