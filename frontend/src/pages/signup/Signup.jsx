@@ -125,15 +125,15 @@ const Signup = () => {
         response = await authApi.registerUser(userData);
       } else {
         // 상담사 회원가입
-
+        // 생년월일을 YYYY-MM-DD 형식으로 포맷팅
         const formattedBirthDate = `${birthYear}-${String(birthMonth).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}`;
 
         const userData = {
           counselor_name: name,
           user_email: email,
           password: password,
-          counselor_gender: gender === '남' ? 'M' : 'F',
-          counselor_birthdate: formattedBirthDate,
+          counselor_gender: gender === '남' ? 'M' : 'F', // 성별 포맷 변환
+          counselor_birthdate: formattedBirthDate, // 포맷팅된 생년월일 사용
           certification: hasCertification,
         };
 
@@ -167,7 +167,7 @@ const Signup = () => {
 
             // 기본 상담사 프로필 생성
             const counselorProfile = {
-              specialty: '',
+              specialty: '', // API는 specialty를 사용하지만 UI는 speciality를 사용
               years: '0',
               bio: '',
               profileUrl: 'src/assets/image/mypage/Mypage_profile.svg',

@@ -30,9 +30,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        // target: 'http://localhost:8080',
+        target: 'http://localhost:8080',
         // 팀장님 서버 사용 시 이 설정 활성화
-        target: 'https://backend.takustory.site',
+        // target: 'https://backend.takustory.site',
         changeOrigin: true,
         secure: false,
       },

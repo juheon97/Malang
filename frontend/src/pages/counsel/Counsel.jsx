@@ -124,7 +124,7 @@ const Counsel = () => {
   const handleRequestSubmit = async userInfo => {
     try {
       // 채널 입장 요청 API 호출
-      // API 엔드포인트가 명확하지 않음 ....
+      // API 엔드포인트가 명확하지 않음
       // const response = await channelEntry.requestChannelEntry(selectedCounselor.id, userInfo);
       console.log('상담 요청:', userInfo, '상담사:', selectedCounselor?.name);
       setShowRequestModal(false);
