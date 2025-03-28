@@ -7,8 +7,18 @@ class WebSocketService {
     this.listeners = {};
     this.isConnected = false;
 
-    // 환경변수에서 API URL을 가져오고, '/ws' 엔드포인트를 붙임
-    this.socketURL = `${import.meta.env.VITE_API_URL}/ws`;
+    // 현재 호스트명을 확인하여 로컬 환경인지 판단
+    const hostname = window.location.hostname;
+    let baseURL;
+
+    // 로컬 환경이면 VITE_API_URL (예: /api/ws) 사용, 아니면 배포 URL (예: /ws) 사용
+    if (hostname === 'localhost') {
+      baseURL = import.meta.env.VITE_API_URL;
+    } else {
+      baseURL = 'https://j12d110.p.ssafy.io';
+    }
+
+    this.socketURL = `${baseURL}/ws`;
   }
 
   connect() {
@@ -19,7 +29,7 @@ class WebSocketService {
     this.stompClient = new Client({
       webSocketFactory: () => {
         // 토큰을 sessionStorage에서 불러오기
-        return new SockJS(`${import.meta.env.VITE_API_URL}/ws`);
+        return new SockJS(this.socketURL);
       },
       // STOMP CONNECT 명령 시 헤더에 Authorization 추가
       connectHeaders: {
