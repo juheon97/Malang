@@ -7,8 +7,8 @@ class WebSocketService {
     this.listeners = {};
     this.isConnected = false;
 
-    // SockJS WebSocket 서버 연결 URL (http(s)로 시작해야 함)
-    this.socketURL = 'https://j12d110.p.ssafy.io/ws'; // 여기 포인트!
+    // 환경변수에서 API URL을 가져오고, '/ws' 엔드포인트를 붙임
+    this.socketURL = `${import.meta.env.VITE_API_URL}/ws`;
   }
 
   connect() {
@@ -17,7 +17,14 @@ class WebSocketService {
     }
 
     this.stompClient = new Client({
-      webSocketFactory: () => new SockJS(this.socketURL), // ✅ 핵심 수정
+      webSocketFactory: () => {
+        // 토큰을 sessionStorage에서 불러오기
+        return new SockJS(`${import.meta.env.VITE_API_URL}/ws`);
+      },
+      // STOMP CONNECT 명령 시 헤더에 Authorization 추가
+      connectHeaders: {
+        Authorization: 'Bearer ' + sessionStorage.getItem('token'),
+      },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
