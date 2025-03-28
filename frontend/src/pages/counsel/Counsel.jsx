@@ -4,18 +4,19 @@ import CounselorRequestModal from '../../components/modal/CounselorRequestModal'
 import WaitingModal from '../../components/modal/WaitingModal';
 import counselorChannel from '../../api/counselorChannel';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAccessibility } from '../../contexts/AccessibilityContext';
 
 // 상담사 찾기 페이지
 const Counsel = () => {
-  // Extract currentUser from AuthContext
   const { currentUser } = useAuth();
+
+  const { isAccessibleMode } = useAccessibility();
 
   const [counselors, setCounselors] = useState([]);
   const [selectedCounselor, setSelectedCounselor] = useState(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showWaitingModal, setShowWaitingModal] = useState(false);
-  const [isAccessibleMode, setIsAccessibleMode] = useState(false);
   const [expandedCard, setExpandedCard] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,19 +29,9 @@ const Counsel = () => {
     size: 10,
   });
 
-  // 모달 열릴 때 포커스 관리를 위한 refs
+  // 모달 열릴 때 포커스 관리 위함
   const previousFocusRef = useRef(null);
   const modalRef = useRef(null);
-
-  // 시각장애인 모드 설정 (sessionlStorage 또는 사용자 설정에서 가져옴)
-  useEffect(() => {
-    const userSettings = JSON.parse(
-      sessionStorage.getItem('userSettings') || '{}',
-    );
-    if (userSettings.isVisuallyImpaired) {
-      setIsAccessibleMode(true);
-    }
-  }, []);
 
   // 상담사 목록 조회
   useEffect(() => {
@@ -95,7 +86,7 @@ const Counsel = () => {
     };
 
     fetchCounselors();
-  }, [filters, currentUser]); // Now currentUser is properly defined
+  }, [filters, currentUser]);
 
   // 필터 변경 핸들러
   const handleFilterChange = (name, value) => {
@@ -104,16 +95,6 @@ const Counsel = () => {
       [name]: value,
       page: 1, // 필터 변경 시 항상 첫 페이지로
     }));
-  };
-
-  // 시각장애인 모드 토글 (개발용)
-  const toggleAccessibleMode = () => {
-    const newMode = !isAccessibleMode;
-    setIsAccessibleMode(newMode);
-    sessionStorage.setItem(
-      'userSettings',
-      JSON.stringify({ isVisuallyImpaired: newMode }),
-    );
   };
 
   // 소개 전문 모달 열기 (기존 리뷰 모달 기능 확장)
@@ -143,7 +124,7 @@ const Counsel = () => {
   const handleRequestSubmit = async userInfo => {
     try {
       // 채널 입장 요청 API 호출
-      // API 엔드포인트가 명확하지 않아 예시로 작성
+      // API 엔드포인트가 명확하지 않음 ....
       // const response = await channelEntry.requestChannelEntry(selectedCounselor.id, userInfo);
       console.log('상담 요청:', userInfo, '상담사:', selectedCounselor?.name);
       setShowRequestModal(false);
@@ -324,22 +305,6 @@ const Counsel = () => {
         }))
       : dummyCounselors;
 
-  // 시각장애인 모드 토글 버튼 스타일
-  const toggleButtonStyle = {
-    position: 'fixed',
-    bottom: '20px',
-    right: '20px',
-    padding: '10px 15px',
-    background: isAccessibleMode ? '#FF5722' : '#08976E',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-    zIndex: 9999,
-    cursor: 'pointer',
-    fontWeight: 'bold',
-  };
-
   // 배경 스타일 (일반 모드에서 사용)
   const pageStyle = {
     backgroundImage: `
@@ -354,11 +319,6 @@ const Counsel = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
-      {/* 시각장애인 모드 토글 버튼 (개발용) */}
-      <button onClick={toggleAccessibleMode} style={toggleButtonStyle}>
-        {isAccessibleMode ? '일반 모드로 전환' : '시각장애인 모드로 전환'}
-      </button>
-
       {isLoading && (
         <div className="flex justify-center items-center h-40">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>

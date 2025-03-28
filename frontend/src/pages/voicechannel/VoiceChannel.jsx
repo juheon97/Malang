@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import PasswordModal from '../../components/modal/PasswordModal';
 import WaitingModal from '../../components/modal/WaitingModal';
 import { useNavigate } from 'react-router-dom';
-import { useAccessibility } from '../../contexts/AccessibilityContext'; // 추가
+import { useAccessibility } from '../../contexts/AccessibilityContext';
 
 const VoiceChannel = () => {
   const [searchInput, setSearchInput] = useState('');
@@ -13,12 +13,24 @@ const VoiceChannel = () => {
   const [currentChannelId, setCurrentChannelId] = useState(null);
   const [expandedChannel, setExpandedChannel] = useState(null);
 
-  // AccessibilityContext에서 isAccessibleMode 가져오기
-  const { isAccessibleMode } = useAccessibility();
+  const { isAccessibleMode, setAccessibleMode } = useAccessibility();
 
   // 모달용 포커스 관리
   const previousFocusRef = useRef(null);
   const modalRef = useRef(null);
+
+  // 세션 스토리지에서 시각장애인 설정 확인
+  useEffect(() => {
+    const userSettings = JSON.parse(
+      sessionStorage.getItem('userSettings') || '{}',
+    );
+
+    if (userSettings.isVisuallyImpaired === false) {
+      setAccessibleMode(false);
+    } else if (userSettings.isVisuallyImpaired === true) {
+      setAccessibleMode(true);
+    }
+  }, [setAccessibleMode]);
 
   // 채널 데이터 useMemo로 메모이제이션
   const channels = useMemo(

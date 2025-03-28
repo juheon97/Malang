@@ -1,15 +1,106 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import websocketService from '../../services/websocketService';
 
-const ChatBox = ({
-  messages,
-  newMessage,
-  setNewMessage,
-  handleSendMessage,
-  handleKeyDown,
-  chatContainerRef,
-  currentUserId,
-  isConnected,
-}) => {
+const ChatBox = ({ currentUserId }) => {
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
+  const chatContainerRef = useRef(null);
+  // 전송한 메시지의 고유 id를 저장하기 위한 ref (중복 수신 방지를 위해)
+  const sentMessageIdsRef = useRef(new Set());
+  const user = JSON.parse(sessionStorage.getItem('user'));
+
+  useEffect(() => {
+    websocketService.connect();
+
+    const checkConnection = setInterval(() => {
+      setIsConnected(websocketService.isConnected);
+    }, 500);
+
+    const unsubscribe = websocketService.addListener('message', data => {
+      if (data.event === 'message') {
+        let parsed;
+        try {
+          parsed = JSON.parse(data.content);
+        } catch (err) {
+          parsed = { text: data.content };
+        }
+
+        if (parsed.id && sentMessageIdsRef.current.has(parsed.id)) {
+          sentMessageIdsRef.current.delete(parsed.id);
+          return;
+        }
+
+        setMessages(prevMessages => [
+          ...prevMessages,
+          {
+            id: parsed.id || Date.now(),
+            text: parsed.text || data.content,
+            sender: parsed.nickname || '익명', // ✅ 수신 메시지의 닉네임 저장
+            timestamp: new Date().toLocaleTimeString(),
+          },
+        ]);
+      }
+    });
+
+    return () => {
+      clearInterval(checkConnection);
+      unsubscribe();
+      websocketService.disconnect();
+    };
+  }, []);
+
+  // 새로운 채팅이 올라오면 채팅창 스크롤 자동으로 맨 아래로 이동
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } =
+        chatContainerRef.current;
+      const isAtBottom = scrollHeight - scrollTop <= clientHeight + 100;
+
+      if (isAtBottom) {
+        chatContainerRef.current.scrollTop =
+          chatContainerRef.current.scrollHeight;
+      }
+    }
+  }, [messages]); // 메시지가 업데이트될 때마다 작동
+
+  const handleSendMessage = e => {
+    e.preventDefault();
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    const nickname = user?.username;
+
+    // 메세지 전송 시 백으로 보내는 json
+    if (newMessage.trim()) {
+      const messageId = Date.now();
+      const payload = JSON.stringify({
+        id: messageId,
+        text: newMessage,
+        nickname: nickname,
+      });
+
+      const success = websocketService.sendMessage('send', payload);
+      if (success) {
+        setMessages(prevMessages => [
+          ...prevMessages,
+          {
+            id: messageId,
+            text: newMessage,
+            sender: nickname, // ✅ 내 닉네임 저장
+            timestamp: new Date().toLocaleTimeString(),
+          },
+        ]);
+        sentMessageIdsRef.current.add(messageId);
+        setNewMessage('');
+      }
+    }
+  };
+
+  const handleKeyDown = e => {
+    if (e.key === 'Enter') {
+      handleSendMessage(e);
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden w-full lg:w-80 flex flex-col">
       <div className="p-3 border-b border-gray-100 flex justify-between items-center">
@@ -19,7 +110,6 @@ const ChatBox = ({
         >
           채팅
         </h1>
-        {/* 연결 상태 표시 */}
         <div className="flex items-center">
           <div
             className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
@@ -30,28 +120,37 @@ const ChatBox = ({
         </div>
       </div>
 
-      {/* 메시지 목록 */}
       <div
         ref={chatContainerRef}
         className="p-3 overflow-y-auto flex-1"
-        style={{
-          minHeight: '350px',
-          maxHeight: '350px',
-        }}
+        style={{ minHeight: '350px', maxHeight: '350px' }}
       >
         {messages.map(message => (
           <div
             key={message.id}
-            className={`mb-2 flex ${message.sender === currentUserId ? 'justify-end' : 'justify-start'}`}
+            className={`mb-2 flex ${message.sender === user?.username ? 'justify-end' : 'justify-start'}`}
           >
-            <div
-              className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${message.sender === currentUserId ? 'bg-[#D1F4CB] text-gray-800' : 'bg-[#E9EDF2] text-gray-800'}`}
-            >
-              <p>{message.text}</p>
-              <p className="text-xs text-gray-500 mt-1">{message.timestamp}</p>
+            <div className="flex flex-col items-start max-w-[85%]">
+              {/* ✅ 말풍선 위에 닉네임 표시 (내 메시지는 생략) */}
+              {message.sender !== user?.username && (
+                <span className="text-xs font-semibold text-gray-600 mb-1 ml-1">
+                  {message.sender}
+                </span>
+              )}
+
+              <div
+                className={`rounded-lg px-3 py-2 text-sm 
+        ${message.sender === user?.username ? 'bg-[#D1F4CB] self-end' : 'bg-[#E9EDF2] self-start'}`}
+              >
+                <p>{message.text}</p>
+                <p className="text-xs text-gray-500 mt-1 text-right">
+                  {message.timestamp}
+                </p>
+              </div>
             </div>
           </div>
         ))}
+
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
             <p className="text-gray-400 text-sm">메시지가 없습니다.</p>
@@ -59,7 +158,6 @@ const ChatBox = ({
         )}
       </div>
 
-      {/* 메시지 입력 */}
       <div className="p-3 border-t border-gray-100 mt-auto">
         <form onSubmit={handleSendMessage} className="flex items-center">
           <input
