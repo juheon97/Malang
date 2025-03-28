@@ -22,7 +22,7 @@ public class SwaggerConfig {
                         .description("Malang 서비스 API 문서입니다")
                         .contact(new Contact().name("D110 SSAFY TEAM")))
                 .servers(List.of(
-                        new Server().url("/").description("API Server")
+                        new Server().url("/api").description("API Server")
                 ));
     }
 }
