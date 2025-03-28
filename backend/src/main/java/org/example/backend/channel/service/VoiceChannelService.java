@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -25,6 +24,38 @@ public class VoiceChannelService {
     private final ChannelRepository channelRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    /**
+     * 순차적 채널 ID 생성
+     *
+     * @return 생성된 순차적 ID
+     */
+    private String generateSequentialChannelId() {
+        // 모든 음성 채널(category=0) 가져오기
+        List<Channel> voiceChannels = channelRepository.findByCategory(0);
+
+        // 채널이 없는 경우 "1" 반환
+        if (voiceChannels.isEmpty()) {
+            return "1";
+        }
+
+        // 기존 채널 ID 중 가장 큰 숫자 찾기
+        long maxId = 0;
+        for (Channel channel : voiceChannels) {
+            try {
+                long id = Long.parseLong(channel.getChannelId());
+                if (id > maxId) {
+                    maxId = id;
+                }
+            } catch (NumberFormatException e) {
+                // 숫자로 변환할 수 없는 ID는 무시
+                continue;
+            }
+        }
+
+        // 최대 ID + 1 반환
+        return String.valueOf(maxId + 1);
+    }
 
     /**
      * 음성 채널 생성
@@ -39,8 +70,8 @@ public class VoiceChannelService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        // 채널 ID 생성 (UUID)
-        String channelId = UUID.randomUUID().toString();
+        // UUID 대신 순차적 ID 생성
+        String channelId = generateSequentialChannelId();
 
         // 비밀번호 암호화 (설정된 경우)
         String encodedPassword = null;
@@ -68,6 +99,7 @@ public class VoiceChannelService {
         return VoiceChannelResponse.from(savedChannel, user.getNickname());
     }
 
+    // 나머지 메서드는 그대로 유지
     /**
      * 음성 채널 목록 조회
      *
