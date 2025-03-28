@@ -2,6 +2,7 @@ package org.example.backend.community.controller;
 
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend.common.exception.ErrorResponse;
 import org.example.backend.community.dto.request.CommunityArticleUpdateRequest;
 import org.example.backend.community.dto.request.CommunityCreateRequest;
 import org.example.backend.community.dto.response.CommunityArticleUpdateResponse;
@@ -10,6 +11,7 @@ import org.example.backend.community.service.CommunityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/community")
 @RequiredArgsConstructor
+@Tag(name = "커뮤니티")
 public class CommunityController {
 
     private final CommunityService communityService;
@@ -66,7 +69,7 @@ public class CommunityController {
         return ResponseEntity.ok(response);
     }
     @PutMapping("/article/{articleId}")
-    public ResponseEntity<Map<String, Object>> updateArticle(
+    public ResponseEntity<?> updateArticle(
             @PathVariable Integer articleId,
             @RequestBody CommunityArticleUpdateRequest request) {
 
@@ -85,25 +88,40 @@ public class CommunityController {
             return ResponseEntity.ok(responseMap);
 
         } catch (IllegalArgumentException e) {
-            // 사용자 권한 오류 (작성자가 아닌 경우)
-            Map<String, Object> errorMap = new HashMap<>();
-            errorMap.put("status", "error");
-            errorMap.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap);
+            // HTTP 상태 코드를 직접 사용
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.FORBIDDEN.value(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
 
         } catch (Exception e) {
-            // 기타 서버 오류
-            Map<String, Object> errorMap = new HashMap<>();
-            errorMap.put("status", "error");
-            errorMap.put("message", "게시글 업데이트 중 오류가 발생했습니다: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap);
+            // HTTP 상태 코드를 직접 사용
+            ErrorResponse errorResponse = new ErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "게시글 업데이트 중 오류가 발생했습니다: " + e.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
 
     @DeleteMapping("/article/{articleId}")
     public ResponseEntity<?> deleteArticle(@PathVariable Integer articleId) {
-        communityService.deleteArticle(articleId);
-        return ResponseEntity.ok().body("Deleted article " + articleId);
+        try {
+            communityService.deleteArticle(articleId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Deleted article " + articleId);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            ErrorResponse errorResponse = new ErrorResponse(HttpStatus.FORBIDDEN.value(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+        } catch (Exception e) {
+            ErrorResponse errorResponse = new ErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "게시글 삭제 중 오류가 발생했습니다: " + e.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 }
