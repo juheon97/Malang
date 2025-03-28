@@ -39,4 +39,10 @@ public class Counselor {
         this.gender = gender;
         this.birthdate = birthdate;
     }
+
+    public static Counselor of(String id) {
+        Counselor counselor = new Counselor();
+        counselor.id = id;
+        return counselor;
+    }
 }

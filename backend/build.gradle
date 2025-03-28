@@ -39,7 +39,8 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test' // Spring Security - JWT 인증을 구현하기 위해 필요한 의존성
 //    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
 //    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-//    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+//    implementation 'org.springframework.boot:spring-boot-st
+//    arter-oauth2-resource-server'
     // JWT 의존성 - 토큰 생성 및 검증을 위한 라이브러리
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
@@ -54,9 +55,13 @@ dependencies {
 
     // websocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    // springdoc-openapi 라이브러리 등록 - 스프링 부트 3.x.x 이상 호환 이슈로 사용
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
 
+    // springdoc-openapi 라이브러리 등록 - 스프링 부트 3.x.x 이상 호환 이슈로 사용
+    implementation 'org.springdoc:springdoc-openapi-starter-common:2.2.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+
+    // json parding 설정
+    implementation 'org.json:json:20231013'
 }
 
 tasks.named('test') {

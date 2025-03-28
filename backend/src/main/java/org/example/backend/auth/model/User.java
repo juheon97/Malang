@@ -1,6 +1,7 @@
 package org.example.backend.auth.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,7 @@ import org.example.backend.common.entity.BaseTimeEntity;
 
 @Entity
 @Getter
+@AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "user")
 public class User extends BaseTimeEntity {
@@ -51,5 +53,15 @@ public class User extends BaseTimeEntity {
     public void updateProfile(String profileUrl, String nickname) {
         this.profileUrl = profileUrl;
         this.nickname = nickname;
+    }
+
+    public static User of(Long id) {
+        User user = new User();
+        user.setId(id);
+        return user;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 }
