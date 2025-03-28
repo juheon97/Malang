@@ -3,19 +3,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
 
 const MyPage = () => {
-  // AuthContext 체크
   const auth = useAuth();
-  // 유효하지 않은 경우를 처리
-  if (!auth) {
-    return <div className="w-full max-w-5xl mx-auto p-6 mt-8">로딩 중...</div>;
-  }
-
-  const { currentUser } = auth;
+  const { currentUser } = auth || {};
   const [profile, setProfile] = useState({
     speciality: '',
     years: 0,
     bio: '',
     profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
+    hasCertification: false,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,19 +18,21 @@ const MyPage = () => {
   const fileInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState('profile');
   const [userDetails, setUserDetails] = useState(null);
+  const [isInitialLoading, setIsInitialLoading] = useState(true); // 초기 로딩 상태 추가
+
+  // 자격증 업데이트 중인지 상태
+  const [updatingCertification, setUpdatingCertification] = useState(false);
 
   // 디버깅을 위한 로그 추가
   useEffect(() => {
-    console.log('현재 사용자 정보:', currentUser);
     if (currentUser) {
-      console.log('사용자 역할:', currentUser.role);
-
-      // 세션 스토리지에서 사용자/상담사 정보 로그 출력
-      const storedUser = sessionStorage.getItem('user');
-      console.log('세션 스토리지 user:', storedUser);
-
-      const mockUsers = sessionStorage.getItem('mockUsers');
-      console.log('세션 스토리지 mockUsers:', mockUsers);
+      console.log(
+        '현재 사용자 객체 전체 구조:',
+        JSON.stringify(currentUser, null, 2),
+      );
+      // 토큰 확인
+      console.log('저장된 토큰:', sessionStorage.getItem('token'));
+      console.log('API URL:', import.meta.env.VITE_API_URL);
     }
   }, [currentUser]);
 
@@ -52,7 +49,7 @@ const MyPage = () => {
           id: storedUser.id || currentUser.id,
           name: storedUser.username || currentUser.username,
           role: storedUser.role || currentUser.role,
-          // 아래는 백엔드 API에서 따로 받아와야 하는 정보일 수 있음
+
           gender: 'M', // 기본값
           birth_date: '정보 없음', // 기본값
         });
@@ -87,33 +84,111 @@ const MyPage = () => {
     // 프로필 정보 불러오기
     const fetchProfile = async () => {
       if (!currentUser) return;
-      console.log('현재 사용자 정보:', currentUser);
 
       try {
         setLoading(true);
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-        // API 요청을 통해 상담사 프로필 정보 가져오기
-        // 모의 API 환경에서는 sessionStorage에서 가져오기
-        const storedProfile = sessionStorage.getItem(
-          `counselor_profile_${currentUser.id}`,
-        );
+        console.log(`API 호출 URL: /api/counselor/profile`);
 
-        if (storedProfile) {
-          setProfile(JSON.parse(storedProfile));
+        if (import.meta.env.VITE_USE_MOCK_API === 'true') {
+          // 모의 API 환경에서는 sessionStorage에서 가져오기
+          const storedProfile = sessionStorage.getItem(
+            `counselor_profile_${currentUser.id}`,
+          );
+
+          if (storedProfile) {
+            const parsedProfile = JSON.parse(storedProfile);
+
+            let yearsValue = 0;
+            if (parsedProfile.years) {
+              try {
+                if (typeof parsedProfile.years === 'string') {
+                  const yearsMatch = parsedProfile.years.match(/\d+/);
+                  if (yearsMatch) {
+                    yearsValue = parseInt(yearsMatch[0], 10);
+                  }
+                } else if (typeof parsedProfile.years === 'number') {
+                  yearsValue = parsedProfile.years;
+                }
+              } catch (error) {
+                console.error('years 값 변환 중 오류:', error);
+              }
+            }
+
+            setProfile({
+              ...parsedProfile,
+              speciality: parsedProfile.specialty || '',
+              years: yearsValue,
+              hasCertification: parsedProfile.hasCertification || false,
+            });
+          } else {
+            // 기본값 설정
+            setProfile({
+              speciality: '',
+              years: 0,
+              bio: '',
+              profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
+              hasCertification: false,
+            });
+          }
         } else {
-          // 기본값 설정
-          setProfile({
-            speciality: '',
-            years: 0,
-            bio: '',
-            profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
+          // 실제 API 호출
+          const response = await axios.get(`/api/counselor/profile`, {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+            },
           });
+
+          console.log('백엔드 API 응답 구조:', response.data);
+
+          if (response.data) {
+            // years 문자열에서 숫자 추출하기기
+            let yearsValue = 0;
+            if (response.data.years) {
+              try {
+                if (typeof response.data.years === 'string') {
+                  const yearsMatch = response.data.years.match(/\d+/);
+                  if (yearsMatch) {
+                    yearsValue = parseInt(yearsMatch[0], 10);
+                  }
+                } else if (typeof response.data.years === 'number') {
+                  yearsValue = response.data.years;
+                }
+              } catch (error) {
+                console.error('years 값 변환 중 오류:', error);
+              }
+            }
+
+            setProfile({
+              speciality: response.data.specialty || '',
+              years: yearsValue,
+              bio: response.data.bio || '',
+              profile_url:
+                response.data.profileUrl ||
+                'src/assets/image/mypage/Mypage_profile.svg',
+              hasCertification: response.data.hasCertification || false,
+            });
+
+            // 사용자 기본 정보 업데이트
+            setUserDetails(prev => ({
+              ...prev,
+              name: response.data.name || prev?.name,
+              gender: response.data.gender || prev?.gender,
+              birth_date: response.data.formattedBirthdate || prev?.birth_date,
+            }));
+          }
         }
       } catch (err) {
-        console.error('프로필 정보를 불러오는데 실패했습니다:', err);
+        console.error('프로필 정보 요청 오류:', err);
+        console.error(
+          '오류 상세 정보:',
+          err.response || err.request || err.message,
+        );
         setError('프로필 정보를 불러오는데 실패했습니다.');
       } finally {
         setLoading(false);
+        setIsInitialLoading(false); // 초기 로딩 완료
       }
     };
 
@@ -147,6 +222,92 @@ const MyPage = () => {
     reader.readAsDataURL(file);
   };
 
+  // 자격증 정보 업데이트 함수
+  const updateCertification = async value => {
+    if (!currentUser) return;
+
+    try {
+      setUpdatingCertification(true);
+      setError('');
+      setSuccess('');
+
+      // 프로필 상태 업데이트
+      setProfile(prev => ({
+        ...prev,
+        hasCertification: value,
+      }));
+
+      if (import.meta.env.VITE_USE_MOCK_API === 'true') {
+        // 모의 API에서 자격증 정보 업데이트
+        const updatedProfile = {
+          ...profile,
+          hasCertification: value,
+          specialty: profile.speciality, // speciality -> specialty 변환
+        };
+        sessionStorage.setItem(
+          `counselor_profile_${currentUser.id}`,
+          JSON.stringify(updatedProfile),
+        );
+
+        // 상담사 목록 업데이트
+        const storedCounselors = JSON.parse(
+          sessionStorage.getItem('mockCounselors') || '[]',
+        );
+        const existingIndex = storedCounselors.findIndex(
+          c => c.id === currentUser.id || c.id === parseInt(currentUser.id),
+        );
+
+        if (existingIndex >= 0) {
+          storedCounselors[existingIndex].hasCertification = value;
+          sessionStorage.setItem(
+            'mockCounselors',
+            JSON.stringify(storedCounselors),
+          );
+        }
+
+        setSuccess('자격증 정보가 업데이트되었습니다.');
+      } else {
+        // 실제 API 호출
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+        console.log(
+          `자격증 업데이트 API 호출: /api/counselor/profile/certification`,
+        );
+        console.log('자격증 업데이트 파라미터:', { hasCertification: value });
+
+        const response = await axios.put(
+          `/api/counselor/profile/certification`,
+          null,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+            },
+            params: { hasCertification: value },
+          },
+        );
+
+        console.log('자격증 업데이트 응답:', response.data);
+
+        if (response.data) {
+          setSuccess('자격증 정보가 업데이트되었습니다.');
+        }
+      }
+    } catch (err) {
+      console.error('자격증 정보 업데이트에 실패했습니다:', err);
+      console.error(
+        '자격증 업데이트 오류 상세 정보:',
+        err.response || err.request || err.message,
+      );
+      setError('자격증 정보 업데이트에 실패했습니다.');
+      // 실패 시 이전 상태로 되돌림
+      setProfile(prev => ({
+        ...prev,
+        hasCertification: !value,
+      }));
+    } finally {
+      setUpdatingCertification(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!currentUser) return;
 
@@ -160,7 +321,11 @@ const MyPage = () => {
         // 상담사 프로필 저장
         sessionStorage.setItem(
           `counselor_profile_${currentUser.id}`,
-          JSON.stringify(profile),
+          JSON.stringify({
+            ...profile,
+            specialty: profile.speciality, // speciality -> specialty 변환
+            years: `${profile.years}년`, // years 값을 문자열로 저장
+          }),
         );
 
         // 상담사 목록에 상담사 추가 또는 업데이트
@@ -177,12 +342,13 @@ const MyPage = () => {
 
         const updatedCounselor = {
           id: currentUser.id,
-          name: currentUser.username || userDetails?.counselor_name || '상담사',
+          name: currentUser.username || userDetails?.name || '상담사',
           title: '심리 상담 전문가',
           specialty: profile.speciality,
           bio: profile.bio,
-          years: profile.years,
+          years: `${profile.years}년`, // 년 단위 추가
           certifications: ['심리상담사'],
+          hasCertification: profile.hasCertification,
           rating_avg:
             existingIndex >= 0 ? storedCounselors[existingIndex].rating_avg : 0,
           review_count:
@@ -218,9 +384,23 @@ const MyPage = () => {
       } else {
         // 실제 API 호출
         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-        await axios.put(
-          `${API_URL}/counselor/${currentUser.id}/profile`,
-          profile,
+
+        // API 요청 데이터 구성 (백엔드 DTO에 맞게 필드명 조정)
+        const requestData = {
+          nickname: currentUser.username || userDetails?.name,
+          specialty: profile.speciality,
+          years: `${profile.years}년`,
+          bio: profile.bio,
+          profileUrl: profile.profile_url,
+        };
+
+        console.log('프로필 업데이트 요청 URL:', `/api/counselor/profile`);
+        console.log('프로필 업데이트 요청 데이터:', requestData);
+        console.log('요청 토큰:', sessionStorage.getItem('token'));
+
+        const response = await axios.put(
+          `/api/counselor/profile`,
+          requestData,
           {
             headers: {
               Authorization: `Bearer ${sessionStorage.getItem('token')}`,
@@ -229,10 +409,55 @@ const MyPage = () => {
           },
         );
 
+        console.log('프로필 업데이트 응답:', response.data);
+
+        // 응답에서 받은 데이터로 userDetails 업데이트
+        if (response.data) {
+          setUserDetails(prev => ({
+            ...prev,
+            name: response.data.name || prev?.name,
+            gender: response.data.gender || prev?.gender,
+            birth_date: response.data.formattedBirthdate || prev?.birth_date,
+          }));
+
+          // API 응답에서 years 필드 처리 (문자열에서 숫자로 변환)
+          let yearsValue = profile.years;
+          if (response.data.years) {
+            try {
+              if (typeof response.data.years === 'string') {
+                const yearsMatch = response.data.years.match(/\d+/);
+                if (yearsMatch) {
+                  yearsValue = parseInt(yearsMatch[0], 10);
+                  console.log('변환된 years 값:', yearsValue);
+                }
+              } else if (typeof response.data.years === 'number') {
+                yearsValue = response.data.years;
+              }
+            } catch (error) {
+              console.error('years 값 변환 중 오류:', error);
+            }
+          }
+
+          // 프로필 정보도 최신 상태로 업데이트
+          setProfile(prev => ({
+            ...prev,
+            speciality: response.data.specialty || prev.speciality,
+            years: yearsValue,
+            bio: response.data.bio || prev.bio,
+            hasCertification:
+              response.data.hasCertification || prev.hasCertification,
+            profile_url: response.data.profileUrl || prev.profile_url,
+          }));
+        }
+
         setSuccess('프로필이 성공적으로 업데이트되었습니다.');
       }
     } catch (err) {
       console.error('프로필 업데이트에 실패했습니다:', err);
+      console.error(
+        '프로필 업데이트 오류 상세 정보:',
+        err.response || err.request || err.message,
+      );
       setError('프로필 업데이트에 실패했습니다.');
     } finally {
       setLoading(false);
@@ -256,6 +481,16 @@ const MyPage = () => {
 
     return false;
   };
+
+  // 초기 로딩 상태인 경우 로딩 화면 표시
+  if (isInitialLoading) {
+    return (
+      <div className="w-full max-w-5xl mx-auto p-6 mt-8 flex flex-col items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mb-4"></div>
+        <p className="text-gray-600">정보를 불러오는 중입니다...</p>
+      </div>
+    );
+  }
 
   // 현재 사용자가 상담사가 아니면 권한 없음 메시지 표시
   if (currentUser && !isCounselor()) {
@@ -358,17 +593,6 @@ const MyPage = () => {
         >
           프로필 정보
         </button>
-
-        <button
-          className={`px-6 py-3 font-medium text-sm transition-colors ${
-            activeTab === 'settings'
-              ? 'text-[#00a173] border-b-2 border-[#00a173]'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-          onClick={() => setActiveTab('settings')}
-        >
-          설정
-        </button>
       </div>
 
       {/* 프로필 정보 탭 */}
@@ -402,9 +626,9 @@ const MyPage = () => {
                 </div>
 
                 <h2 className="text-xl font-bold text-gray-800 mb-4">
-                  {currentUser?.username ||
+                  {userDetails?.name ||
+                    currentUser?.username ||
                     currentUser?.counselor_name ||
-                    userDetails?.name ||
                     '상담사'}
                 </h2>
 
@@ -445,6 +669,31 @@ const MyPage = () => {
                             currentUser?.birth_date ||
                             '정보 없음'}
                         </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">자격증</span>
+                        <div className="flex items-center">
+                          {profile.hasCertification ? (
+                            <span className="text-[#00a173] font-medium mr-2">
+                              보유
+                            </span>
+                          ) : (
+                            <>
+                              <span className="text-gray-500 font-medium mr-2">
+                                미보유
+                              </span>
+                              <button
+                                onClick={() => updateCertification(true)}
+                                disabled={updatingCertification}
+                                className="text-xs bg-[#00a173] text-white px-2 py-1 rounded hover:bg-[#008d63] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {updatingCertification
+                                  ? '업데이트 중...'
+                                  : '자격증 추가'}
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -508,50 +757,6 @@ const MyPage = () => {
                     </div>
                   </div>
                 </div>
-
-                <div className="pt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">
-                    자격증 (선택사항)
-                  </h4>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <div className="bg-gray-100 rounded-full px-3 py-1 text-sm text-gray-700 flex items-center">
-                      심리상담사
-                      <button className="ml-1 text-gray-400 hover:text-gray-600">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <button className="text-sm text-[#00a173] hover:text-[#008d63] flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                    자격증 추가
-                  </button>
-                </div>
               </div>
 
               <div className="mt-8 flex justify-end">
@@ -568,92 +773,6 @@ const MyPage = () => {
                   {loading ? '저장 중...' : '변경사항 저장'}
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 설정 탭 */}
-      {activeTab === 'settings' && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              계정 설정
-            </h3>
-            <p className="text-gray-600 text-sm">
-              계정 관련 설정을 관리하세요.
-            </p>
-          </div>
-
-          <div className="space-y-6">
-            <div className="pb-6 border-b border-gray-200">
-              <h4 className="text-md font-medium text-gray-700 mb-3">
-                알림 설정
-              </h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-800">이메일 알림</p>
-                    <p className="text-xs text-gray-500">
-                      새로운 상담 요청이 있을 때 이메일 알림을 받습니다.
-                    </p>
-                  </div>
-                  <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                    <input
-                      type="checkbox"
-                      name="email_noti"
-                      id="email_noti"
-                      className="checked:bg-[#00a173] outline-none focus:outline-none right-4 checked:right-0 duration-200 ease-in absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                    />
-                    <label
-                      htmlFor="email_noti"
-                      className="block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"
-                    ></label>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-800">SMS 알림</p>
-                    <p className="text-xs text-gray-500">
-                      새로운 상담 요청이 있을 때 SMS 알림을 받습니다.
-                    </p>
-                  </div>
-                  <div className="relative inline-block w-10 mr-2 align-middle select-none">
-                    <input
-                      type="checkbox"
-                      name="sms_noti"
-                      id="sms_noti"
-                      className="checked:bg-[#00a173] outline-none focus:outline-none right-4 checked:right-0 duration-200 ease-in absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                    />
-                    <label
-                      htmlFor="sms_noti"
-                      className="block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"
-                    ></label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="pb-6 border-b border-gray-200">
-              <h4 className="text-md font-medium text-gray-700 mb-3">
-                계정 보안
-              </h4>
-              <button className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-md transition-colors">
-                비밀번호 변경
-              </button>
-            </div>
-
-            <div>
-              <h4 className="text-md font-medium text-red-600 mb-3">
-                계정 삭제
-              </h4>
-              <p className="text-sm text-gray-500 mb-3">
-                계정을 삭제하면 모든 데이터가 영구적으로 제거됩니다. 이 작업은
-                되돌릴 수 없습니다.
-              </p>
-              <button className="text-sm bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-md transition-colors">
-                계정 삭제
-              </button>
             </div>
           </div>
         </div>
@@ -864,7 +983,7 @@ export default MyPage;
 //         // 실제 API 호출
 //         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 //         await axios.put(
-//           `${API_URL}/counselor/${currentUser.id}/profile`,
+//           `/api/counselor/${currentUser.id}/profile`,
 //           profile,
 //           {
 //             headers: {
