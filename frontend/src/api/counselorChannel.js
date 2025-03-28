@@ -1,12 +1,10 @@
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL;
 // 환경에 따른 API 기본 URL 설정
 const isDevelopment = import.meta.env
   ? import.meta.env.MODE === 'development'
   : process.env.NODE_ENV === 'development';
-const BASE_URL = isDevelopment
-  ? 'http://localhost:8080/api'
-  : 'https://J12D110.p.ssafy.io/api';
 
 // axios 인스턴스 생성
 const apiClient = axios.create({

@@ -2,7 +2,8 @@
 import axios from 'axios';
 
 // API 기본 URL (실제 백엔드 서버 주소로 변경 필요)
-const API_URL = 'https://j12d110.p.ssafy.io/api';
+// const API_URL = 'https://j12d110.p.ssafy.io/api';
+const API_URL = import.meta.env.VITE_API_URL;
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
