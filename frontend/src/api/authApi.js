@@ -1,9 +1,6 @@
 import axios from 'axios';
 
-const isDevelopment = import.meta.env.MODE === 'development';
-const API_URL = isDevelopment
-  ? 'http://localhost:8080/api'
-  : 'https://J12D110.p.ssafy.io/api';
+const API_URL = import.meta.env.VITE_API_URL;
 
 // 환경 변수에서 모의 API 사용 여부 가져옴
 const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === 'true';

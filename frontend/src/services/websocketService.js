@@ -1,5 +1,5 @@
-// services/websocketService.js
 import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client/dist/sockjs.min.js';
 
 class WebSocketService {
   constructor() {
@@ -7,8 +7,8 @@ class WebSocketService {
     this.listeners = {};
     this.isConnected = false;
 
-    // WebSocket 서버 연결 URL
-    this.brokerURL = 'wss://backend.takustory.site/api/ws';
+    // 환경변수에서 API URL을 가져오고, '/ws' 엔드포인트를 붙임
+    this.socketURL = `${import.meta.env.VITE_API_URL}/ws`;
   }
 
   connect() {
@@ -16,19 +16,23 @@ class WebSocketService {
       return;
     }
 
-    // STOMP 클라이언트 생성
     this.stompClient = new Client({
-      brokerURL: this.brokerURL,
+      webSocketFactory: () => {
+        // 토큰을 sessionStorage에서 불러오기
+        return new SockJS(`${import.meta.env.VITE_API_URL}/ws`);
+      },
+      // STOMP CONNECT 명령 시 헤더에 Authorization 추가
+      connectHeaders: {
+        Authorization: 'Bearer ' + sessionStorage.getItem('token'),
+      },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
     });
 
-    // 연결 성공 이벤트
     this.stompClient.onConnect = () => {
       this.isConnected = true;
 
-      // 기본 채팅 채널 구독
       this.subscribe('/sub/chat', message => {
         try {
           const data = JSON.parse(message.body);
@@ -36,26 +40,22 @@ class WebSocketService {
             this.listeners['message'].forEach(callback => callback(data));
           }
         } catch (error) {
-          // 메시지 처리 오류
+          console.error('메시지 처리 오류:', error);
         }
       });
     };
 
-    // 연결 종료 이벤트
     this.stompClient.onWebSocketClose = () => {
       this.isConnected = false;
     };
 
-    // STOMP 오류 이벤트
     this.stompClient.onStompError = () => {
       this.isConnected = false;
     };
 
-    // 연결 시작
     this.stompClient.activate();
   }
 
-  // 연결 종료
   disconnect() {
     if (this.stompClient) {
       this.stompClient.deactivate();
@@ -64,7 +64,6 @@ class WebSocketService {
     }
   }
 
-  // 채널 구독
   subscribe(destination, callback) {
     if (!this.stompClient || !this.isConnected) {
       return null;
@@ -73,7 +72,6 @@ class WebSocketService {
     return this.stompClient.subscribe(destination, callback);
   }
 
-  // 메시지 전송
   sendMessage(event, content, destination = '/pub/chat') {
     if (!this.stompClient || !this.isConnected) {
       return false;
@@ -91,7 +89,6 @@ class WebSocketService {
     }
   }
 
-  // 리스너 추가
   addListener(event, callback) {
     if (!this.listeners[event]) {
       this.listeners[event] = [];
@@ -100,7 +97,6 @@ class WebSocketService {
     return () => this.removeListener(event, callback);
   }
 
-  // 리스너 제거
   removeListener(event, callback) {
     if (this.listeners[event]) {
       this.listeners[event] = this.listeners[event].filter(
@@ -110,6 +106,5 @@ class WebSocketService {
   }
 }
 
-// 싱글톤 인스턴스 생성
 const websocketService = new WebSocketService();
 export default websocketService;

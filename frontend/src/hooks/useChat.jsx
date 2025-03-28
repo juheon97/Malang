@@ -38,6 +38,7 @@ export default function useChat(currentUserId, channel = 'default') {
     return () => {
       clearInterval(checkConnectionInterval);
       removeListener();
+      websocketService.disconnect();
     };
   }, []);
 

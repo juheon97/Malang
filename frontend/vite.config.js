@@ -38,8 +38,8 @@ export default defineConfig({
       },
     },
     allowedHosts: [
-      '54db-14-46-141-158.ngrok-free.app', // 이건 ngrok 서버임
-      'backend.takustory.site', // 팀장 노트북 서버 켜져야 작동됨
+      'j12d110.p.ssafy.io', // 팀장 노트북 서버 켜져야 작동됨
+      '7075-14-46-141-158.ngrok-free.app',
     ],
   },
 });
