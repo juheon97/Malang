@@ -152,6 +152,64 @@ const useCommentStore = create(set => ({
     }
   },
 
+  updateReply: async (commentId, replyId, replyData) => {
+    set({ loading: true });
+    try {
+      // 실제 API 호출 (백엔드 연동 시)
+      // const response = await CommentService.updateReply(commentId, replyId, replyData);
+
+      set(state => ({
+        comments: state.comments.map(comment =>
+          comment.id === parseInt(commentId)
+            ? {
+                ...comment,
+                replies: comment.replies.map(reply =>
+                  reply.id === replyId ? { ...reply, ...replyData } : reply,
+                ),
+              }
+            : comment,
+        ),
+        loading: false,
+        error: null,
+      }));
+    } catch (error) {
+      console.error('답글 수정 오류:', error);
+      set({
+        error: '답글 수정 중 오류가 발생했습니다.',
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  deleteReply: async (commentId, replyId) => {
+    set({ loading: true });
+    try {
+      // 실제 API 호출 (백엔드 연동 시)
+      // await CommentService.deleteReply(commentId, replyId);
+
+      set(state => ({
+        comments: state.comments.map(comment =>
+          comment.id === parseInt(commentId)
+            ? {
+                ...comment,
+                replies: comment.replies.filter(reply => reply.id !== replyId),
+              }
+            : comment,
+        ),
+        loading: false,
+        error: null,
+      }));
+    } catch (error) {
+      console.error('답글 삭제 오류:', error);
+      set({
+        error: '답글 삭제 중 오류가 발생했습니다.',
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
   resetComments: () => set({ comments: [] }),
 }));
 
