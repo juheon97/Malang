@@ -109,7 +109,13 @@ export const AuthProvider = ({ children }) => {
       };
 
       // 사용자 정보 세션 스토리지에 저장
-      sessionStorage.setItem('user', JSON.stringify(userInfo));
+      sessionStorage.setItem(
+        'user',
+        JSON.stringify({
+          id: userId, // 이메일 또는 고유 id
+          username: nickname, // ✅ 사용자 닉네임
+        }),
+      );
 
       // 시각장애 여부를 userSettings에 저장 (UI 설정에 활용)
       sessionStorage.setItem(
