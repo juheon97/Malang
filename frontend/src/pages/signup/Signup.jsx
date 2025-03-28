@@ -125,15 +125,15 @@ const Signup = () => {
         response = await authApi.registerUser(userData);
       } else {
         // 상담사 회원가입
-        // 생년월일을 YYYY-MM-DD 형식으로 포맷팅
+
         const formattedBirthDate = `${birthYear}-${String(birthMonth).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}`;
 
         const userData = {
           counselor_name: name,
           user_email: email,
           password: password,
-          counselor_gender: gender === '남' ? 'M' : 'F', // 성별 포맷 변환
-          counselor_birthdate: formattedBirthDate, // 포맷팅된 생년월일 사용
+          counselor_gender: gender === '남' ? 'M' : 'F',
+          counselor_birthdate: formattedBirthDate,
           certification: hasCertification,
         };
 
@@ -141,6 +141,77 @@ const Signup = () => {
         console.log('상담사 회원가입 엔드포인트:', '/auth/signup/counselor');
 
         response = await authApi.registerCounselor(userData);
+
+        // 모의 API 환경에서는 회원가입 후 바로 기본 프로필 정보 저장
+        if (import.meta.env.VITE_USE_MOCK_API === 'true') {
+          try {
+            // 사용자 ID 가져오기 (실제 API 응답에서는 다를 수 있음)
+            const userId = response.data?.id || Date.now();
+
+            // 모의 User 데이터 생성
+            const mockUser = {
+              user_id: userId,
+              username: name,
+              email: email,
+              role: 'ROLE_COUNSELOR',
+              gender: gender === '남' ? 'M' : 'F',
+              birth_date: formattedBirthDate,
+            };
+
+            // 세션 스토리지에 저장
+            const storedUsers = JSON.parse(
+              sessionStorage.getItem('mockUsers') || '[]',
+            );
+            storedUsers.push(mockUser);
+            sessionStorage.setItem('mockUsers', JSON.stringify(storedUsers));
+
+            // 기본 상담사 프로필 생성
+            const counselorProfile = {
+              specialty: '',
+              years: '0',
+              bio: '',
+              profileUrl: 'src/assets/image/mypage/Mypage_profile.svg',
+              hasCertification: hasCertification,
+            };
+
+            // 세션 스토리지에 프로필 저장
+            sessionStorage.setItem(
+              `counselor_profile_${userId}`,
+              JSON.stringify(counselorProfile),
+            );
+
+            // 상담사 목록에도 추가
+            const mockCounselors = JSON.parse(
+              sessionStorage.getItem('mockCounselors') || '[]',
+            );
+            mockCounselors.push({
+              id: userId,
+              name: name,
+              title: '심리 상담 전문가',
+              specialty: '',
+              bio: '',
+              years: 0,
+              certifications: ['심리상담사'],
+              hasCertification: hasCertification,
+              rating_avg: 0,
+              review_count: 0,
+              status: 'available',
+              profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
+              satisfaction: '0%',
+              gender: gender === '남' ? 'M' : 'F',
+              birth_date: formattedBirthDate,
+              created_at: new Date().toISOString(),
+            });
+            sessionStorage.setItem(
+              'mockCounselors',
+              JSON.stringify(mockCounselors),
+            );
+
+            console.log('모의 환경에 상담사 정보 저장 완료');
+          } catch (error) {
+            console.error('모의 데이터 저장 중 오류:', error);
+          }
+        }
       }
 
       console.log('회원가입 성공:', response.data);
@@ -228,7 +299,7 @@ const Signup = () => {
         )}
 
         <div className="flex gap-3 mb-8">
-          <button // src/pages/signup/Signup.jsx (계속)
+          <button
             className={`py-2.5 px-5 rounded-full cursor-pointer outline-none text-xl min-w-[120px] text-center whitespace-nowrap border-[4px] ${
               userType === 'normal'
                 ? 'border-[#92e4d1] text-black shadow-md bg-white'

@@ -4,8 +4,8 @@ const WaitingModal = ({
   isOpen,
   onCancel,
   title = '수락을 기다려주세요...',
-  waitingFor = '방장',
-  // waitingFor = "상담사님님",
+  // waitingFor = '방장',
+  waitingFor = '상담사님',
   message = '잠시만 기다려주세요. 곧 연결됩니다.',
   cancelButtonText = '취소',
 }) => {

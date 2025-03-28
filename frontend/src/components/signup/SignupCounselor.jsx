@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const SignupCounselor = ({
   name,
@@ -29,27 +29,38 @@ const SignupCounselor = ({
     setHasCertification(!hasCertification);
   };
 
-  const incrementValue = (setter, value, max) => {
-    if (value < max) {
-      setter(value + 1);
-    }
-  };
+  const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
+  const [monthDropdownOpen, setMonthDropdownOpen] = useState(false);
+  const [dayDropdownOpen, setDayDropdownOpen] = useState(false);
 
-  const decrementValue = (setter, value, min) => {
-    if (value > min) {
-      setter(value - 1);
-    }
-  };
-
-  // 현재 연도 계산
   const currentYear = new Date().getFullYear();
 
-  // 선택한 월에 따른 최대 일수 계산
+  const yearList = Array.from({ length: 100 }, (_, i) => currentYear - i);
+
+  const monthList = Array.from({ length: 12 }, (_, i) => i + 1);
+
   const getMaxDaysInMonth = (year, month) => {
     return new Date(year, month, 0).getDate();
   };
 
   const maxDays = getMaxDaysInMonth(birthYear, birthMonth);
+
+  const dayList = Array.from({ length: maxDays }, (_, i) => i + 1);
+
+  // 드롭다운 토글 함수
+  const toggleDropdown = (setter, currentState) => {
+    setYearDropdownOpen(false);
+    setMonthDropdownOpen(false);
+    setDayDropdownOpen(false);
+
+    setter(!currentState);
+  };
+
+  // 드롭다운 항목 선택 함수
+  const selectItem = (value, setter, dropdownSetter) => {
+    setter(value);
+    dropdownSetter(false);
+  };
 
   // 날짜가 유효한지 확인하고 필요시 조정
   React.useEffect(() => {
@@ -57,6 +68,20 @@ const SignupCounselor = ({
       setBirthDay(maxDays);
     }
   }, [birthMonth, birthYear, birthDay, maxDays, setBirthDay]);
+
+  // 다른 곳 클릭시 드롭다운 닫기
+  React.useEffect(() => {
+    const handleClickOutside = () => {
+      setYearDropdownOpen(false);
+      setMonthDropdownOpen(false);
+      setDayDropdownOpen(false);
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   return (
     <>
@@ -180,90 +205,142 @@ const SignupCounselor = ({
       <div className="mb-6 flex flex-col items-start">
         <label className="w-full text-xl text-gray-800 mb-2">생년월일 :</label>
         <div className="flex gap-4 items-center">
-          <div className="flex items-center">
-            <div className="relative w-[120px] mr-2.5">
-              <input
-                type="text"
-                className="w-full text-center py-2.5 px-8 border-[3px] border-gray-300 rounded-3xl text-xl relative"
-                value={birthYear}
-                readOnly
-              />
-              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex flex-col h-[30px] justify-between z-[2]">
-                <button
-                  type="button"
-                  className="bg-none border-none cursor-pointer text-sm text-black h-[15px] flex items-center justify-center p-0"
-                  onClick={() =>
-                    incrementValue(setBirthYear, birthYear, currentYear)
-                  }
-                >
-                  ▲
-                </button>
-                <button
-                  type="button"
-                  className="bg-none border-none cursor-pointer text-sm text-black h-[15px] flex items-center justify-center p-0"
-                  onClick={() => decrementValue(setBirthYear, birthYear, 1920)}
-                >
-                  ▼
-                </button>
-              </div>
+          {/* 년도 드롭다운 */}
+          <div className="relative">
+            <div
+              className="flex items-center justify-between w-32 py-2 px-3 border-2 border-gray-300 rounded-lg bg-white cursor-pointer"
+              onClick={e => {
+                e.stopPropagation();
+                toggleDropdown(setYearDropdownOpen, yearDropdownOpen);
+              }}
+            >
+              <span className="text-gray-700">{birthYear || 'YYYY'}</span>
+              <svg
+                className={`w-4 h-4 ml-2 transition-transform ${yearDropdownOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
             </div>
-            <span className="ml-1 text-xl">년</span>
+            {yearDropdownOpen && (
+              <div
+                className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                onClick={e => e.stopPropagation()}
+              >
+                {yearList.map(year => (
+                  <div
+                    key={year}
+                    className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${birthYear === year ? 'bg-gray-100 text-[#00a67d]' : ''}`}
+                    onClick={() =>
+                      selectItem(year, setBirthYear, setYearDropdownOpen)
+                    }
+                  >
+                    {year}
+                  </div>
+                ))}
+              </div>
+            )}
+            <span className="ml-2">년</span>
           </div>
 
-          <div className="flex items-center">
-            <div className="relative w-[80px] mr-2.5">
-              <input
-                type="text"
-                className="w-full text-center py-2.5 px-8 border-[3px] border-gray-300 rounded-3xl text-xl relative"
-                value={birthMonth}
-                readOnly
-              />
-              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex flex-col h-[30px] justify-between z-[2]">
-                <button
-                  type="button"
-                  className="bg-none border-none cursor-pointer text-sm text-black h-[15px] flex items-center justify-center p-0"
-                  onClick={() => incrementValue(setBirthMonth, birthMonth, 12)}
-                >
-                  ▲
-                </button>
-                <button
-                  type="button"
-                  className="bg-none border-none cursor-pointer text-sm text-black h-[15px] flex items-center justify-center p-0"
-                  onClick={() => decrementValue(setBirthMonth, birthMonth, 1)}
-                >
-                  ▼
-                </button>
-              </div>
+          {/* 월 드롭다운 */}
+          <div className="relative">
+            <div
+              className="flex items-center justify-between w-24 py-2 px-3 border-2 border-gray-300 rounded-lg bg-white cursor-pointer"
+              onClick={e => {
+                e.stopPropagation();
+                toggleDropdown(setMonthDropdownOpen, monthDropdownOpen);
+              }}
+            >
+              <span className="text-gray-700">{birthMonth || 'MM'}</span>
+              <svg
+                className={`w-4 h-4 ml-2 transition-transform ${monthDropdownOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
             </div>
-            <span className="ml-1 text-xl">월</span>
+            {monthDropdownOpen && (
+              <div
+                className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                onClick={e => e.stopPropagation()}
+              >
+                {monthList.map(month => (
+                  <div
+                    key={month}
+                    className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${birthMonth === month ? 'bg-gray-100 text-[#00a67d]' : ''}`}
+                    onClick={() =>
+                      selectItem(month, setBirthMonth, setMonthDropdownOpen)
+                    }
+                  >
+                    {month}
+                  </div>
+                ))}
+              </div>
+            )}
+            <span className="ml-2">월</span>
           </div>
 
-          <div className="flex items-center">
-            <div className="relative w-[80px] mr-2.5">
-              <input
-                type="text"
-                className="w-full text-center py-2.5 px-8 border-[3px] border-gray-300 rounded-3xl text-xl relative"
-                value={birthDay}
-                readOnly
-              />
-              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex flex-col h-[30px] justify-between z-[2]">
-                <button
-                  type="button"
-                  className="bg-none border-none cursor-pointer text-sm text-black h-[15px] flex items-center justify-center p-0"
-                  onClick={() => incrementValue(setBirthDay, birthDay, maxDays)}
-                >
-                  ▲
-                </button>
-                <button
-                  type="button"
-                  className="bg-none border-none cursor-pointer text-sm text-black h-[15px] flex items-center justify-center p-0"
-                  onClick={() => decrementValue(setBirthDay, birthDay, 1)}
-                >
-                  ▼
-                </button>
-              </div>
+          {/* 일 드롭다운 */}
+          <div className="relative">
+            <div
+              className="flex items-center justify-between w-24 py-2 px-3 border-2 border-gray-300 rounded-lg bg-white cursor-pointer"
+              onClick={e => {
+                e.stopPropagation();
+                toggleDropdown(setDayDropdownOpen, dayDropdownOpen);
+              }}
+            >
+              <span className="text-gray-700">{birthDay || 'DD'}</span>
+              <svg
+                className={`w-4 h-4 ml-2 transition-transform ${dayDropdownOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
             </div>
-            <span className="ml-1 text-xl">일</span>
+            {dayDropdownOpen && (
+              <div
+                className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                onClick={e => e.stopPropagation()}
+              >
+                {dayList.map(day => (
+                  <div
+                    key={day}
+                    className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${birthDay === day ? 'bg-gray-100 text-[#00a67d]' : ''}`}
+                    onClick={() =>
+                      selectItem(day, setBirthDay, setDayDropdownOpen)
+                    }
+                  >
+                    {day}
+                  </div>
+                ))}
+              </div>
+            )}
+            <span className="ml-2">일</span>
           </div>
         </div>
       </div>
@@ -315,9 +392,6 @@ const SignupCounselor = ({
             </label>
           </div>
         </div>
-        <p className="text-gray-600 text-sm mt-2">
-          * 가입 후 마이페이지에서 자격증 정보를 추가할 수 있습니다.
-        </p>
       </div>
     </>
   );

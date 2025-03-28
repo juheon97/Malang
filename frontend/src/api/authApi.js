@@ -378,15 +378,22 @@ const authApi = USE_MOCK_API
           throw new Error('로그인 상태가 아닙니다.');
         }
 
-        return api.post(
-          '/auth/logout',
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
+        try {
+          const response = await api.post(
+            '/auth/logout',
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             },
-          },
-        );
+          );
+          console.log('로그아웃 API 응답:', response.data); // 응답 로그 추가
+          return response;
+        } catch (error) {
+          console.error('로그아웃 API 오류:', error);
+          throw error;
+        }
       },
     };
 

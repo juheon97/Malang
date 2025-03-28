@@ -130,10 +130,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   // 로그아웃 함수
+  // 로그아웃 함수
   const logout = async () => {
     try {
       // 백엔드 로그아웃 API 호출
-      await authApi.logout();
+      const response = await authApi.logout();
+      console.log('AuthContext: 로그아웃 성공', response?.data); // 성공 로그 추가
 
       // 현재 사용자가 상담사인 경우 활성 상태에서 제거
       if (currentUser && currentUser.role === 'ROLE_COUNSELOR') {
@@ -148,6 +150,7 @@ export const AuthProvider = ({ children }) => {
             'loggedInUsers',
             JSON.stringify(updatedActiveUsers),
           );
+          console.log('상담사 활성 상태 업데이트 완료'); // 로그 추가
         } catch (err) {
           console.error('활성 상태 업데이트 실패:', err);
         }
@@ -157,12 +160,16 @@ export const AuthProvider = ({ children }) => {
       sessionStorage.removeItem('user');
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('refreshToken');
+      sessionStorage.removeItem('userSettings');
+      sessionStorage.removeItem('loggedInUsers');
+      console.log('세션 스토리지 클리어 완료'); // 로그 추가
 
       setCurrentUser(null);
 
       // 로그아웃 이벤트 발생 (다른 탭이나 컴포넌트에서 감지할 수 있도록)
       const logoutEvent = new CustomEvent('auth:logout');
       window.dispatchEvent(logoutEvent);
+      console.log('로그아웃 이벤트 발생 완료'); // 로그 추가
 
       navigate('/');
     } catch (error) {
@@ -173,6 +180,7 @@ export const AuthProvider = ({ children }) => {
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('refreshToken');
       sessionStorage.removeItem('userSettings');
+      console.log('오류 발생했지만 세션 스토리지 클리어 완료'); // 로그 추가
 
       setCurrentUser(null);
 
