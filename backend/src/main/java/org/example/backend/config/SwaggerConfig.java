@@ -19,7 +19,10 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("Malang API 문서")
                         .version("1.0")
+                        .description("Malang 서비스 API 문서입니다")
                         .contact(new Contact().name("D110 SSAFY TEAM")))
-                .servers(List.of(new Server().url("https://j12d110.p.ssafy.io/api/")));
+                .servers(List.of(
+                        new Server().url("/").description("API Server")
+                ));
     }
 }
