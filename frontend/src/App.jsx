@@ -85,6 +85,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/voice-channel-video/:channelId"
+                  element={
+                    <ProtectedRoute>
+                      <VoiceChannelVideo />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/counsel-channel-room"
                   element={
                     <ProtectedRoute>
