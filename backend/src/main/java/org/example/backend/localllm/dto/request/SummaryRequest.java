@@ -14,7 +14,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class SummaryRequest {
     private Long userId;
-    private Long counselorId;
+    private Long counselorUserId;
     private String channelId; // Redis key
     private List<Map<String, String>> messages; // LLM 메시지 포맷
 }

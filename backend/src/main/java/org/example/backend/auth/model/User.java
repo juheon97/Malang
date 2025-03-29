@@ -30,7 +30,7 @@ public class User extends BaseTimeEntity {
     private String profileUrl;
 
     @Column(name = "role", nullable = false)
-    private String role;
+    private String role; // "ROLE_USER" 또는 "ROLE_COUNSELOR"
 
     @Column(name = "user_nickname", nullable = false)
     private String nickname;
