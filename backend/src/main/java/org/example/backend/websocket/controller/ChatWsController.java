@@ -18,7 +18,7 @@ public class ChatWsController {
     }
 
     @MessageMapping("/{channel_id}/chat")
-    @SendTo("/sub/{channel_id}/chat")
+    @SendTo("/sub/{channel_id}/")
     public ChatMessageResponse handleMessage(
             @DestinationVariable Long channel_id,
             ChatMessageRequest request) {
