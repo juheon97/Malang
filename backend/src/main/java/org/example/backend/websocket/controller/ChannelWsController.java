@@ -22,8 +22,8 @@ public class ChannelWsController {
         this.channelWsService = channelWsService;
     }
 
-    @MessageMapping("/{channel_id}/")
-    @SendTo("/sub/{channel_id}/")
+    @MessageMapping("/{channel_id}")
+    @SendTo("/sub/{channel_id}")
     public ChannelEventResponse handleChannel(
             @DestinationVariable Long channel_id,
             ChannelEventRequest request) {
