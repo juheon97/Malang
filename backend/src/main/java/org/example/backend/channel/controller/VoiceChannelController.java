@@ -177,4 +177,25 @@ public class VoiceChannelController {
             throw new IllegalStateException("사용자 ID를 추출할 수 없습니다.", e);
         }
     }
+
+    @DeleteMapping("/{channelId}")
+    public ResponseEntity<?> deleteVoiceChannel(@PathVariable String channelId) {
+        try {
+            log.info("음성 채널 삭제 요청: channelId={}", channelId);
+
+            voiceChannelService.deleteVoiceChannel(channelId);
+
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            log.error("음성 채널 삭제 실패: {}", e.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        } catch (Exception e) {
+            log.error("음성 채널 삭제 중 예외 발생: {}", e.getMessage(), e);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "채널 삭제 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
 }

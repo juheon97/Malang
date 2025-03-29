@@ -33,6 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/auth/login",
             "/auth/signup",
             "/auth/token/refresh",
+            // 웹소켓 통신시 jwt가 가져가는 경로 차단하여 웹소켓에서만 access token처리하게 추가
             "/ws/**",
             "/ws/info",
             
