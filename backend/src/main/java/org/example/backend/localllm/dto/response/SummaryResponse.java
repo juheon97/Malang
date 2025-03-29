@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SummaryResponse {
-    private String summaryTopic;
+    private String summary_topic;
     private String symptoms;
     private String treatment;
-    private String counselorNote;
-    private String nextSchedule;
+    private String counselor_note;
+    private String next_schedule;
 }

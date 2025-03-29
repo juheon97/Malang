@@ -28,14 +28,18 @@ public class SummaryServiceImpl implements SummaryService {
     public void summarizeAndSave(SummaryRequest dto) {
         SummaryResponse summary = llmClient.requestSummary(dto.getMessages());
 
+        if (summary.getSummary_topic() == null) {
+            throw new IllegalArgumentException("summary_topic이 비어 있습니다. LLM 응답이 올바르지 않습니다.");
+        }
+
         Summary entity = Summary.builder()
                 .user(User.of(dto.getUserId()))
                 .counselor(User.of(dto.getCounselorUserId()))
-                .summaryTopic(summary.getSummaryTopic())
+                .summaryTopic(summary.getSummary_topic())
                 .symptoms(summary.getSymptoms())
                 .treatment(summary.getTreatment())
-                .counselorNote(summary.getCounselorNote())
-                .nextSchedule(parseDate(summary.getNextSchedule()))
+                .counselorNote(summary.getCounselor_note())
+                .nextSchedule(parseDate(summary.getNext_schedule()))
                 .build();
 
         summaryRepository.save(entity);
@@ -43,10 +47,13 @@ public class SummaryServiceImpl implements SummaryService {
 
     private LocalDateTime parseDate(String input) {
         try {
+            if (input == null || input.isBlank()) {
+                return null; // 또는 LocalDateTime.now() 등 fallback 값 설정
+            }
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
             return LocalDateTime.parse(input, formatter);
         } catch (DateTimeParseException e) {
-            return LocalDateTime.now();
+            return null; // 또는 fallback
         }
     }
 }

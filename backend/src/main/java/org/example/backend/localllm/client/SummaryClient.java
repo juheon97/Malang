@@ -1,5 +1,6 @@
 package org.example.backend.localllm.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.example.backend.localllm.dto.response.SummaryResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,20 +21,38 @@ public class SummaryClient {
         this.webClient = builder.baseUrl(baseUrl).build();
     }
 
+    private List<Map<String, String>> convertRoles(List<Map<String, String>> messages) {
+        return messages.stream()
+                .map(message -> {
+                    String role = message.get("role");
+                    String newRole = switch (role) {
+                        case "counselor" -> "assistant";
+                        case "client" -> "user";
+                        default -> role;
+                    };
+                    return Map.of(
+                            "role", newRole,
+                            "content", message.get("content")
+                    );
+                })
+                .toList();
+    }
+
+
     public SummaryResponse requestSummary(List<Map<String, String>> redisMessages) {
-        // 여기에 messages 형식 포함된 JSON 생성 + 전송
-        // 시스템 프롬프트 설정
+        // Step 1. Role 변환
+        List<Map<String, String>> convertedMessages = convertRoles(redisMessages);
+
+        // Step 2. 시스템 프롬프트 삽입
         Map<String, String> systemMessage = Map.of(
                 "role", "system",
                 "content", "너는 정신건강 상담 내용을 요약하는 비서야. 다음 형식에 맞춰 객관적이고 간결하게 작성해. 반드시 요약 문장으로만 작성할 것.\n\n- 상담 주제:\n- 주요 증상:\n- 진행된 치료/훈련:\n- 상담사 소감:\n- 다음 상담 일정:"
         );
 
-        // 전체 메시지 구성
         List<Map<String, String>> allMessages = new ArrayList<>();
         allMessages.add(systemMessage);
-        allMessages.addAll(redisMessages); // Redis에서 불러온 대화 리스트 삽입
+        allMessages.addAll(convertedMessages);
 
-        // 요청 바디 구성
         Map<String, Object> requestBody = Map.of(
                 "model", "kanana-nano-2.1b-instruct-abliterated-i1",
                 "temperature", 0.3,
@@ -41,12 +60,27 @@ public class SummaryClient {
                 "messages", allMessages
         );
 
-        return webClient.post()
+        Map<String, Object> responseMap = webClient.post()
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(requestBody)
                 .retrieve()
-                .bodyToMono(SummaryResponse.class)
+                .bodyToMono(Map.class)
                 .block();
+
+        if (responseMap == null) {
+            throw new RuntimeException("LLM 응답이 null입니다.");
+        }
+
+        Map<String, Object> firstChoice = ((List<Map<String, Object>>) responseMap.get("choices")).get(0);
+        Map<String, String> message = (Map<String, String>) firstChoice.get("message");
+        String contentJson = message.get("content");
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(contentJson, SummaryResponse.class);
+        } catch (Exception e) {
+            throw new RuntimeException("LLM 응답 content 파싱 실패: " + contentJson, e);
+        }
     }
 }
