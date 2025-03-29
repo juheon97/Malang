@@ -1,5 +1,9 @@
 package org.example.backend.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 import org.example.backend.security.jwt.JwtTokenProvider;  // 제공하신 JWT 클래스
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -13,11 +17,12 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    private static final Logger logger = LoggerFactory.getLogger(WebsocketConfig.class);
 
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -50,6 +55,7 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
+                // 인증 처리
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
                     String authorizationHeader = accessor.getFirstNativeHeader("Authorization");
 
@@ -65,12 +71,20 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
                             // 사용자 정보를 웹소켓 세션에 저장
                             accessor.setUser(() -> email);
 
-                            // 추가 정보 저장 (필요한 경우)
+                            // 추가 정보 저장
                             accessor.getSessionAttributes().put("userId", userId);
                             accessor.getSessionAttributes().put("auth", auth);
                         }
                     }
                 }
+
+                // 로깅 처리
+                if (StompCommand.SEND.equals(accessor.getCommand())) {
+                    logger.info("Message sent to: {}", accessor.getDestination());
+                } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+                    logger.info("Subscription to: {}", accessor.getDestination());
+                }
+
                 return message;
             }
         });
