@@ -48,7 +48,7 @@ const VoiceChannel = () => {
   // 채널 참여 버튼 클릭 시
   const handleJoinChannel = channel => {
     console.log('채널 참여:', channel); // 참여하려는 채널 정보를 콘솔에 출력
-    navigate(`/voice-channel-video/${channel}`);
+    navigate(`/voice-channel-video/${channel.channelId}`);
   };
 
   // 채널 확장/축소 토글
