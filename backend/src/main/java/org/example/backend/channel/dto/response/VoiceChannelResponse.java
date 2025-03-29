@@ -22,6 +22,7 @@ public class VoiceChannelResponse {
     private Long creatorId;
     private String creatorNickname;
     private LocalDateTime createdAt;
+    private Integer category;
 
     // Channel 엔티티로부터 DTO 생성하는 정적 팩토리 메서드
     public static VoiceChannelResponse from(Channel channel, String creatorNickname) {
@@ -34,6 +35,7 @@ public class VoiceChannelResponse {
                 .creatorId(channel.getUserId())
                 .creatorNickname(creatorNickname)
                 .createdAt(channel.getCreatedAt())
+                .category(channel.getCategory())
                 .build();
     }
 }

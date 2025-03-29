@@ -169,4 +169,21 @@ public class VoiceChannelService {
         // 비밀번호 일치 여부 확인
         return passwordEncoder.matches(password, channel.getPassword());
     }
+
+    @Transactional
+    public void deleteVoiceChannel(String channelId) {
+        // 채널 존재 여부 확인
+        Channel channel = channelRepository.findById(channelId)
+                .orElseThrow(() -> new IllegalArgumentException("채널을 찾을 수 없습니다."));
+
+        // 음성 채널 타입 검증
+        if (channel.getCategory() != 0) { // VOICE = 0
+            throw new IllegalArgumentException("요청한 채널은 음성 채널이 아닙니다.");
+        }
+
+        // 채널 삭제
+        log.info("음성 채널 자동 삭제: channelId={}", channelId);
+        channelRepository.delete(channel);
+    }
+
 }

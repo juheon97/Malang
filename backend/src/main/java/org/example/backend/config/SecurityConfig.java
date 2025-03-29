@@ -129,6 +129,8 @@ public class SecurityConfig {
                         .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                         // Community 모든 요청은 인증 필요 (GET 포함)
                         .requestMatchers("/community/**").authenticated()
+                        // Community 모든 요청은 인증 필요 (GET 포함)
+                        .requestMatchers("/channels/voice/**").authenticated()
                         // 상담사 프로필 API는 ROLE_COUNSELOR 권한이 있는 사용자만 접근 가능
                         .requestMatchers("/counselor/profile/**").hasAuthority("ROLE_COUNSELOR")
                         // 상담 채널 API는 ROLE_COUNSELOR 권한이 있는 사용자만 접근 가능 - 수정 부분
