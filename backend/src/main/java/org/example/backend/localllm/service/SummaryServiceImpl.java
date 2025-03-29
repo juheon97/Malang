@@ -30,7 +30,7 @@ public class SummaryServiceImpl implements SummaryService {
 
         Summary entity = Summary.builder()
                 .user(User.of(dto.getUserId()))
-                .counselor(Counselor.of(dto.getCounselorId().toString()))
+                .counselor(User.of(dto.getCounselorUserId()))
                 .summaryTopic(summary.getSummaryTopic())
                 .symptoms(summary.getSymptoms())
                 .treatment(summary.getTreatment())
