@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-const BASE_URL = 'https://j12d110.p.ssafy.io/api';
-
+// const BASE_URL = 'https://j12d110.p.ssafy.io/api';
+// const BASE_URL = 'https://10c0-116-36-40-48.ngrok-free.app/api';
+const BASE_URL = import.meta.env.VITE_API_URL;
 // axios 인스턴스 생성
 const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -28,8 +29,8 @@ apiClient.interceptors.request.use(
   error => Promise.reject(error),
 );
 
-const APPLICATION_SERVER_URL =
-  import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
+// const APPLICATION_SERVER_URL =
+//   import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const voiceChannelApi = {
   // 채널 생성 API
@@ -58,6 +59,17 @@ const voiceChannelApi = {
       return response.data;
     } catch (error) {
       console.error('채널 나가기 오류:', error);
+      throw error;
+    }
+  },
+
+  listChannels: async () => {
+    try {
+      const response = await apiClient.get('/channels/voice');
+      console.log('API 응답 데이터:', response.data); // 응답 데이터 출력
+      return response.data;
+    } catch (error) {
+      console.error('채널 목록 오류:', error);
       throw error;
     }
   },
