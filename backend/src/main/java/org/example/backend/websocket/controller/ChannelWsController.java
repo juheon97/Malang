@@ -1,5 +1,8 @@
 package org.example.backend.websocket.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.example.backend.websocket.dto.request.ChannelEventRequest;
 import org.example.backend.websocket.dto.response.ChannelEventResponse;
 import org.example.backend.websocket.service.ChannelWsService;
@@ -13,6 +16,8 @@ public class ChannelWsController {
 
     private final ChannelWsService channelWsService;
 
+    private static final Logger logger = LoggerFactory.getLogger(ChannelWsController.class);
+
     public ChannelWsController(ChannelWsService channelWsService) {
         this.channelWsService = channelWsService;
     }
@@ -22,6 +27,10 @@ public class ChannelWsController {
     public ChannelEventResponse handleChannel(
             @DestinationVariable Long channel_id,
             ChannelEventRequest request) {
+
+        logger.debug("Received channel event: channel_id={}, user_id={}, event={}",
+                channel_id, request.user_id(), request.event());
+
 
         switch (request.event()) {
             case "join":
