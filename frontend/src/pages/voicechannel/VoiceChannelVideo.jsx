@@ -1,3 +1,4 @@
+// VoiceChannelVideo.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import VideoLayout from '../../components/video/VideoLayout';
@@ -20,6 +21,7 @@ function VoiceChannelVideo() {
   const [isSignLanguageOn, setIsSignLanguageOn] = useState(false);
   const [channelInfo, setChannelInfo] = useState(null);
   const [connectionError, setConnectionError] = useState('');
+  const [channels, setChannels] = useState([]); // 채널 목록 상태
 
   // 초기화 여부 추적
   const hasJoined = useRef(false);
@@ -32,39 +34,6 @@ function VoiceChannelVideo() {
       });
     }
   }, [isAuthenticated, navigate, channelId]);
-
-  // // 채널 정보 가져오기
-  // useEffect(() => {
-  //   const fetchChannelInfo = async () => {
-  //     try {
-  //       const token = sessionStorage.getItem('token');
-  //       if (!token) {
-  //         throw new Error('인증 토큰이 없습니다.');
-  //       }
-
-  //       const response = await axios.get(`/channels/voice/${channelId}`, {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           'Content-Type': 'application/json',
-  //         },
-  //       });
-
-  //       if (response.data && response.data.data) {
-  //         setChannelInfo(response.data.data);
-  //         return response.data.data;
-  //       } else {
-  //         throw new Error('채널 정보가 올바르지 않습니다.');
-  //       }
-  //     } catch (error) {
-  //       console.error('채널 정보 가져오기 실패:', error);
-  //       setConnectionError('채널 정보를 가져오는데 실패했습니다.');
-  //       return null;
-  //     }
-  //   };
-  //   if (isAuthenticated && channelId) {
-  //     fetchChannelInfo();
-  //   }
-  // }, [channelId, isAuthenticated]);
 
   // 커스텀 훅 사용
   const { participants, joinSession, leaveSession, toggleAudio, toggleVideo } =
@@ -117,35 +86,38 @@ function VoiceChannelVideo() {
     setIsSignLanguageOn(!isSignLanguageOn);
   };
 
-  // 참가자 정보 렌더링
-  const renderParticipantInfo = participant => (
-    <>
-      <div className="absolute bottom-2 left-2 bg-black bg-opacity-30 text-white px-2 py-1 rounded text-xs">
-        {participant.name}
-        {participant.isSelf && ' (나)'}
-      </div>
-    </>
-  );
+  // 채널 목록 가져오기 함수
+  const fetchChannels = async () => {
+    try {
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다.');
+      }
 
-  const handleLeaveChannel = async () => {
+      const response = await axios.get('/api/channels', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.data && response.data.data) {
+        setChannels(response.data.data);
+      } else {
+        throw new Error('채널 목록을 가져오는 데 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('채널 목록 가져오기 실패:', error);
+      setConnectionError('채널 목록을 가져오는데 실패했습니다.');
+    }
+  };
+
+  // 채널 나가기 및 목록 새로고침
+  const handleLeaveChannel = () => {
     try {
       leaveSession();
 
-      // 채널 퇴장 API 호출
-      if (isAuthenticated) {
-        const token = sessionStorage.getItem('token');
-        await axios.post(
-          `/api/channels/${channelId}/leave`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          },
-        );
-      }
-
+      // 채널 목록 페이지로 이동
       navigate('/voice-channel');
     } catch (error) {
       console.error('채널 퇴장 실패:', error);
@@ -189,9 +161,6 @@ function VoiceChannelVideo() {
             <h1 className="font-bold text-gray-800">
               {channelInfo?.channelName || '음성 채널'}
             </h1>
-            {/* <p className="text-sm text-gray-500">
-              참여자: {participants.length}/{channelInfo?.max_player || 4}
-            </p> */}
           </div>
         </div>
       </div>
@@ -226,15 +195,6 @@ function VoiceChannelVideo() {
 
       {/* 메인 컨텐츠 - 영상과 채팅 */}
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
-        {/* 영상 영역 */}
-        {/* <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
-          <VideoLayout
-            participants={participants}
-            renderParticipantInfo={renderParticipantInfo}
-          />
-        </div> */}
-
-        {/* ChatBox 컴포넌트 사용 */}
         <ChatBox
           messages={messages}
           newMessage={newMessage}
