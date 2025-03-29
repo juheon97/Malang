@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,6 +25,40 @@ public class CounselingChannelService {
     private final ChannelRepository channelRepository;
     private final UserRepository userRepository;
     private final CounselorRepository counselorRepository;
+
+    /**
+     * 순차적 상담 채널 ID 생성
+     *
+     * @return 생성된 순차적 ID
+     */
+    private String generateSequentialChannelId() {
+        // 모든 상담 채널(category=1) 가져오기
+        List<Channel> counselingChannels = channelRepository.findByCategory(1);
+
+        // 채널이 없는 경우 "C1" 반환 (C는 Counseling의 약자로 음성 채널과 구분)
+        if (counselingChannels.isEmpty()) {
+            return "C1";
+        }
+
+        // 기존 채널 ID 중 가장 큰 숫자 찾기
+        long maxId = 0;
+        for (Channel channel : counselingChannels) {
+            try {
+                // "C" 접두사 제거 후 숫자만 추출
+                String idNumber = channel.getChannelId().substring(1);
+                long id = Long.parseLong(idNumber);
+                if (id > maxId) {
+                    maxId = id;
+                }
+            } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                // 숫자로 변환할 수 없는 ID나 형식이 맞지 않는 ID는 무시
+                continue;
+            }
+        }
+
+        // 최대 ID + 1 반환 ("C" 접두사 추가)
+        return "C" + (maxId + 1);
+    }
 
     /**
      * 상담 채널 생성
@@ -52,8 +85,8 @@ public class CounselingChannelService {
             throw new IllegalArgumentException("그룹 상담은 최대 3명까지 가능합니다.");
         }
 
-        // 채널 ID 생성 (UUID)
-        String channelId = UUID.randomUUID().toString();
+        // UUID 대신 순차적 채널 ID 생성
+        String channelId = generateSequentialChannelId();
 
         // 채널 엔티티 생성
         Channel channel = Channel.builder()
