@@ -72,7 +72,7 @@ function VoiceChannelVideo() {
           console.log('웹소켓 연결 성공');
 
           // 채널 구독
-          stompClient.subscribe(`/sub/${channelId}`, message => {
+          stompClient.subscribe(`/sub/${channelId}/`, message => {
             console.log('메시지 수신:', JSON.parse(message.body));
             // 수신한 메시지 처리 로직
           });
@@ -81,9 +81,9 @@ function VoiceChannelVideo() {
           stompClient.publish({
             destination: `/pub/${channelId}/`,
             body: JSON.stringify({
-              event: 'join',
               user_id: parseInt(currentUser?.id, 10),
               channel: parseInt(channelId, 10),
+              event: 'join',
             }),
             headers: { 'content-type': 'application/json' },
           });
@@ -139,12 +139,13 @@ function VoiceChannelVideo() {
   const handleLeaveChannel = async () => {
     try {
       if (stompClientRef.current && stompClientRef.current.connected) {
+        // API 명세서에 맞게 leave 이벤트 전송
         stompClientRef.current.publish({
           destination: `/pub/${channelId}/`,
           body: JSON.stringify({
             event: 'leave',
-            user_id: parseInt(currentUser?.id, 10), // 문자열을 int로 변환
-            channel: parseInt(channelId, 10), // 문자열을 int로 변환
+            user_id: parseInt(currentUser?.id, 10),
+            channel: parseInt(channelId, 10),
           }),
           headers: { 'content-type': 'application/json' },
         });
@@ -153,9 +154,10 @@ function VoiceChannelVideo() {
         stompClientRef.current.deactivate();
       }
 
+      // OpenVidu 세션 종료
       leaveSession();
 
-      // 서버에 채널 퇴장 API 요청 (필요한 경우)
+      // 서버에 채널 퇴장 API 요청
       if (isAuthenticated) {
         const token = sessionStorage.getItem('token');
         const API_URL = import.meta.env.VITE_API_URL;
@@ -171,9 +173,12 @@ function VoiceChannelVideo() {
         );
       }
 
+      // 채널 목록 페이지로 이동
       navigate('/voice-channel');
     } catch (error) {
       console.error('채널 퇴장 실패:', error);
+      // 오류가 발생해도 페이지 이동
+      navigate('/voice-channel');
     }
   };
 

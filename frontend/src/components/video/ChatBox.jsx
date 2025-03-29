@@ -6,46 +6,45 @@ const ChatBox = ({ currentUserId, channelId }) => {
   const [newMessage, setNewMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const chatContainerRef = useRef(null);
-  const sentMessageIdsRef = useRef(new Set());
+
   const user = JSON.parse(sessionStorage.getItem('user'));
   const userId = user?.id;
   const nickname = user?.username;
 
+  // 📌 channelId를 int로 변환
+  const intChannelId = parseInt(channelId, 10);
+
   useEffect(() => {
-    websocketService.connect();
+    if (isNaN(intChannelId)) {
+      console.error('channelId가 숫자가 아닙니다:', channelId);
+      return;
+    }
+
+    websocketService.connect(intChannelId);
 
     const checkConnection = setInterval(() => {
       setIsConnected(websocketService.isConnected);
     }, 500);
 
-    const subscriptionDestination = `/sub/chat/${channelId}`;
+    const subscriptionDestination = `/sub/${intChannelId}/`;
     const subscription = websocketService.subscribe(
       subscriptionDestination,
-      data => {
-        if (data.event === 'message') {
-          let parsed;
-          try {
-            parsed = JSON.parse(data.content);
-          } catch (err) {
-            parsed = { text: data.content };
+      message => {
+        try {
+          const data = JSON.parse(message.body);
+          if (data.event === 'message') {
+            setMessages(prevMessages => [
+              ...prevMessages,
+              {
+                id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                senderId: userId,
+                text: data.content,
+                sender: nickname || '익명',
+              },
+            ]);
           }
-
-          if (parsed.id && sentMessageIdsRef.current.has(parsed.id)) {
-            sentMessageIdsRef.current.delete(parsed.id);
-            return;
-          }
-
-          setMessages(prevMessages => [
-            ...prevMessages,
-            {
-              id:
-                parsed.id ||
-                `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-              senderId: parsed.senderId || parsed.id,
-              text: parsed.text || data.content,
-              sender: parsed.nickname || '익명',
-            },
-          ]);
+        } catch (err) {
+          console.error('메시지 파싱 오류:', err);
         }
       },
     );
@@ -61,51 +60,31 @@ const ChatBox = ({ currentUserId, channelId }) => {
       }
       websocketService.disconnect();
     };
-  }, [channelId]);
-
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } =
-        chatContainerRef.current;
-      const isAtBottom = scrollHeight - scrollTop <= clientHeight + 100;
-      if (isAtBottom) {
-        chatContainerRef.current.scrollTop =
-          chatContainerRef.current.scrollHeight;
-      }
-    }
-  }, [messages]);
+  }, [intChannelId, userId, nickname]);
 
   const handleSendMessage = e => {
     e.preventDefault();
 
     if (newMessage.trim()) {
-      // 고유한 메시지 ID 생성
-      const messageId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const payload = JSON.stringify({
-        id: messageId,
-        senderId: userId,
-        text: newMessage,
-        nickname,
-        channelId,
+        content: newMessage,
+        event: 'send',
       });
 
-      const destination = `/pub/chat/${channelId}`;
-      const success = websocketService.sendMessage(
-        'send',
-        payload,
-        destination,
-      );
+      const destination = `/pub/${intChannelId}/chat`;
+
+      const success = websocketService.sendMessage(destination, payload);
+
       if (success) {
         setMessages(prevMessages => [
           ...prevMessages,
           {
-            id: messageId,
+            id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             senderId: userId,
             text: newMessage,
-            sender: nickname,
+            sender: nickname || '익명',
           },
         ]);
-        sentMessageIdsRef.current.add(messageId);
         setNewMessage('');
       }
     }
@@ -144,18 +123,18 @@ const ChatBox = ({ currentUserId, channelId }) => {
           <div
             key={message.id}
             className={`mb-2 flex ${
-              message.senderId === user?.id ? 'justify-end' : 'justify-start'
+              message.senderId === userId ? 'justify-end' : 'justify-start'
             }`}
           >
             <div className="flex flex-col items-start max-w-[85%]">
-              {message.sender !== user?.username && (
+              {message.sender !== nickname && (
                 <span className="text-xs font-semibold text-gray-600 mb-1 ml-1">
                   {message.sender}
                 </span>
               )}
               <div
                 className={`rounded-lg px-3 py-2 text-sm ${
-                  message.senderId === user?.id
+                  message.senderId === userId
                     ? 'bg-[#D1F4CB] self-end'
                     : 'bg-[#E9EDF2] self-start'
                 }`}
