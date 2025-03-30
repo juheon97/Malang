@@ -52,14 +52,15 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route
+                {/* <Route
                   path="/counsel-channel"
                   element={
                     <ProtectedRoute>
                       <Counsel />
                     </ProtectedRoute>
                   }
-                />
+                /> */}
+                <Route path="/counsel-channel" element={<Counsel />} />
                 <Route
                   path="/voice-channel"
                   element={

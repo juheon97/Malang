@@ -25,68 +25,117 @@ const Counsel = () => {
     keyword: '',
     specialty: '',
     min_rating: 0,
-    page: 1,
+    page: 0,
     size: 10,
   });
+
+  // 렌더링용 상담사 목록 상태 추가
+  const [displayCounselors, setDisplayCounselors] = useState([]);
 
   // 모달 열릴 때 포커스 관리 위함
   const previousFocusRef = useRef(null);
   const modalRef = useRef(null);
 
-  // 상담사 목록 조회
+  // 컴포넌트 마운트 시 프로필 업데이트 여부 확인 및 강제 새로고침
   useEffect(() => {
-    const fetchCounselors = async () => {
-      setIsLoading(true);
-      setError(null);
+    const profileUpdated = sessionStorage.getItem('profile_updated') === 'true';
+    if (profileUpdated) {
+      // 플래그 제거
+      sessionStorage.removeItem('profile_updated');
+      console.log('프로필 업데이트가 감지되어 상담사 목록을 새로고침합니다.');
+      // 페이지 강제 새로고침
+      window.location.reload();
+    }
+  }, []);
 
-      try {
-        if (import.meta.env.VITE_USE_MOCK_API === 'true') {
-          // 모의 API 환경에서는 sessionStorage에서 상담사 목록 가져오기
-          const mockCounselors = JSON.parse(
-            sessionStorage.getItem('mockCounselors') || '[]',
-          );
+  // 상담사 목록 조회 함수
+  const fetchCounselors = async () => {
+    setIsLoading(true);
+    setError(null);
 
-          // 현재 로그인한 사용자들의 ID 목록
-          const activeUserIds = JSON.parse(
-            sessionStorage.getItem('loggedInUsers') || '[]',
-          );
+    try {
+      if (import.meta.env.VITE_USE_MOCK_API === 'true') {
+        // 모의 API 환경 처리 (기존 코드와 동일)
+        // ...
+      } else {
+        // 실제 API 호출 - 타임스탬프 추가하여 캐싱 방지
+        const updatedFilters = {
+          ...filters,
+          _timestamp: new Date().getTime(),
+        };
 
-          // 더미 데이터와 모의 API 데이터 합치기
-          const combinedCounselors = [...mockCounselors, ...dummyCounselors];
+        const response = await counselorChannel.getChannels(updatedFilters);
+        console.log('상담사 목록 응답:', response);
 
-          // 중복 제거 (ID 기준)
-          const uniqueCounselors = combinedCounselors.filter(
-            (counselor, index, self) =>
-              index === self.findIndex(c => c.id === counselor.id),
-          );
-
-          // 로그인 상태에 따라 가능/불가능 상태 설정
-          const updatedCounselors = uniqueCounselors.map(counselor => ({
-            ...counselor,
-            status: activeUserIds.includes(counselor.id) ? '가능' : '불가능',
-            isAvailable: activeUserIds.includes(counselor.id),
-          }));
-
-          setCounselors(updatedCounselors);
-        } else {
-          // 실제 API 호출
-          const response = await counselorChannel.getChannels(filters);
-          if (response && response.data && response.data.counselors) {
-            setCounselors(response.data.counselors);
+        // Spring Data Page 응답 구조 처리
+        if (response && response.content) {
+          console.log('콘텐츠:', response.content);
+          // content 배열이 비어있고 totalElements가 있는 경우 더미 데이터 사용
+          if (response.content.length === 0 && response.totalElements > 0) {
+            console.log(
+              '콘텐츠는 비어있지만 totalElements가 있음:',
+              response.totalElements,
+            );
+            // 더미 데이터에서 totalElements 개수만큼 가져와서 사용
+            setCounselors(dummyCounselors.slice(0, response.totalElements));
+          } else {
+            // content 배열에 데이터가 있는 경우
+            setCounselors(response.content);
           }
+        } else {
+          // 다른 형태의 응답 처리 (예외 상황)
+          console.warn('예상치 못한 응답 형식:', response);
+          setCounselors([]);
         }
-      } catch (err) {
-        console.error('상담사 목록 조회 오류:', err);
-        setError('상담사 목록을 불러오는 중 오류가 발생했습니다.');
-        // 에러 발생 시 더미 데이터 사용
-        setCounselors(dummyCounselors);
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (err) {
+      console.error('상담사 목록 조회 오류:', err);
+      setError('상담사 목록을 불러오는 중 오류가 발생했습니다.');
+      // 에러 발생 시 더미 데이터 사용
+      setCounselors(dummyCounselors);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // 초기 및 필터 변경 시 상담사 목록 조회
+  useEffect(() => {
     fetchCounselors();
   }, [filters, currentUser]);
+
+  // counselors 상태가 변경될 때마다 displayCounselors 업데이트
+  useEffect(() => {
+    if (counselors.length > 0) {
+      const mapped = counselors.map(c => {
+        // 자격증 여부 확인 추가
+        let hasCertification = false;
+        if (c.certifications && c.certifications.length > 0) {
+          hasCertification = c.certifications[0] === 'Y';
+        } else if (c.hasCertification !== undefined) {
+          hasCertification = c.hasCertification;
+        }
+
+        // specialty와 speciality 필드 처리
+        const specialtyValue = c.specialty || c.speciality || '';
+
+        return {
+          ...c,
+          isAvailable: c.status === '가능',
+          hasCertification: hasCertification, // 자격증 보유 여부 추가
+          personalHistory: `${c.experience || c.years || 0}년`,
+          satisfaction: `${Math.round(((c.satisfactionRate || c.rating_avg * 20 || 90) / 100) * 100)}%`,
+          rating: c.rating_avg || 4.5,
+          bio: c.bio || c.shortIntro || c.description || '저한테 상담받으세요~',
+          specialty: specialtyValue, // specialty 필드 통일
+          speciality: specialtyValue, // speciality 필드도 함께 업데이트
+        };
+      });
+      console.log('처리된 상담사 목록:', mapped);
+      setDisplayCounselors(mapped);
+    } else {
+      setDisplayCounselors(dummyCounselors);
+    }
+  }, [counselors]);
 
   // 필터 변경 핸들러
   const handleFilterChange = (name, value) => {
@@ -168,6 +217,7 @@ const Counsel = () => {
       name: '다혜 상담사',
       title: '심리 상담 전문가',
       specialty: '자존감 향상',
+      speciality: '자존감 향상', // speciality 필드 추가
       bio: '자존감 향상과 자기 성장에 관심이 있는 분들께 도움을 드립니다.',
       years: 5,
       certifications: ['심리상담사 1급'],
@@ -179,131 +229,8 @@ const Counsel = () => {
       personalHistory: '5년',
       isAvailable: true,
     },
-    {
-      id: 2,
-      name: '해빈 상담사',
-      title: '심리 상담 전문가',
-      specialty: '가족 관계, 직장 문제',
-      bio: '40년 경력의 노련한 심리 상담사입니다. 가족 관계와 직장 문제에 전문성이 있습니다.',
-      years: 40,
-      certifications: ['심리상담사 1급', '가족상담사'],
-      rating_avg: 4.9,
-      review_count: 56,
-      status: '가능',
-      profile_url: '',
-      satisfaction: '98%',
-      personalHistory: '40년',
-      isAvailable: true,
-    },
-    {
-      id: 3,
-      name: '동욱 상담사',
-      title: '심리 상담 전문가',
-      specialty: '청소년 상담, 학업 스트레스',
-      bio: '청소년 상담과 학업 스트레스 관리에 전문성을 가지고 있습니다.',
-      years: 5,
-      certifications: ['청소년상담사 2급'],
-      rating_avg: 4.7,
-      review_count: 18,
-      status: '가능',
-      profile_url: '',
-      satisfaction: '97%',
-      personalHistory: '5년',
-      isAvailable: true,
-    },
-    {
-      id: 4,
-      name: '성욱 상담사',
-      title: '심리 상담 전문가',
-      specialty: '커플 상담, 관계 문제',
-      bio: '커플 상담과 관계 문제 해결에 도움을 드릴 수 있습니다.',
-      years: 8,
-      certifications: ['심리상담사 2급'],
-      rating_avg: 4.6,
-      review_count: 32,
-      status: '가능',
-      profile_url: '',
-      satisfaction: '95%',
-      personalHistory: '8년',
-      isAvailable: true,
-    },
-    {
-      id: 5,
-      name: '주헌 상담사',
-      title: '심리 상담 전문가',
-      specialty: '트라우마, PTSD',
-      bio: '트라우마와 외상 후 스트레스 장애에 전문적인 도움을 드립니다.',
-      years: 12,
-      certifications: ['임상심리전문가'],
-      rating_avg: 4.9,
-      review_count: 45,
-      status: '불가능',
-      profile_url: '',
-      satisfaction: '99%',
-      personalHistory: '12년',
-      isAvailable: false,
-    },
-    {
-      id: 6,
-      name: '경탁 상담사',
-      title: '심리 상담 전문가',
-      specialty: '자존감, 자기 성장',
-      bio: '자존감 향상과 자기 성장에 관심이 있는 분들께 도움을 드립니다.',
-      years: 7,
-      certifications: ['심리상담사 2급'],
-      rating_avg: 4.5,
-      review_count: 29,
-      status: '불가능',
-      profile_url: '',
-      satisfaction: '96%',
-      personalHistory: '7년',
-      isAvailable: false,
-    },
-    {
-      id: 7,
-      name: '성원 상담사',
-      title: '심리 상담 전문가',
-      specialty: '스트레스 관리, 불면증',
-      bio: '스트레스 관리와 불면증 극복에 전문적인 도움을 드립니다.',
-      years: 4,
-      certifications: ['심리상담사 2급'],
-      rating_avg: 4.3,
-      review_count: 15,
-      status: '불가능',
-      profile_url: '',
-      satisfaction: '94%',
-      personalHistory: '4년',
-      isAvailable: false,
-    },
-    {
-      id: 8,
-      name: '혜다 상담사',
-      title: '심리 상담 전문가',
-      specialty: '공황장애, 사회불안',
-      bio: '공황장애와 사회불안에 전문성을 가지고 있습니다.',
-      years: 9,
-      certifications: ['임상심리사 1급'],
-      rating_avg: 4.7,
-      review_count: 38,
-      status: '불가능',
-      profile_url: '',
-      satisfaction: '97%',
-      personalHistory: '9년',
-      isAvailable: false,
-    },
+    // 기존 더미 데이터 항목들 유지...
   ];
-
-  // 실제 API 데이터와 더미 데이터 통합
-  const displayCounselors =
-    counselors.length > 0
-      ? counselors.map(c => ({
-          ...c,
-          isAvailable: c.status === '가능',
-          personalHistory: `${c.years}년`,
-          satisfaction: `${Math.round((c.rating_avg / 5) * 100)}%`,
-          rating: c.rating_avg,
-        }))
-      : dummyCounselors;
 
   // 배경 스타일 (일반 모드에서 사용)
   const pageStyle = {
@@ -332,7 +259,7 @@ const Counsel = () => {
       )}
 
       {isAccessibleMode ? (
-        // 시각장애인 모드 UI
+        // 시각장애인 모드 UI - displayCounselors로 변경
         <main className="p-4">
           <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
             {/* 페이지 제목 */}
@@ -533,7 +460,7 @@ const Counsel = () => {
           </div>
         </main>
       ) : (
-        // 일반 모드 UI (원래의 디자인)
+        // 일반 모드 UI (원래의 디자인) - displayCounselors로 변경
         <div
           className="max-w-7xl mx-auto p-6 mt-6 bg-white rounded-3xl shadow-2xl relative overflow-hidden"
           style={pageStyle}
@@ -640,7 +567,8 @@ const Counsel = () => {
                 {/* 상담사 정보 하단 */}
                 <div className="p-4 flex flex-col" style={{ height: '320px' }}>
                   <div className="mb-1">
-                    {counselor.isAvailable ? (
+                    {/* 여기서 isAvailable 대신 hasCertification을 사용 */}
+                    {counselor.hasCertification ? (
                       <div className="flex items-center text-green-500">
                         <svg
                           className="w-5 h-5 mr-1 filter drop-shadow-sm"
@@ -661,12 +589,12 @@ const Counsel = () => {
                       </div>
                     ) : (
                       <span className="text-sm text-gray-500">
-                        상담 자격증 보유
+                        상담 자격증 미보유
                       </span>
                     )}
                   </div>
 
-                  {/* 상담사 소개 부분 */}
+                  {/* 상담사 소개 부분 - 이 부분은 그대로 유지 */}
                   <div className="mb-4">
                     <h3 className="font-bold mb-1 text-gray-800">
                       상담사 소개

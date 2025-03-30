@@ -27,7 +27,7 @@ const openviduApi = {
   // 세션 생성 API
   createSession: async () => {
     try {
-      const response = await apiClient.post('channels/voice', {});
+      const response = await apiClient.post('channels/counsel', {});
       return response.data.sessionId;
     } catch (error) {
       console.error('세션 생성 오류:', error);

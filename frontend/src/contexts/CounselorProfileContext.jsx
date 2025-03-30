@@ -2,8 +2,10 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
 
+// 상담사 프로필 컨텍스트 생성
 const CounselorProfileContext = createContext();
 
+// 상담사 프로필 컨텍스트 제공자 컴포넌트
 export const CounselorProfileProvider = ({ children }) => {
   const auth = useAuth();
   const { currentUser, isLoading: authLoading } = auth || {};
@@ -15,33 +17,15 @@ export const CounselorProfileProvider = ({ children }) => {
     profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
     hasCertification: false,
   });
+  const [userDetails, setUserDetails] = useState(null); // 추가: 사용자 기본 정보 저장
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [updatingCertification, setUpdatingCertification] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
-  // 사용자가 상담사인지 확인하는 함수
-  const isCounselor = () => {
-    if (!currentUser) return false;
-
-    // 사용자 역할 확인
-    if (typeof currentUser.role === 'string') {
-      return currentUser.role.toLowerCase().includes('counselor');
-    }
-
-    return false;
-  };
-
   // 프로필 정보 불러오기 함수
   const fetchProfile = async (forceRefresh = false) => {
-    // 사용자가 상담사가 아니면 요청을 하지 않음
-    if (!isCounselor()) {
-      setLoading(false);
-      setInitialized(true);
-      return;
-    }
-
     // 이미 초기화되어 있고 강제 새로고침이 아니면 건너뛰기
     if (initialized && !forceRefresh) return;
 
@@ -51,6 +35,37 @@ export const CounselorProfileProvider = ({ children }) => {
       setLoading(true);
       setError('');
 
+      // 기본 사용자 정보 세팅
+      const storedUser = JSON.parse(sessionStorage.getItem('user') || '{}');
+      setUserDetails({
+        id: storedUser.id || currentUser.id,
+        name: storedUser.username || currentUser.username,
+        role: storedUser.role || currentUser.role,
+        gender: storedUser.gender || 'M', // 기본값
+        birth_date: storedUser.birth_date || '정보 없음', // 기본값
+      });
+
+      // mockUsers에서도 추가 정보 확인
+      try {
+        const storedUsers = JSON.parse(
+          sessionStorage.getItem('mockUsers') || '[]',
+        );
+        if (storedUsers.length > 0) {
+          const foundUser = storedUsers.find(
+            u => u.user_id?.toString() === currentUser.id?.toString(),
+          );
+          if (foundUser) {
+            setUserDetails(prev => ({
+              ...prev,
+              gender: foundUser.gender || prev.gender,
+              birth_date: foundUser.birth_date || prev.birth_date,
+            }));
+          }
+        }
+      } catch (e) {
+        console.error('mockUsers 정보 처리 오류:', e);
+      }
+
       if (import.meta.env.VITE_USE_MOCK_API === 'true') {
         // 모의 API 환경에서는 sessionStorage에서 가져오기
         const storedProfile = sessionStorage.getItem(
@@ -59,12 +74,32 @@ export const CounselorProfileProvider = ({ children }) => {
 
         if (storedProfile) {
           const parsedProfile = JSON.parse(storedProfile);
+
+          // 추가 사용자 정보 업데이트
+          if (
+            parsedProfile.name ||
+            parsedProfile.gender ||
+            parsedProfile.birth_date
+          ) {
+            setUserDetails(prev => ({
+              ...prev,
+              name: parsedProfile.name || prev.name,
+              gender: parsedProfile.gender || prev.gender,
+              birth_date:
+                parsedProfile.birth_date ||
+                parsedProfile.formattedBirthdate ||
+                prev.birth_date,
+            }));
+          }
+
           setProfile({
             ...parsedProfile,
             speciality: parsedProfile.specialty || '',
-
+            // years 필드는 문자열(예: "3년")일 수 있으므로, 숫자만 추출
             years: parsedProfile.years
-              ? parseInt(parsedProfile.years.replace(/[^0-9]/g, '')) || 0
+              ? parseInt(
+                  parsedProfile.years.toString().replace(/[^0-9]/g, ''),
+                ) || 0
               : 0,
             hasCertification: parsedProfile.hasCertification || false,
           });
@@ -78,6 +113,27 @@ export const CounselorProfileProvider = ({ children }) => {
             hasCertification: false,
           });
         }
+
+        // 상담사 목록에서 추가 정보 확인
+        try {
+          const storedCounselors = JSON.parse(
+            sessionStorage.getItem('mockCounselors') || '[]',
+          );
+          const existingCounselor = storedCounselors.find(
+            c => c.id === currentUser.id || c.id === parseInt(currentUser.id),
+          );
+
+          if (existingCounselor) {
+            setUserDetails(prev => ({
+              ...prev,
+              name: existingCounselor.name || prev.name,
+              gender: existingCounselor.gender || prev.gender,
+              birth_date: existingCounselor.birth_date || prev.birth_date,
+            }));
+          }
+        } catch (e) {
+          console.error('상담사 목록 정보 처리 오류:', e);
+        }
       } else {
         // 실제 API 호출
         const response = await axios.get(`/api/counselor/profile`, {
@@ -89,8 +145,20 @@ export const CounselorProfileProvider = ({ children }) => {
         if (response.data) {
           // 백엔드 응답 데이터를 프론트엔드 상태에 매핑
           const yearsValue = response.data.years
-            ? parseInt(response.data.years.replace(/[^0-9]/g, '')) || 0
+            ? parseInt(response.data.years.toString().replace(/[^0-9]/g, '')) ||
+              0
             : 0;
+
+          // 사용자 기본 정보 업데이트
+          setUserDetails(prev => ({
+            ...prev,
+            name: response.data.name || response.data.nickname || prev.name,
+            gender: response.data.gender || prev.gender,
+            birth_date:
+              response.data.formattedBirthdate ||
+              response.data.birth_date ||
+              prev.birth_date,
+          }));
 
           setProfile({
             speciality: response.data.specialty || '',
@@ -122,7 +190,7 @@ export const CounselorProfileProvider = ({ children }) => {
 
   // 프로필 정보 업데이트 함수
   const updateProfile = async updatedProfile => {
-    if (!currentUser || !isCounselor()) return false;
+    if (!currentUser) return false;
 
     try {
       setLoading(true);
@@ -140,6 +208,10 @@ export const CounselorProfileProvider = ({ children }) => {
           bio: updatedProfile.bio,
           profile_url: updatedProfile.profile_url,
           hasCertification: updatedProfile.hasCertification,
+          // 기본 정보도 함께 저장
+          name: userDetails?.name,
+          gender: userDetails?.gender,
+          birth_date: userDetails?.birth_date,
         };
 
         sessionStorage.setItem(
@@ -163,12 +235,15 @@ export const CounselorProfileProvider = ({ children }) => {
             years: `${updatedProfile.years}년`, // 백엔드 형식에 맞춰 저장
             hasCertification: updatedProfile.hasCertification,
             profile_url: updatedProfile.profile_url,
+            name: userDetails?.name,
+            gender: userDetails?.gender,
+            birth_date: userDetails?.birth_date,
           };
         } else {
           // 상담사 목록에 없으면 새로 추가
           storedCounselors.push({
             id: currentUser.id,
-            name: currentUser.username || '상담사',
+            name: userDetails?.name || currentUser.username || '상담사',
             title: '심리 상담 전문가',
             specialty: updatedProfile.speciality,
             bio: updatedProfile.bio,
@@ -179,8 +254,8 @@ export const CounselorProfileProvider = ({ children }) => {
             review_count: 0,
             status: 'available',
             satisfaction: '0%',
-            gender: 'M',
-            birth_date: '',
+            gender: userDetails?.gender || 'M',
+            birth_date: userDetails?.birth_date || '',
             created_at: new Date().toISOString(),
           });
         }
@@ -197,9 +272,9 @@ export const CounselorProfileProvider = ({ children }) => {
       } else {
         // 실제 API 호출
         const requestData = {
-          nickname: currentUser.username,
+          nickname: userDetails?.name || currentUser.username,
           specialty: updatedProfile.speciality,
-          years: `${updatedProfile.years}년`,
+          years: `${updatedProfile.years}년`, // 백엔드가 '년' 단위와 함께 받음
           bio: updatedProfile.bio,
         };
 
@@ -221,7 +296,8 @@ export const CounselorProfileProvider = ({ children }) => {
         if (response.data) {
           // 응답에서 years 필드 처리 (문자열에서 숫자로 변환)
           const yearsValue = response.data.years
-            ? parseInt(response.data.years.replace(/[^0-9]/g, '')) || 0
+            ? parseInt(response.data.years.toString().replace(/[^0-9]/g, '')) ||
+              0
             : updatedProfile.years;
 
           // 응답 데이터로 상태 업데이트
@@ -233,6 +309,21 @@ export const CounselorProfileProvider = ({ children }) => {
             hasCertification:
               response.data.hasCertification || updatedProfile.hasCertification,
           });
+
+          // 사용자 정보 업데이트
+          if (
+            response.data.name ||
+            response.data.gender ||
+            response.data.formattedBirthdate
+          ) {
+            setUserDetails(prev => ({
+              ...prev,
+              name: response.data.name || prev.name,
+              gender: response.data.gender || prev.gender,
+              birth_date: response.data.formattedBirthdate || prev.birth_date,
+            }));
+          }
+
           setSuccess('프로필이 성공적으로 업데이트되었습니다.');
           return true;
         }
@@ -249,7 +340,7 @@ export const CounselorProfileProvider = ({ children }) => {
 
   // 자격증 정보 업데이트 함수
   const updateCertification = async value => {
-    if (!currentUser || !isCounselor()) return;
+    if (!currentUser) return;
 
     try {
       setUpdatingCertification(true);
@@ -261,7 +352,7 @@ export const CounselorProfileProvider = ({ children }) => {
         const updatedProfile = {
           ...profile,
           hasCertification: value,
-          specialty: profile.speciality,
+          specialty: profile.speciality, // speciality -> specialty 변환
         };
 
         sessionStorage.setItem(
@@ -331,15 +422,12 @@ export const CounselorProfileProvider = ({ children }) => {
 
   // 처음 마운트 또는 사용자 변경 시에만 실행 (auth 로딩이 완료된 후)
   useEffect(() => {
+    // auth 로딩 중이면 아직 기다림
     if (authLoading) return;
 
-    // 사용자가 있고 상담사이며 아직 초기화되지 않았으면 프로필 가져오기
-    if (currentUser && isCounselor() && !initialized) {
+    // 사용자가 있고 아직 초기화되지 않았으면 프로필 가져오기
+    if (currentUser && !initialized) {
       fetchProfile();
-    } else if (currentUser && !isCounselor()) {
-      // 상담사가 아닌 경우 로딩 상태 해제
-      setLoading(false);
-      setInitialized(true);
     }
 
     // 사용자가 로그아웃했거나 변경된 경우 초기화 상태 리셋
@@ -352,12 +440,14 @@ export const CounselorProfileProvider = ({ children }) => {
         profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
         hasCertification: false,
       });
+      setUserDetails(null);
     }
   }, [currentUser, authLoading, initialized]);
 
   // 컨텍스트 값 설정
   const value = {
     profile,
+    userDetails, // 추가: 사용자 기본 정보 내보내기
     loading: loading || authLoading, // auth 로딩 중일 때도 로딩 상태로 표시
     error,
     success,
@@ -368,7 +458,7 @@ export const CounselorProfileProvider = ({ children }) => {
     setSuccess,
     setError,
     initialized,
-    isCounselor: isCounselor(),
+    setUserDetails, // 사용자 정보 변경 함수 추가
   };
 
   return (
@@ -388,5 +478,3 @@ export const useCounselorProfile = () => {
   }
   return context;
 };
-
-export default CounselorProfileContext;

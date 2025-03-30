@@ -7,6 +7,7 @@ const MyPage = () => {
   const { currentUser } = auth || {};
   const [profile, setProfile] = useState({
     speciality: '',
+    specialty: '', // specialty 필드 추가
     years: 0,
     bio: '',
     profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
@@ -116,9 +117,14 @@ const MyPage = () => {
               }
             }
 
+            // speciality와 specialty 모두 확인
+            const specialtyValue =
+              parsedProfile.specialty || parsedProfile.speciality || '';
+
             setProfile({
               ...parsedProfile,
-              speciality: parsedProfile.specialty || '',
+              speciality: specialtyValue,
+              specialty: specialtyValue,
               years: yearsValue,
               hasCertification: parsedProfile.hasCertification || false,
             });
@@ -126,6 +132,7 @@ const MyPage = () => {
             // 기본값 설정
             setProfile({
               speciality: '',
+              specialty: '',
               years: 0,
               bio: '',
               profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
@@ -160,8 +167,13 @@ const MyPage = () => {
               }
             }
 
+            // specialty와 speciality 모두 확인
+            const specialtyValue =
+              response.data.specialty || response.data.speciality || '';
+
             setProfile({
-              speciality: response.data.specialty || '',
+              speciality: specialtyValue,
+              specialty: specialtyValue,
               years: yearsValue,
               bio: response.data.bio || '',
               profile_url:
@@ -197,10 +209,19 @@ const MyPage = () => {
 
   const handleInputChange = e => {
     const { name, value } = e.target;
-    setProfile({
-      ...profile,
-      [name]: value,
-    });
+    if (name === 'speciality') {
+      // speciality가 변경되면 specialty도 함께 업데이트
+      setProfile({
+        ...profile,
+        speciality: value,
+        specialty: value,
+      });
+    } else {
+      setProfile({
+        ...profile,
+        [name]: value,
+      });
+    }
   };
 
   const handleProfileImageClick = () => {
@@ -238,32 +259,26 @@ const MyPage = () => {
       }));
 
       if (import.meta.env.VITE_USE_MOCK_API === 'true') {
-        // 모의 API에서 자격증 정보 업데이트
+        // 모의 API 환경
+        const storedProfile = sessionStorage.getItem(
+          `counselor_profile_${currentUser.id}`,
+        );
+        const currentProfile = storedProfile ? JSON.parse(storedProfile) : {};
+
+        // 업데이트된 프로필 데이터
         const updatedProfile = {
-          ...profile,
+          ...currentProfile,
           hasCertification: value,
-          specialty: profile.speciality, // speciality -> specialty 변환
         };
+
+        // 세션 스토리지에 저장
         sessionStorage.setItem(
           `counselor_profile_${currentUser.id}`,
           JSON.stringify(updatedProfile),
         );
 
-        // 상담사 목록 업데이트
-        const storedCounselors = JSON.parse(
-          sessionStorage.getItem('mockCounselors') || '[]',
-        );
-        const existingIndex = storedCounselors.findIndex(
-          c => c.id === currentUser.id || c.id === parseInt(currentUser.id),
-        );
-
-        if (existingIndex >= 0) {
-          storedCounselors[existingIndex].hasCertification = value;
-          sessionStorage.setItem(
-            'mockCounselors',
-            JSON.stringify(storedCounselors),
-          );
-        }
+        // 업데이트 성공 후 플래그 설정
+        sessionStorage.setItem('profile_updated', 'true');
 
         setSuccess('자격증 정보가 업데이트되었습니다.');
       } else {
@@ -280,6 +295,7 @@ const MyPage = () => {
           {
             headers: {
               Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
             },
             params: { hasCertification: value },
           },
@@ -288,6 +304,9 @@ const MyPage = () => {
         console.log('자격증 업데이트 응답:', response.data);
 
         if (response.data) {
+          // 업데이트 성공 후 플래그 설정
+          sessionStorage.setItem('profile_updated', 'true');
+
           setSuccess('자격증 정보가 업데이트되었습니다.');
         }
       }
@@ -318,67 +337,31 @@ const MyPage = () => {
 
       // 모의 API 환경에서는 sessionStorage에 저장
       if (import.meta.env.VITE_USE_MOCK_API === 'true') {
-        // 상담사 프로필 저장
-        sessionStorage.setItem(
+        // 현재 프로필 데이터 가져오기
+        const storedProfile = sessionStorage.getItem(
           `counselor_profile_${currentUser.id}`,
-          JSON.stringify({
-            ...profile,
-            specialty: profile.speciality, // speciality -> specialty 변환
-            years: `${profile.years}년`, // years 값을 문자열로 저장
-          }),
         );
+        const currentProfile = storedProfile ? JSON.parse(storedProfile) : {};
 
-        // 상담사 목록에 상담사 추가 또는 업데이트
-        const storedCounselors = JSON.parse(
-          sessionStorage.getItem('mockCounselors') || '[]',
-        );
-        const existingIndex = storedCounselors.findIndex(
-          c => c.id === currentUser.id || c.id === parseInt(currentUser.id),
-        );
-
-        // userDetails에서 생년월일과 성별 정보 가져오기
-        const birthDate = userDetails?.birth_date || '';
-        const gender = userDetails?.gender || 'M';
-
-        const updatedCounselor = {
-          id: currentUser.id,
-          name: currentUser.username || userDetails?.name || '상담사',
-          title: '심리 상담 전문가',
-          specialty: profile.speciality,
+        // 업데이트할 프로필 데이터 준비 - specialty와 speciality 모두 업데이트
+        const updatedProfile = {
+          ...currentProfile,
+          speciality: profile.speciality,
+          specialty: profile.speciality, // specialty 필드 추가
+          years: profile.years,
           bio: profile.bio,
-          years: `${profile.years}년`, // 년 단위 추가
-          certifications: ['심리상담사'],
-          hasCertification: profile.hasCertification,
-          rating_avg:
-            existingIndex >= 0 ? storedCounselors[existingIndex].rating_avg : 0,
-          review_count:
-            existingIndex >= 0
-              ? storedCounselors[existingIndex].review_count
-              : 0,
-          status: 'available', // 기본값 설정
           profile_url: profile.profile_url,
-          satisfaction:
-            existingIndex >= 0
-              ? storedCounselors[existingIndex].satisfaction
-              : '0%',
-          gender: gender,
-          birth_date: birthDate,
-          created_at:
-            existingIndex >= 0
-              ? storedCounselors[existingIndex].created_at
-              : new Date().toISOString(),
+          hasCertification: profile.hasCertification,
         };
 
-        if (existingIndex >= 0) {
-          storedCounselors[existingIndex] = updatedCounselor;
-        } else {
-          storedCounselors.push(updatedCounselor);
-        }
-
+        // 세션 스토리지에 저장
         sessionStorage.setItem(
-          'mockCounselors',
-          JSON.stringify(storedCounselors),
+          `counselor_profile_${currentUser.id}`,
+          JSON.stringify(updatedProfile),
         );
+
+        // 업데이트 성공 후 플래그 설정
+        sessionStorage.setItem('profile_updated', 'true');
 
         setSuccess('프로필이 성공적으로 업데이트되었습니다.');
       } else {
@@ -388,7 +371,8 @@ const MyPage = () => {
         // API 요청 데이터 구성 (백엔드 DTO에 맞게 필드명 조정)
         const requestData = {
           nickname: currentUser.username || userDetails?.name,
-          specialty: profile.speciality,
+          specialty: profile.speciality, // specialty 필드 사용
+          speciality: profile.speciality, // 혹시 모를 호환성을 위해 speciality도 전송
           years: `${profile.years}년`,
           bio: profile.bio,
           profileUrl: profile.profile_url,
@@ -438,10 +422,17 @@ const MyPage = () => {
             }
           }
 
+          // specialty와 speciality 처리
+          const specialtyValue =
+            response.data.specialty ||
+            response.data.speciality ||
+            profile.speciality;
+
           // 프로필 정보도 최신 상태로 업데이트
           setProfile(prev => ({
             ...prev,
-            speciality: response.data.specialty || prev.speciality,
+            speciality: specialtyValue,
+            specialty: specialtyValue,
             years: yearsValue,
             bio: response.data.bio || prev.bio,
             hasCertification:
@@ -449,6 +440,9 @@ const MyPage = () => {
             profile_url: response.data.profileUrl || prev.profile_url,
           }));
         }
+
+        // 업데이트 성공 후 플래그 설정
+        sessionStorage.setItem('profile_updated', 'true');
 
         setSuccess('프로필이 성공적으로 업데이트되었습니다.');
       }

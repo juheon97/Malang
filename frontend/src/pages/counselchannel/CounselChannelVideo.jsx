@@ -64,7 +64,7 @@ function CounselChannelVideo() {
 
   // 참가자 제어 초기화
   useEffect(() => {
-    if (participants.length > 0) {
+    if (participants && participants.length > 0) {
       initParticipantControls(participants);
     }
   }, [participants]);
@@ -164,12 +164,12 @@ function CounselChannelVideo() {
       {/* 메인 컨텐츠 - 영상과 채팅 */}
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
         {/* 영상 영역 */}
-        <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
+        {/* <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
           <VideoLayout
             participants={participants}
             renderParticipantInfo={renderParticipantInfo}
           />
-        </div>
+        </div> */}
 
         {/* ChatBox 컴포넌트 사용 */}
         <ChatBox
