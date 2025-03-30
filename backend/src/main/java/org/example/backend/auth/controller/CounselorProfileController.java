@@ -1,5 +1,6 @@
 package org.example.backend.auth.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import java.util.Map;
 @RequestMapping("/counselor/profile")
 @Slf4j
 @RequiredArgsConstructor
+@Tag(name = "상담사프로필", description = "상담사 프로필 컨트롤러")
 public class CounselorProfileController {
 
     private final CounselorProfileService counselorProfileService;
