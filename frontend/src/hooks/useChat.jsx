@@ -1,48 +1,25 @@
-// hooks/useChat.js
-import { useState, useEffect, useRef } from 'react';
-import websocketService from '../services/websocketService';
+// useChat.js
+import { useState, useRef, useEffect, useCallback } from 'react';
 
-export default function useChat(currentUserId, channel = 'default') {
+const useChat = currentUserId => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
   const chatContainerRef = useRef(null);
 
-  // 컴포넌트 마운트 시 WebSocket 연결
-  useEffect(() => {
-    // 웹소켓 연결
-    websocketService.connect();
+  // 채팅 입력 엔터키 핸들러
+  const handleKeyDown = e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const form = e.target.closest('form');
+      if (form) {
+        form.dispatchEvent(
+          new Event('submit', { cancelable: true, bubbles: true }),
+        );
+      }
+    }
+  };
 
-    // 연결 상태 확인
-    const checkConnectionInterval = setInterval(() => {
-      setIsConnected(websocketService.isConnected);
-    }, 1000);
-
-    // 메시지 수신 리스너
-    const removeListener = websocketService.addListener('message', data => {
-      setMessages(prevMessages => [
-        ...prevMessages,
-        {
-          id: Date.now(),
-          text: data.content,
-          sender: data.senderId || 'unknown',
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
-        },
-      ]);
-    });
-
-    // 컴포넌트 언마운트 시 정리
-    return () => {
-      clearInterval(checkConnectionInterval);
-      removeListener();
-      websocketService.disconnect();
-    };
-  }, []);
-
-  // 채팅창 스크롤 자동 조정
+  // 새 메시지가 추가될 때마다 스크롤을 아래로 이동
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
@@ -50,47 +27,26 @@ export default function useChat(currentUserId, channel = 'default') {
     }
   }, [messages]);
 
-  // 메시지 전송 함수
-  const handleSendMessage = e => {
-    e.preventDefault();
-    if (newMessage.trim() === '') return;
-
-    // 메시지 전송
-    const success = websocketService.sendMessage('message', newMessage);
-
-    if (success) {
-      // 내 메시지 표시
-      setMessages(prevMessages => [
-        ...prevMessages,
-        {
-          id: Date.now(),
-          text: newMessage,
-          sender: currentUserId,
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
-        },
-      ]);
-      setNewMessage('');
-    }
-  };
-
-  // 메시지 입력 시 엔터키 처리
-  const handleKeyDown = e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage(e);
-    }
-  };
+  // 외부에서 메시지를 추가할 수 있는 함수 (useCallback으로 메모이제이션)
+  const addMessage = useCallback((content, sender, senderId) => {
+    const newMsg = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // 고유 ID 생성
+      text: content,
+      sender: sender,
+      senderId: senderId,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, newMsg]);
+  }, []);
 
   return {
     messages,
     newMessage,
     setNewMessage,
-    handleSendMessage,
     handleKeyDown,
     chatContainerRef,
-    isConnected,
+    addMessage,
   };
-}
+};
+
+export default useChat;

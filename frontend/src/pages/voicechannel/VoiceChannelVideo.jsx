@@ -24,6 +24,7 @@ function VoiceChannelVideo() {
   const [connectionError, setConnectionError] = useState('');
   const stompClientRef = useRef(null);
   const [channels, setChannels] = useState([]); // 채널 목록 상태
+  const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
 
   const hasJoined = useRef(false);
 
@@ -48,20 +49,45 @@ function VoiceChannelVideo() {
     messages,
     newMessage,
     setNewMessage,
-    handleSendMessage,
     handleKeyDown,
     chatContainerRef,
+    addMessage,
   } = useChat(currentUser?.id || 'guest');
+
+  // 채팅 전송 함수
+  const handleSendMessage = e => {
+    e.preventDefault();
+    if (newMessage.trim() === '' || !stompClientRef.current?.connected) return;
+
+    // 웹소켓을 통해 메시지 전송
+    stompClientRef.current.publish({
+      destination: `/pub/${channelId}/chat`,
+      body: JSON.stringify({
+        event: 'send',
+        content: newMessage,
+      }),
+      headers: { 'content-type': 'application/json' },
+    });
+
+    // 로컬 UI에 메시지 추가
+    addMessage(
+      newMessage,
+      currentUser?.username || 'Me',
+      currentUser?.id || 'guest',
+    );
+    setNewMessage('');
+  };
 
   // 웹소켓 연결 및 채널 입장 알림
   useEffect(() => {
+    console.log('🎯 VoiceChannelVideo mounted');
+
     const connectWebSocket = () => {
       const API_URL = import.meta.env.VITE_API_URL;
       const token = sessionStorage.getItem('token');
 
       if (!token || !isAuthenticated || !channelId) return;
 
-      // global 객체 문제 해결을 위한 polyfill
       if (typeof window !== 'undefined' && !window.global) {
         window.global = window;
       }
@@ -72,15 +98,50 @@ function VoiceChannelVideo() {
           Authorization: `Bearer ${token}`,
         },
         onConnect: () => {
-          console.log('웹소켓 연결 성공');
+          console.log('✅ 웹소켓 연결 성공');
+          setIsWebSocketConnected(true);
 
-          // 채널 구독
-          stompClient.subscribe(`/sub/${channelId}`, message => {
-            console.log('메시지 수신:', JSON.parse(message.body));
-            // 수신한 메시지 처리 로직
+          // 채팅 메시지 구독 (명세서에 맞게 수정)
+          stompClient.subscribe(`/sub/${channelId}/chat`, message => {
+            try {
+              const data = JSON.parse(message.body);
+              console.log('📩 채팅 메시지 수신:', data);
+
+              // 메시지 이벤트 처리
+              if (data.event === 'message') {
+                // 채팅 메시지 추가
+                addMessage(
+                  data.content,
+                  data.sender || 'Unknown',
+                  data.senderId || null,
+                );
+              }
+            } catch (e) {
+              console.error('❗ 메시지 파싱 오류:', e);
+            }
           });
 
-          // 입장 메시지 전송
+          // 채널 이벤트 구독 (join, leave 등)
+          stompClient.subscribe(`/sub/${channelId}`, message => {
+            try {
+              const data = JSON.parse(message.body);
+              console.log('📩 채널 이벤트 수신:', data);
+
+              // 메시지 이벤트 처리 - 채팅 메시지도 여기서 수신
+              if (data.event === 'message') {
+                // 채팅 메시지 추가
+                addMessage(
+                  data.content,
+                  data.sender || 'Unknown',
+                  data.senderId || null,
+                );
+              }
+            } catch (e) {
+              console.error('❗ 채널 이벤트 파싱 오류:', e);
+            }
+          });
+
+          // 입장 이벤트 발행
           stompClient.publish({
             destination: `/pub/${channelId}`,
             body: JSON.stringify({
@@ -91,35 +152,59 @@ function VoiceChannelVideo() {
             headers: { 'content-type': 'application/json' },
           });
 
-          console.log('채팅방 입장 알림 전송 완료');
+          console.log('📢 채팅방 입장 알림 전송 완료');
         },
         onStompError: frame => {
-          console.error('웹소켓 에러:', frame);
-          setConnectionError('웹소켓 연결에 실패했습니다. 다시 시도해주세요.');
+          console.error('💥 STOMP 에러 발생:', frame);
+          setConnectionError('웹소켓 연결에 실패했습니다.');
+          setIsWebSocketConnected(false);
+        },
+        onWebSocketClose: event => {
+          console.warn('🚫 웹소켓 연결 종료됨:', event);
+          setConnectionError('웹소켓 연결이 끊어졌습니다.');
+          setIsWebSocketConnected(false);
         },
       });
 
-      // 연결 시작
       stompClient.activate();
       stompClientRef.current = stompClient;
     };
 
-    if (isAuthenticated && channelId && !hasJoined.current) {
+    // 연결 조건 만족 시 1회만 연결
+    if (!hasJoined.current && isAuthenticated && channelId) {
       hasJoined.current = true;
-      connectWebSocket(); // 웹소켓 연결
-      joinSession(); // OpenVidu 세션 연결
+      connectWebSocket();
+      joinSession();
     }
 
     return () => {
+      console.log('💨 VoiceChannelVideo unmounted');
+
       if (hasJoined.current) {
-        // 웹소켓 연결 해제
-        if (stompClientRef.current && stompClientRef.current.connected) {
+        hasJoined.current = false;
+
+        if (stompClientRef.current?.connected) {
+          // 퇴장 이벤트 발행
+          stompClientRef.current.publish({
+            destination: `/pub/${channelId}`,
+            body: JSON.stringify({
+              event: 'leave',
+              user_id: parseInt(currentUser?.id, 10),
+              channel: parseInt(channelId, 10),
+            }),
+            headers: { 'content-type': 'application/json' },
+          });
+
+          console.log('🔌 웹소켓 연결 해제');
           stompClientRef.current.deactivate();
+          setIsWebSocketConnected(false);
         }
-        leaveSession(); // OpenVidu 세션 연결 해제
+
+        leaveSession();
       }
     };
-  }, [channelId, isAuthenticated, currentUser?.id, joinSession, leaveSession]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, channelId]);
 
   const toggleMic = () => {
     setIsMicOn(!isMicOn);
@@ -182,6 +267,7 @@ function VoiceChannelVideo() {
 
         // 웹소켓 연결 해제
         stompClientRef.current.deactivate();
+        setIsWebSocketConnected(false);
       }
 
       // OpenVidu 세션 종료
@@ -283,14 +369,15 @@ function VoiceChannelVideo() {
 
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
         <ChatBox
+          currentUserId={currentUser?.id}
+          channelId={channelId}
           messages={messages}
           newMessage={newMessage}
           setNewMessage={setNewMessage}
           handleSendMessage={handleSendMessage}
           handleKeyDown={handleKeyDown}
           chatContainerRef={chatContainerRef}
-          currentUserId={currentUser?.id || 'guest'}
-          channelId={channelId}
+          isConnected={isWebSocketConnected}
         />
       </div>
 
