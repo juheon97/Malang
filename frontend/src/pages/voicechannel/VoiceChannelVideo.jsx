@@ -1,3 +1,4 @@
+// VoiceChannelVideo.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import VideoLayout from '../../components/video/VideoLayout';
@@ -22,6 +23,7 @@ function VoiceChannelVideo() {
   const [channelInfo, setChannelInfo] = useState(null);
   const [connectionError, setConnectionError] = useState('');
   const stompClientRef = useRef(null);
+  const [channels, setChannels] = useState([]); // 채널 목록 상태
 
   const hasJoined = useRef(false);
 
@@ -33,6 +35,7 @@ function VoiceChannelVideo() {
     }
   }, [isAuthenticated, navigate, channelId]);
 
+  // 커스텀 훅 사용
   const { participants, joinSession, leaveSession, toggleAudio, toggleVideo } =
     useOpenVidu(
       channelId,
@@ -136,6 +139,33 @@ function VoiceChannelVideo() {
     setIsSignLanguageOn(!isSignLanguageOn);
   };
 
+  // 채널 목록 가져오기 함수
+  const fetchChannels = async () => {
+    try {
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다.');
+      }
+
+      const response = await axios.get('/api/channels', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.data && response.data.data) {
+        setChannels(response.data.data);
+      } else {
+        throw new Error('채널 목록을 가져오는 데 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('채널 목록 가져오기 실패:', error);
+      setConnectionError('채널 목록을 가져오는데 실패했습니다.');
+    }
+  };
+
+  // 채널 나가기 및 목록 새로고침
   const handleLeaveChannel = async () => {
     try {
       if (stompClientRef.current && stompClientRef.current.connected) {
@@ -172,6 +202,9 @@ function VoiceChannelVideo() {
           },
         );
       }
+
+      // 채널 목록 새로고침 (필요한 경우)
+      await fetchChannels();
 
       // 채널 목록 페이지로 이동
       navigate('/voice-channel');

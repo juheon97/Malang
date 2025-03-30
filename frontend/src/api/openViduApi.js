@@ -1,3 +1,4 @@
+// src>api>communityApi.js
 import axios from 'axios';
 
 // API 기본 URL 설정

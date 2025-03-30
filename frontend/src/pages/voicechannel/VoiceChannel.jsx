@@ -14,21 +14,22 @@ const VoiceChannel = () => {
   const [error, setError] = useState(null);
 
   // 채널 목록 가져오기
+  const fetchChannels = async () => {
+    setIsLoading(true);
+    try {
+      const data = await voiceChannelApi.listChannels();
+      console.log('채널 목록:', data); // API에서 가져온 채널 데이터를 콘솔에 출력
+      setChannels(data);
+      setError(null);
+    } catch (error) {
+      console.error('채널 목록 조회 실패:', error);
+      setError('채널 목록을 불러오는데 실패했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchChannels = async () => {
-      setIsLoading(true);
-      try {
-        const data = await voiceChannelApi.listChannels();
-        console.log('채널 목록:', data); // API에서 가져온 채널 데이터를 콘솔에 출력
-        setChannels(data);
-        setError(null);
-      } catch (error) {
-        console.error('채널 목록 조회 실패:', error);
-        setError('채널 목록을 불러오는데 실패했습니다.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchChannels();
   }, []);
 
@@ -62,6 +63,11 @@ const VoiceChannel = () => {
     console.log('접근성 모드 변경:', !isAccessibleMode); // 접근성 모드 상태를 출력
     setIsAccessibleMode(!isAccessibleMode);
     setExpandedChannel(null); // 모드 변경 시 확장된 채널 초기화
+  };
+
+  // 새로 고침 버튼 클릭 시
+  const handleRefresh = () => {
+    fetchChannels(); // 채널 목록을 새로 고침
   };
 
   return (
@@ -106,6 +112,13 @@ const VoiceChannel = () => {
                     className="px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50"
                   >
                     {isAccessibleMode ? '일반 모드' : '접근성 모드'}
+                  </button>
+                  {/* 새로 고침 버튼 */}
+                  <button
+                    onClick={handleRefresh}
+                    className="px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50"
+                  >
+                    새로 고침
                   </button>
                 </div>
               </div>
