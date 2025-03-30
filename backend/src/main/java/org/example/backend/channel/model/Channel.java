@@ -40,7 +40,7 @@ public class Channel extends BaseTimeEntity {
     private String description;
 
     @Column(name = "status")
-    private Integer status; // 채널 상태: 0-대기중, 1-진행중, 2-종료됨
+    private Integer status; // 채널 상태: -1-미생성(요청만 된 상태), 0-대기중, 1-진행중, 2-종료됨
 
     @Column(name = "participants_count")
     private Integer participantsCount; // 현재 참여 인원 수
@@ -64,7 +64,8 @@ public class Channel extends BaseTimeEntity {
 
     @Builder
     public Channel(String channelId, String channelName, int maxPlayer, Long userId,
-                   String counselorId, ChannelType channelType, String password, String description) {
+                   String counselorId, ChannelType channelType, String password, String description,
+                   Integer status, Integer participantsCount, LocalDateTime scheduledTime) {
         this.channelId = channelId;
         this.channelName = channelName;
         this.maxPlayer = maxPlayer;

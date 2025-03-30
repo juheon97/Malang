@@ -143,6 +143,11 @@ public class SecurityConfig {
                                 "/channels/counseling/create",
                                 "/channels/counseling/update/*",
                                 "/channels/counseling/delete/*").hasAuthority("ROLE_COUNSELOR")
+                        // 상담 요청 관련 API 접근 설정 - API 명세서에 맞게 수정
+                        .requestMatchers("/channels/counseling/request/available").authenticated() // 참여 가능한 상담 채널 목록 조회 - 인증된 사용자
+                        .requestMatchers("/channels/counseling/request/my-channels").hasAuthority("ROLE_COUNSELOR") // 상담사의 대기중인 채널 목록 조회 - 상담사만
+                        .requestMatchers("/channels/counseling/request/{channelId}").authenticated() // 상담 요청 - 인증된 사용자
+                        .requestMatchers("/channels/counseling/request/{channelId}/end").hasAuthority("ROLE_COUNSELOR") // 상담 종료 - 상담사만
                         // Community 모든 요청은 인증 필요 (GET 포함)
                         .requestMatchers("/community/**").authenticated()
                         // Voice 채널 모든 요청은 인증 필요
