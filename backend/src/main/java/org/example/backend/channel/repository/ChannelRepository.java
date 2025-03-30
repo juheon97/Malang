@@ -24,4 +24,13 @@ public interface ChannelRepository extends JpaRepository<Channel, String> {
 
     // 특정 상담사의 채널 조회 (상담 채널용)
     List<Channel> findByCounselorId(String counselorId);
+
+    // 특정 상담사의 특정 상태 채널 조회 (상담 요청 목록용)
+    List<Channel> findByCounselorIdAndStatus(String counselorId, Integer status);
+
+    // 특정 사용자의 특정 상태 채널 조회
+    List<Channel> findByUserIdAndStatus(Long userId, Integer status);
+
+    // 상태별 모든 채널 조회
+    List<Channel> findByStatus(Integer status);
 }
