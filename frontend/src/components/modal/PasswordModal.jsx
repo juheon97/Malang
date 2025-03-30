@@ -1,3 +1,4 @@
+//src>components/modal/PasswordModal.jsx
 import React from 'react';
 
 const PasswordModal = ({
@@ -38,10 +39,16 @@ const PasswordModal = ({
 
           <div className="flex justify-center">
             <button
-              className="bg-[#f2f2f2] hover:bg-gradient-to-r hover:from-[#79E7B7] hover:to-[#08976E] hover:text-white text-black text-sm font-medium px-6 py-1.5 rounded-md shadow-sm transition-colors"
+              className="bg-[#f2f2f2] hover:bg-gradient-to-r hover:from-[#79E7B7] hover:to-[#08976E] hover:text-white text-black text-sm font-medium px-6 py-1.5 rounded-md mr-4 shadow-sm transition-colors"
               onClick={onSubmit}
             >
               확인
+            </button>
+            <button
+              className="bg-[#f2f2f2] hover:bg-gradient-to-r hover:from-[#79E7B7] hover:to-[#08976E] hover:text-white text-black text-sm font-medium px-6 py-1.5 rounded-md shadow-sm transition-colors"
+              onClick={onClose}
+            >
+              취소
             </button>
           </div>
         </div>
