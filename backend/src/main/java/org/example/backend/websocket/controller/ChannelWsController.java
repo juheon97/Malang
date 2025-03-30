@@ -28,6 +28,9 @@ public class ChannelWsController {
             @DestinationVariable Long channel_id,
             ChannelEventRequest request) {
 
+        logger.info("Received channel event: channel_id={}, user_id={}, event={}, full request={}",
+                channel_id, request.user_id(), request.event(), request);
+
         logger.debug("Received channel event: channel_id={}, user_id={}, event={}",
                 channel_id, request.user_id(), request.event());
 
@@ -35,13 +38,16 @@ public class ChannelWsController {
         switch (request.event()) {
             case "join":
                 channelWsService.joinChannel(channel_id, request.user_id());
+                logger.info("User {} joined channel {}", request.user_id(), channel_id);
                 return new ChannelEventResponse(channel_id, request.user_id(), "join");
 
             case "leave":
                 channelWsService.leaveChannel(channel_id, request.user_id());
+                logger.info("User {} left channel {}", request.user_id(), channel_id);
                 return new ChannelEventResponse(channel_id, request.user_id(), "leave");
 
             default:
+                logger.warn("Unknown channel event: {}", request.event());
                 return new ChannelEventResponse(channel_id, request.user_id(), "unknown");
         }
     }
