@@ -1,100 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import websocketService from '../../services/websocketService';
+import React from 'react';
 
-const ChatBox = ({ currentUserId, channelId }) => {
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
-  const chatContainerRef = useRef(null);
-
+const ChatBox = ({
+  currentUserId,
+  channelId,
+  messages,
+  newMessage,
+  setNewMessage,
+  handleSendMessage,
+  handleKeyDown,
+  chatContainerRef,
+  isConnected,
+}) => {
   const user = JSON.parse(sessionStorage.getItem('user'));
-  const userId = user?.id;
+  const userId = user?.id || currentUserId;
   const nickname = user?.username;
-
-  // 📌 channelId를 int로 변환
-  const intChannelId = parseInt(channelId, 10);
-
-  useEffect(() => {
-    if (isNaN(intChannelId)) {
-      console.error('channelId가 숫자가 아닙니다:', channelId);
-      return;
-    }
-
-    websocketService.connect(intChannelId);
-
-    const checkConnection = setInterval(() => {
-      setIsConnected(websocketService.isConnected);
-    }, 500);
-
-    const subscriptionDestination = `/sub/${intChannelId}`;
-    const subscription = websocketService.subscribe(
-      subscriptionDestination,
-      message => {
-        try {
-          const data = JSON.parse(message.body);
-          if (data.event === 'message') {
-            setMessages(prevMessages => [
-              ...prevMessages,
-              {
-                id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                senderId: userId,
-                text: data.content,
-                sender: nickname || '익명',
-              },
-            ]);
-          }
-        } catch (err) {
-          console.error('메시지 파싱 오류:', err);
-        }
-      },
-    );
-
-    return () => {
-      clearInterval(checkConnection);
-      if (subscription) {
-        if (typeof subscription === 'function') {
-          subscription();
-        } else if (typeof subscription.unsubscribe === 'function') {
-          subscription.unsubscribe();
-        }
-      }
-      websocketService.disconnect();
-    };
-  }, [intChannelId, userId, nickname]);
-
-  const handleSendMessage = e => {
-    e.preventDefault();
-
-    if (newMessage.trim()) {
-      const payload = JSON.stringify({
-        event: 'send',
-        content: newMessage,
-      });
-
-      const destination = `/pub/${intChannelId}/chat`;
-
-      const success = websocketService.sendMessage(destination, payload);
-
-      if (success) {
-        setMessages(prevMessages => [
-          ...prevMessages,
-          {
-            id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            senderId: userId,
-            text: newMessage,
-            sender: nickname || '익명',
-          },
-        ]);
-        setNewMessage('');
-      }
-    }
-  };
-
-  const handleKeyDown = e => {
-    if (e.key === 'Enter') {
-      handleSendMessage(e);
-    }
-  };
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden w-full lg:w-80 flex flex-col">
@@ -127,7 +46,7 @@ const ChatBox = ({ currentUserId, channelId }) => {
             }`}
           >
             <div className="flex flex-col items-start max-w-[85%]">
-              {message.sender !== nickname && (
+              {message.sender !== nickname && message.senderId !== userId && (
                 <span className="text-xs font-semibold text-gray-600 mb-1 ml-1">
                   {message.sender}
                 </span>
@@ -160,10 +79,15 @@ const ChatBox = ({ currentUserId, channelId }) => {
             onKeyDown={handleKeyDown}
             placeholder="메시지를 입력해주세요"
             className="w-full border border-gray-200 rounded-full p-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 bg-[#F2F2F2]"
+            disabled={!isConnected}
           />
           <button
             type="submit"
-            className="ml-2 bg-green-500 hover:bg-green-600 rounded-full p-2.5 text-white transition-colors"
+            className={`ml-2 rounded-full p-2.5 text-white transition-colors ${
+              isConnected
+                ? 'bg-green-500 hover:bg-green-600'
+                : 'bg-gray-400 cursor-not-allowed'
+            }`}
             disabled={!isConnected}
           >
             <svg
