@@ -55,11 +55,18 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
                 StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
+                // 메시지 페이로드 로깅 (바이너리 데이터는 제외)
+                if (accessor != null && message.getPayload() != null && !message.getPayload().getClass().isArray()) {
+                    logger.debug("WebSocket message payload: {}", message.getPayload());
+                }
+
                 // 인증 처리
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    logger.info("WebSocket CONNECT request received");
                     String authorizationHeader = accessor.getFirstNativeHeader("Authorization");
 
                     if (authorizationHeader != null) {
+                        logger.debug("Authorization header present in WebSocket connection");
                         String token = jwtTokenProvider.resolveToken(authorizationHeader);
 
                         if (token != null && jwtTokenProvider.validateToken(token)) {
@@ -68,14 +75,26 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
                             Long userId = jwtTokenProvider.getUserIdFromToken(token);
                             String auth = jwtTokenProvider.getAuthFromToken(token);
 
+                            logger.info("WebSocket authenticated user: email={}, userId={}, auth={}",
+                                    email, userId, auth);
+
                             // 사용자 정보를 웹소켓 세션에 저장
                             accessor.setUser(() -> email);
 
                             // 추가 정보 저장
                             accessor.getSessionAttributes().put("userId", userId);
                             accessor.getSessionAttributes().put("auth", auth);
+                        } else {
+                            logger.warn("Invalid token in WebSocket connection");
                         }
+                    } else {
+                        logger.debug("No authorization header in WebSocket connection");
                     }
+                }
+
+                // 헤더 정보 로깅
+                if (accessor != null) {
+                    logger.debug("WebSocket headers: {}", accessor.getMessageHeaders());
                 }
 
                 // 로깅 처리
@@ -83,6 +102,15 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
                     logger.info("Message sent to: {}", accessor.getDestination());
                 } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
                     logger.info("Subscription to: {}", accessor.getDestination());
+
+                    // 구독 정보에 사용자 ID가 있으면 함께 로깅
+                    Object userId = accessor.getSessionAttributes().get("userId");
+                    if (userId != null) {
+                        logger.info("User {} subscribed to {}", userId, accessor.getDestination());
+                    }
+                } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
+                    Object userId = accessor.getSessionAttributes().get("userId");
+                    logger.info("WebSocket disconnection from user: {}", userId);
                 }
 
                 return message;

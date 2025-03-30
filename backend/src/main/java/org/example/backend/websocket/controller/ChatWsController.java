@@ -1,5 +1,9 @@
 package org.example.backend.websocket.controller;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.example.backend.websocket.dto.request.ChatMessageRequest;
 import org.example.backend.websocket.dto.response.ChatMessageResponse;
 import org.example.backend.websocket.service.ChatWsService;
@@ -13,6 +17,8 @@ public class ChatWsController {
 
     private final ChatWsService chatWsService;
 
+    private static final Logger logger = LoggerFactory.getLogger(ChatWsController.class);
+
     public ChatWsController(ChatWsService chatWsService) {
         this.chatWsService = chatWsService;
     }
@@ -23,11 +29,17 @@ public class ChatWsController {
             @DestinationVariable Long channel_id,
             ChatMessageRequest request) {
 
+        logger.info("Received chat message: channel_id={}, event={}, content_length={}",
+                channel_id, request.event(), request.content() != null ? request.content().length() : 0);
+
+
         String processedContent = chatWsService.processMessage(request.event(), request.content());
 
         if ("send".equals(request.event())) {
+            logger.info("Sent message to channel {}", channel_id);
             return new ChatMessageResponse("message", processedContent);
         } else {
+            logger.warn("Chat error for channel {}: {}", channel_id, processedContent);
             return new ChatMessageResponse("error", processedContent);
         }
     }
