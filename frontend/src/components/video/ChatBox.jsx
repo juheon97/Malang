@@ -26,7 +26,7 @@ const ChatBox = ({ currentUserId, channelId }) => {
       setIsConnected(websocketService.isConnected);
     }, 500);
 
-    const subscriptionDestination = `/sub/${intChannelId}/`;
+    const subscriptionDestination = `/sub/${intChannelId}`;
     const subscription = websocketService.subscribe(
       subscriptionDestination,
       message => {
@@ -67,8 +67,8 @@ const ChatBox = ({ currentUserId, channelId }) => {
 
     if (newMessage.trim()) {
       const payload = JSON.stringify({
-        content: newMessage,
         event: 'send',
+        content: newMessage,
       });
 
       const destination = `/pub/${intChannelId}/chat`;

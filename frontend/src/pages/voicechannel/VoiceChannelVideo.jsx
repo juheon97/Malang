@@ -72,18 +72,18 @@ function VoiceChannelVideo() {
           console.log('웹소켓 연결 성공');
 
           // 채널 구독
-          stompClient.subscribe(`/sub/${channelId}/`, message => {
+          stompClient.subscribe(`/sub/${channelId}`, message => {
             console.log('메시지 수신:', JSON.parse(message.body));
             // 수신한 메시지 처리 로직
           });
 
           // 입장 메시지 전송
           stompClient.publish({
-            destination: `/pub/${channelId}/`,
+            destination: `/pub/${channelId}`,
             body: JSON.stringify({
+              event: 'join',
               user_id: parseInt(currentUser?.id, 10),
               channel: parseInt(channelId, 10),
-              event: 'join',
             }),
             headers: { 'content-type': 'application/json' },
           });
@@ -141,7 +141,7 @@ function VoiceChannelVideo() {
       if (stompClientRef.current && stompClientRef.current.connected) {
         // API 명세서에 맞게 leave 이벤트 전송
         stompClientRef.current.publish({
-          destination: `/pub/${channelId}/`,
+          destination: `/pub/${channelId}`,
           body: JSON.stringify({
             event: 'leave',
             user_id: parseInt(currentUser?.id, 10),

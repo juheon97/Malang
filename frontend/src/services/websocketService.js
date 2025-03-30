@@ -35,7 +35,7 @@ class WebSocketService {
 
       // channelId가 있는 경우에만 기본 채팅 채널 구독
       if (channelId) {
-        this.subscribe(`/sub/${channelId}/`, message => {
+        this.subscribe(`/sub/${channelId}`, message => {
           try {
             const data = JSON.parse(message.body);
             if (this.listeners['message']) {
