@@ -2,6 +2,7 @@ package org.example.backend.channel.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.backend.auth.event.CounselorProfileUpdatedEvent;
 import org.example.backend.auth.model.Counselor;
 import org.example.backend.auth.model.CounselorProfile;
 import org.example.backend.auth.model.User;
@@ -19,6 +20,9 @@ import org.example.backend.channel.model.ChannelType;
 import org.example.backend.channel.model.CounselingReview;
 import org.example.backend.channel.repository.ChannelRepository;
 import org.example.backend.channel.repository.CounselingReviewRepository;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,6 +41,26 @@ public class CounselingChannelService {
     private final CounselorRepository counselorRepository;
     private final CounselorProfileRepository counselorProfileRepository;
     private final CounselingReviewRepository counselingReviewRepository;
+
+    /**
+     * 상담사 프로필 업데이트 이벤트 리스너
+     * 상담사 프로필이 업데이트되면 해당 상담사의 캐시된 정보를 제거합니다.
+     *
+     * @param event 상담사 프로필 업데이트 이벤트
+     */
+    @EventListener
+    @CacheEvict(value = "counselors", key = "#event.counselorId")
+    public void handleCounselorProfileUpdated(CounselorProfileUpdatedEvent event) {
+        log.info("상담사 프로필 업데이트 이벤트 수신: userId={}, counselorId={}",
+                event.getUserId(), event.getCounselorId());
+
+        try {
+            // 프로필 변경 시 필요한 추가 작업이 있다면 여기에 구현
+            log.info("상담사 프로필 업데이트로 인해 캐시 제거 완료: counselorId={}", event.getCounselorId());
+        } catch (Exception e) {
+            log.error("상담사 프로필 업데이트 이벤트 처리 중 오류 발생: {}", e.getMessage(), e);
+        }
+    }
 
     /**
      * 순차적 채널 ID 생성
@@ -168,6 +192,7 @@ public class CounselingChannelService {
                 })
                 .collect(Collectors.toList());
     }
+
     /**
      * 상담사 목록 조회
      *
@@ -243,13 +268,16 @@ public class CounselingChannelService {
     }
 
     /**
-     * 상담사 상세 정보 조회
+     * 상담사 상세 정보 조회 (캐싱 적용)
      *
      * @param counselorId 상담사 ID
      * @return 상담사 상세 정보
      */
+    @Cacheable(value = "counselors", key = "#counselorId")
     @Transactional(readOnly = true)
     public CounselorDetailResponse getCounselorDetail(String counselorId) {
+        log.info("상담사 상세 정보 조회 요청 (DB에서): counselorId={}", counselorId);
+
         // 상담사 정보 조회
         Counselor counselor = counselorRepository.findById(counselorId)
                 .orElseThrow(() -> new IllegalArgumentException("상담사를 찾을 수 없습니다."));

@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.auth.dto.request.CounselorProfileUpdateRequest;
 import org.example.backend.auth.dto.response.CounselorProfileResponse;
+import org.example.backend.auth.event.CounselorProfileUpdatedEvent;
 import org.example.backend.auth.model.Counselor;
 import org.example.backend.auth.model.CounselorProfile;
 import org.example.backend.auth.model.User;
 import org.example.backend.auth.repository.CounselorProfileRepository;
 import org.example.backend.auth.repository.CounselorRepository;
 import org.example.backend.auth.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ public class CounselorProfileService {
     private final UserRepository userRepository;
     private final CounselorRepository counselorRepository;
     private final CounselorProfileRepository counselorProfileRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 상담사 프로필 조회
@@ -94,6 +97,10 @@ public class CounselorProfileService {
         userRepository.save(user);
         counselorProfileRepository.save(profile);
 
+        // 프로필 업데이트 이벤트 발행
+        eventPublisher.publishEvent(new CounselorProfileUpdatedEvent(this, userId, counselor.getId()));
+        log.info("상담사 프로필 업데이트 이벤트 발행: userId={}, counselorId={}", userId, counselor.getId());
+
         log.info("상담사 프로필 업데이트 성공: userId={}", userId);
         // 업데이트된 정보로 응답 생성
         return CounselorProfileResponse.from(user, counselor, profile);
@@ -113,10 +120,18 @@ public class CounselorProfileService {
         CounselorProfile profile = counselorProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("상담사 프로필을 찾을 수 없습니다."));
 
+        // 상담사 정보 조회
+        Counselor counselor = counselorRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("상담사 정보를 찾을 수 없습니다."));
+
         // 자격증 정보 업데이트
         String certificationValue = hasCertification ? "Y" : "N";
         profile.updateProfile(profile.getSpecialty(), profile.getYears(), certificationValue, profile.getBio());
         counselorProfileRepository.save(profile);
+
+        // 프로필 업데이트 이벤트 발행
+        eventPublisher.publishEvent(new CounselorProfileUpdatedEvent(this, userId, counselor.getId()));
+        log.info("상담사 자격증 정보 업데이트 이벤트 발행: userId={}, counselorId={}", userId, counselor.getId());
 
         log.info("상담사 자격증 정보 업데이트 성공: userId={}", userId);
         // 업데이트된 전체 프로필 조회 및 반환
