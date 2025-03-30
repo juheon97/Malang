@@ -28,7 +28,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "로그인")
+@Tag(name = "로그인", description = "로그인 기능 컨트롤러")
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);

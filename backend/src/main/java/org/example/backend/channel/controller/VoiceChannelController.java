@@ -1,5 +1,6 @@
 package org.example.backend.channel.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/channels/voice") // api/ 접두사 제거함
 @RequiredArgsConstructor
+@Tag(name = "음성채널", description = "음성채널 컨트롤러")
 public class VoiceChannelController {
 
     private final VoiceChannelService voiceChannelService;

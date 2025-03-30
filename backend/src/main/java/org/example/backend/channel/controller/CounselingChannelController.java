@@ -1,5 +1,6 @@
 package org.example.backend.channel.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/channels/counseling")
 @RequiredArgsConstructor
+@Tag(name = "상담채널", description = "상담채널 컨트롤러")
 public class CounselingChannelController {
 
     private final CounselingChannelService counselingChannelService;
