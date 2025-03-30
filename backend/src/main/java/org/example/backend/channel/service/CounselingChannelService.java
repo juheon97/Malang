@@ -20,8 +20,8 @@ import org.example.backend.channel.model.ChannelType;
 import org.example.backend.channel.model.CounselingReview;
 import org.example.backend.channel.repository.ChannelRepository;
 import org.example.backend.channel.repository.CounselingReviewRepository;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,7 +49,7 @@ public class CounselingChannelService {
      * @param event 상담사 프로필 업데이트 이벤트
      */
     @EventListener
-    @CacheEvict(value = "counselors", key = "#event.counselorId")
+    @CacheEvict(value = {"counselors", "counselorList"}, allEntries = true)
     public void handleCounselorProfileUpdated(CounselorProfileUpdatedEvent event) {
         log.info("상담사 프로필 업데이트 이벤트 수신: userId={}, counselorId={}",
                 event.getUserId(), event.getCounselorId());
@@ -245,7 +245,11 @@ public class CounselingChannelService {
 
                 if (profile.getYears() != null && !profile.getYears().isEmpty()) {
                     try {
-                        experience = Integer.parseInt(profile.getYears().trim());
+                        // "8년"과 같은 문자열에서 숫자만 추출
+                        String yearsStr = profile.getYears().replaceAll("[^0-9]", "");
+                        if (!yearsStr.isEmpty()) {
+                            experience = Integer.parseInt(yearsStr);
+                        }
                     } catch (NumberFormatException e) {
                         log.warn("경력 년수 변환 실패: {}", profile.getYears());
                     }
@@ -256,7 +260,9 @@ public class CounselingChannelService {
                     .id(counselor.getId())
                     .name(user.getNickname() + " 상담사")
                     .profileImage(user.getProfileUrl())
-                    .title("심리 상담 전문가") // 기본 타이틀
+                    .title(specialties != null && specialties.length > 0
+                            ? specialties[0] + " 전문가"
+                            : "심리 상담 전문가") // 전문 분야를 포함한 타이틀로 수정
                     .specialties(specialties)
                     .experience(experience)
                     .certifications(certifications)
@@ -314,7 +320,11 @@ public class CounselingChannelService {
 
             if (profile.getYears() != null && !profile.getYears().isEmpty()) {
                 try {
-                    experience = Integer.parseInt(profile.getYears().trim());
+                    // "8년"과 같은 문자열에서 숫자만 추출
+                    String yearsStr = profile.getYears().replaceAll("[^0-9]", "");
+                    if (!yearsStr.isEmpty()) {
+                        experience = Integer.parseInt(yearsStr);
+                    }
                 } catch (NumberFormatException e) {
                     log.warn("경력 년수 변환 실패: {}", profile.getYears());
                 }
