@@ -92,10 +92,14 @@ public class SecurityConfig {
                 "https://backend.takustory.site"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Upgrade", "Connection"));
+        configuration.setAllowedHeaders(Arrays.asList
+                ("Authorization", "Content-Type", "X-Requested-With", "Upgrade", "Connection","Cache-Control",
+                        "Pragma",
+                        "Expires"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Cache-Control"));  // Cache-Control 추가
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
