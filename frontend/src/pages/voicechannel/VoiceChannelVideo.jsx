@@ -8,25 +8,25 @@ import useOpenVidu from '../../hooks/useOpenvidu';
 import useChat from '../../hooks/useChat';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
+import SockJS from 'sockjs-client/dist/sockjs.min.js';
+import { Client } from '@stomp/stompjs';
 
 function VoiceChannelVideo() {
-  const { channelId } = useParams(); // URL에서 channelId 추출
+  const { channelId } = useParams();
   const { currentUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // 상태 관리
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isVoiceTranslationOn, setIsVoiceTranslationOn] = useState(false);
   const [isSignLanguageOn, setIsSignLanguageOn] = useState(false);
   const [channelInfo, setChannelInfo] = useState(null);
   const [connectionError, setConnectionError] = useState('');
+  const stompClientRef = useRef(null);
   const [channels, setChannels] = useState([]); // 채널 목록 상태
 
-  // 초기화 여부 추적
   const hasJoined = useRef(false);
 
-  // 인증 확인
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login', {
@@ -53,21 +53,74 @@ function VoiceChannelVideo() {
     chatContainerRef,
   } = useChat(currentUser?.id || 'guest');
 
-  // 세션 참여
+  // 웹소켓 연결 및 채널 입장 알림
   useEffect(() => {
+    const connectWebSocket = () => {
+      const API_URL = import.meta.env.VITE_API_URL;
+      const token = sessionStorage.getItem('token');
+
+      if (!token || !isAuthenticated || !channelId) return;
+
+      // global 객체 문제 해결을 위한 polyfill
+      if (typeof window !== 'undefined' && !window.global) {
+        window.global = window;
+      }
+
+      const stompClient = new Client({
+        webSocketFactory: () => new SockJS(`${API_URL}/ws`),
+        connectHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+        onConnect: () => {
+          console.log('웹소켓 연결 성공');
+
+          // 채널 구독
+          stompClient.subscribe(`/sub/${channelId}`, message => {
+            console.log('메시지 수신:', JSON.parse(message.body));
+            // 수신한 메시지 처리 로직
+          });
+
+          // 입장 메시지 전송
+          stompClient.publish({
+            destination: `/pub/${channelId}`,
+            body: JSON.stringify({
+              event: 'join',
+              user_id: parseInt(currentUser?.id, 10),
+              channel: parseInt(channelId, 10),
+            }),
+            headers: { 'content-type': 'application/json' },
+          });
+
+          console.log('채팅방 입장 알림 전송 완료');
+        },
+        onStompError: frame => {
+          console.error('웹소켓 에러:', frame);
+          setConnectionError('웹소켓 연결에 실패했습니다. 다시 시도해주세요.');
+        },
+      });
+
+      // 연결 시작
+      stompClient.activate();
+      stompClientRef.current = stompClient;
+    };
+
     if (isAuthenticated && channelId && !hasJoined.current) {
       hasJoined.current = true;
-      joinSession();
+      connectWebSocket(); // 웹소켓 연결
+      joinSession(); // OpenVidu 세션 연결
     }
 
     return () => {
       if (hasJoined.current) {
-        leaveSession();
+        // 웹소켓 연결 해제
+        if (stompClientRef.current && stompClientRef.current.connected) {
+          stompClientRef.current.deactivate();
+        }
+        leaveSession(); // OpenVidu 세션 연결 해제
       }
     };
-  }, [channelId, isAuthenticated]);
+  }, [channelId, isAuthenticated, currentUser?.id, joinSession, leaveSession]);
 
-  // 토글 함수
   const toggleMic = () => {
     setIsMicOn(!isMicOn);
     toggleAudio(!isMicOn);
@@ -113,18 +166,55 @@ function VoiceChannelVideo() {
   };
 
   // 채널 나가기 및 목록 새로고침
-  const handleLeaveChannel = () => {
+  const handleLeaveChannel = async () => {
     try {
+      if (stompClientRef.current && stompClientRef.current.connected) {
+        // API 명세서에 맞게 leave 이벤트 전송
+        stompClientRef.current.publish({
+          destination: `/pub/${channelId}`,
+          body: JSON.stringify({
+            event: 'leave',
+            user_id: parseInt(currentUser?.id, 10),
+            channel: parseInt(channelId, 10),
+          }),
+          headers: { 'content-type': 'application/json' },
+        });
+
+        // 웹소켓 연결 해제
+        stompClientRef.current.deactivate();
+      }
+
+      // OpenVidu 세션 종료
       leaveSession();
+
+      // 서버에 채널 퇴장 API 요청
+      if (isAuthenticated) {
+        const token = sessionStorage.getItem('token');
+        const API_URL = import.meta.env.VITE_API_URL;
+        await axios.post(
+          `${API_URL}/channels/${channelId}/leave`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+      }
+
+      // 채널 목록 새로고침 (필요한 경우)
+      await fetchChannels();
 
       // 채널 목록 페이지로 이동
       navigate('/voice-channel');
     } catch (error) {
       console.error('채널 퇴장 실패:', error);
+      // 오류가 발생해도 페이지 이동
+      navigate('/voice-channel');
     }
   };
 
-  // 인증 로딩 중이거나 인증되지 않은 경우 로딩 표시
   if (!isAuthenticated) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -138,7 +228,6 @@ function VoiceChannelVideo() {
       className="flex flex-col h-full bg-[#f5fdf5]"
       style={{ minHeight: 'calc(100vh - 75px)' }}
     >
-      {/* 방 정보 헤더 */}
       <div className="flex items-center justify-between p-4 rounded-lg bg-white m-4 mb-0 shadow-sm">
         <div className="flex items-center">
           <div className="w-10 h-10 rounded-full bg-[#00a173] flex items-center justify-center text-white mr-3">
@@ -165,7 +254,6 @@ function VoiceChannelVideo() {
         </div>
       </div>
 
-      {/* 에러 메시지 */}
       {connectionError && (
         <div className="mx-4 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between text-sm">
           <div className="flex items-center text-red-600">
@@ -193,7 +281,6 @@ function VoiceChannelVideo() {
         </div>
       )}
 
-      {/* 메인 컨텐츠 - 영상과 채팅 */}
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
         <ChatBox
           messages={messages}
@@ -203,10 +290,10 @@ function VoiceChannelVideo() {
           handleKeyDown={handleKeyDown}
           chatContainerRef={chatContainerRef}
           currentUserId={currentUser?.id || 'guest'}
+          channelId={channelId}
         />
       </div>
 
-      {/* VideoControls 컴포넌트 사용 */}
       <VideoControls
         isMicOn={isMicOn}
         isCameraOn={isCameraOn}

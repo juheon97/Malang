@@ -1,95 +1,90 @@
 import React, { useState, useEffect, useRef } from 'react';
 import websocketService from '../../services/websocketService';
 
-const ChatBox = ({ currentUserId }) => {
+const ChatBox = ({ currentUserId, channelId }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const chatContainerRef = useRef(null);
-  // 전송한 메시지의 고유 id를 저장하기 위한 ref (중복 수신 방지를 위해)
-  const sentMessageIdsRef = useRef(new Set());
+
   const user = JSON.parse(sessionStorage.getItem('user'));
+  const userId = user?.id;
+  const nickname = user?.username;
+
+  // 📌 channelId를 int로 변환
+  const intChannelId = parseInt(channelId, 10);
 
   useEffect(() => {
-    websocketService.connect();
+    if (isNaN(intChannelId)) {
+      console.error('channelId가 숫자가 아닙니다:', channelId);
+      return;
+    }
+
+    websocketService.connect(intChannelId);
 
     const checkConnection = setInterval(() => {
       setIsConnected(websocketService.isConnected);
     }, 500);
 
-    const unsubscribe = websocketService.addListener('message', data => {
-      if (data.event === 'message') {
-        let parsed;
+    const subscriptionDestination = `/sub/${intChannelId}`;
+    const subscription = websocketService.subscribe(
+      subscriptionDestination,
+      message => {
         try {
-          parsed = JSON.parse(data.content);
+          const data = JSON.parse(message.body);
+          if (data.event === 'message') {
+            setMessages(prevMessages => [
+              ...prevMessages,
+              {
+                id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                senderId: userId,
+                text: data.content,
+                sender: nickname || '익명',
+              },
+            ]);
+          }
         } catch (err) {
-          parsed = { text: data.content };
+          console.error('메시지 파싱 오류:', err);
         }
-
-        if (parsed.id && sentMessageIdsRef.current.has(parsed.id)) {
-          sentMessageIdsRef.current.delete(parsed.id);
-          return;
-        }
-
-        setMessages(prevMessages => [
-          ...prevMessages,
-          {
-            id: parsed.id || Date.now(),
-            text: parsed.text || data.content,
-            sender: parsed.nickname || '익명', // ✅ 수신 메시지의 닉네임 저장
-            timestamp: new Date().toLocaleTimeString(),
-          },
-        ]);
-      }
-    });
+      },
+    );
 
     return () => {
       clearInterval(checkConnection);
-      unsubscribe();
+      if (subscription) {
+        if (typeof subscription === 'function') {
+          subscription();
+        } else if (typeof subscription.unsubscribe === 'function') {
+          subscription.unsubscribe();
+        }
+      }
       websocketService.disconnect();
     };
-  }, []);
-
-  // 새로운 채팅이 올라오면 채팅창 스크롤 자동으로 맨 아래로 이동
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } =
-        chatContainerRef.current;
-      const isAtBottom = scrollHeight - scrollTop <= clientHeight + 100;
-
-      if (isAtBottom) {
-        chatContainerRef.current.scrollTop =
-          chatContainerRef.current.scrollHeight;
-      }
-    }
-  }, [messages]); // 메시지가 업데이트될 때마다 작동
+  }, [intChannelId, userId, nickname]);
 
   const handleSendMessage = e => {
     e.preventDefault();
-    const user = JSON.parse(sessionStorage.getItem('user'));
-    const nickname = user?.username;
 
-    // 메세지 전송 시 백으로 보내는 json
     if (newMessage.trim()) {
-      const messageId = Date.now();
       const payload = JSON.stringify({
-        id: messageId,
-        text: newMessage,
-        nickname: nickname,
+        event: 'send',
+        content: newMessage,
       });
 
-      const success = websocketService.sendMessage('send', payload);
+      const destination = `/pub/${intChannelId}/chat`;
+
+      const success = websocketService.sendMessage(destination, payload);
+
       if (success) {
         setMessages(prevMessages => [
           ...prevMessages,
           {
-            id: messageId,
+            id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            senderId: userId,
             text: newMessage,
-            sender: nickname, // ✅ 내 닉네임 저장
-            timestamp: new Date().toLocaleTimeString(),
+            sender: nickname || '익명',
           },
         ]);
-        sentMessageIdsRef.current.add(messageId);
         setNewMessage('');
       }
     }
@@ -104,15 +99,14 @@ const ChatBox = ({ currentUserId }) => {
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden w-full lg:w-80 flex flex-col">
       <div className="p-3 border-b border-gray-100 flex justify-between items-center">
-        <h1
-          style={{ fontFamily: "'HancomMalangMalang-Regular', sans-serif" }}
-          className="text-2xl font-bold text-gray-800 relative pl-3 mb-2 mt-2"
-        >
+        <h1 className="text-2xl font-bold text-gray-800 relative pl-3 mb-2 mt-2">
           채팅
         </h1>
         <div className="flex items-center">
           <div
-            className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+            className={`w-3 h-3 rounded-full ${
+              isConnected ? 'bg-green-500' : 'bg-red-500'
+            }`}
           ></div>
           <span className="text-xs ml-1">
             {isConnected ? '연결됨' : '연결 안됨'}
@@ -128,29 +122,28 @@ const ChatBox = ({ currentUserId }) => {
         {messages.map(message => (
           <div
             key={message.id}
-            className={`mb-2 flex ${message.sender === user?.username ? 'justify-end' : 'justify-start'}`}
+            className={`mb-2 flex ${
+              message.senderId === userId ? 'justify-end' : 'justify-start'
+            }`}
           >
             <div className="flex flex-col items-start max-w-[85%]">
-              {/* ✅ 말풍선 위에 닉네임 표시 (내 메시지는 생략) */}
-              {message.sender !== user?.username && (
+              {message.sender !== nickname && (
                 <span className="text-xs font-semibold text-gray-600 mb-1 ml-1">
                   {message.sender}
                 </span>
               )}
-
               <div
-                className={`rounded-lg px-3 py-2 text-sm 
-        ${message.sender === user?.username ? 'bg-[#D1F4CB] self-end' : 'bg-[#E9EDF2] self-start'}`}
+                className={`rounded-lg px-3 py-2 text-sm ${
+                  message.senderId === userId
+                    ? 'bg-[#D1F4CB] self-end'
+                    : 'bg-[#E9EDF2] self-start'
+                }`}
               >
                 <p>{message.text}</p>
-                <p className="text-xs text-gray-500 mt-1 text-right">
-                  {message.timestamp}
-                </p>
               </div>
             </div>
           </div>
         ))}
-
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
             <p className="text-gray-400 text-sm">메시지가 없습니다.</p>

@@ -19,7 +19,18 @@ const ParticipantVideo = ({ participant, renderParticipantInfo }) => (
 );
 
 // 비디오 레이아웃 컴포넌트
-const VideoLayout = ({ participants, renderParticipantInfo }) => {
+const VideoLayout = ({ participants = [], renderParticipantInfo }) => {
+  // 참가자 배열이 없거나 비어있는 경우 메시지 표시
+  if (!participants || participants.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg p-4">
+        <p className="text-gray-500">
+          참가자가 없습니다. 회의에 참여하는 사람들이 여기에 표시됩니다.
+        </p>
+      </div>
+    );
+  }
+
   const count = participants.length;
 
   // 참가자가 한 명인 경우 (자기 자신만)
@@ -33,9 +44,13 @@ const VideoLayout = ({ participants, renderParticipantInfo }) => {
             isSelf={participant.isSelf}
           />
         )}
-        <div className="absolute bottom-2 right-2 bg-gray-700 bg-opacity-70 text-white px-2 py-1 rounded text-xs">
-          {participant.name}
-        </div>
+        {renderParticipantInfo ? (
+          renderParticipantInfo(participant)
+        ) : (
+          <div className="absolute bottom-2 right-2 bg-gray-700 bg-opacity-70 text-white px-2 py-1 rounded text-xs">
+            {participant.name}
+          </div>
+        )}
       </div>
     );
   }

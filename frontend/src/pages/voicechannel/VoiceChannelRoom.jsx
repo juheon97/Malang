@@ -106,6 +106,7 @@ function VoiceChannelRoom() {
       const channelId = channelResponse.data.channelId;
       console.log('채널 ID:', channelId);
       navigate(`/voice-channel-video/${channelId}`);
+
       // navigate(`/voice-channel-video/${channelResponse.data.data.channelName}`);
     } catch (error) {
       console.error('채널 생성 실패:', error);
