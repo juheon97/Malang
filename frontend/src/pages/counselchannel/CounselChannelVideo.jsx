@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import VideoLayout from '../../components/video/VideoLayout';
 import ChatBox from '../../components/video/ChatBox';
 import VideoControls from '../../components/video/VideoControls';
 import useOpenVidu from '../../hooks/useOpenvidu';
 import useParticipantControls from '../../hooks/useParticipantControls';
 import useChat from '../../hooks/useChat';
+import axios from 'axios';
 
 function CounselChannelVideo() {
+  // URL에서 채널 ID 가져오기
+  const { channelId } = useParams();
+
   // 상태 관리
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
@@ -15,14 +19,65 @@ function CounselChannelVideo() {
   const [isHost] = useState(true);
   const [isVoiceTranslationOn, setIsVoiceTranslationOn] = useState(false);
   const [isSignLanguageOn, setIsSignLanguageOn] = useState(false);
-  const [roomInfo] = useState({
-    name: '마음 건강 상담실',
+  const [roomInfo, setRoomInfo] = useState({
+    name: '상담방',
     maxParticipants: 4,
+    description: '',
   });
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   // 초기화 여부 추적
   const hasJoined = useRef(false);
+
+  // 방 정보 가져오기
+  useEffect(() => {
+    const fetchChannelInfo = async () => {
+      try {
+        setIsLoading(true);
+        // 세션 스토리지에서 먼저 확인
+        const storedChannelInfo = sessionStorage.getItem('currentChannel');
+
+        if (storedChannelInfo) {
+          const channelData = JSON.parse(storedChannelInfo);
+          setRoomInfo({
+            name: channelData.channelName || '상담방',
+            maxParticipants: channelData.maxPlayer || 4,
+            description: channelData.description || '',
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // 세션 스토리지에 없으면 API 호출
+        if (channelId) {
+          const token = sessionStorage.getItem('token');
+          const response = await axios.get(
+            `${import.meta.env.VITE_API_URL}/channels/counseling/${channelId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          if (response.data) {
+            setRoomInfo({
+              name: response.data.channelName || '상담방',
+              maxParticipants: response.data.maxPlayer || 4,
+              description: response.data.description || '',
+            });
+          }
+        }
+      } catch (error) {
+        console.error('방 정보 가져오기 실패:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChannelInfo();
+  }, [channelId]);
 
   // 커스텀 훅 사용
   const {
@@ -32,7 +87,12 @@ function CounselChannelVideo() {
     leaveSession,
     toggleAudio,
     toggleVideo,
-  } = useOpenVidu('session1', 'randomNickname', isMicOn, isCameraOn);
+  } = useOpenVidu(
+    channelId || 'session1',
+    'randomNickname',
+    isMicOn,
+    isCameraOn,
+  );
 
   const {
     participantControls,
@@ -52,7 +112,7 @@ function CounselChannelVideo() {
 
   // 세션 참여
   useEffect(() => {
-    if (!hasJoined.current) {
+    if (!hasJoined.current && !isLoading) {
       hasJoined.current = true;
       joinSession();
     }
@@ -60,7 +120,7 @@ function CounselChannelVideo() {
     return () => {
       leaveSession();
     };
-  }, []);
+  }, [isLoading]);
 
   // 참가자 제어 초기화
   useEffect(() => {
@@ -129,7 +189,13 @@ function CounselChannelVideo() {
           </div>
           <div>
             <h1 className="font-bold text-gray-800">{roomInfo.name}</h1>
+            {roomInfo.description && (
+              <p className="text-gray-500 text-sm">{roomInfo.description}</p>
+            )}
           </div>
+        </div>
+        <div className="text-sm text-gray-500">
+          최대 인원: {roomInfo.maxParticipants}명
         </div>
       </div>
 
@@ -161,15 +227,23 @@ function CounselChannelVideo() {
         </div>
       )}
 
+      {/* 로딩 표시 */}
+      {isLoading && (
+        <div className="flex justify-center items-center h-32 mx-4 my-2">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+          <span className="ml-2 text-gray-600">방 정보를 불러오는 중...</span>
+        </div>
+      )}
+
       {/* 메인 컨텐츠 - 영상과 채팅 */}
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
         {/* 영상 영역 */}
-        {/* <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
           <VideoLayout
             participants={participants}
             renderParticipantInfo={renderParticipantInfo}
           />
-        </div> */}
+        </div>
 
         {/* ChatBox 컴포넌트 사용 */}
         <ChatBox
