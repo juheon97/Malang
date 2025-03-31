@@ -24,4 +24,5 @@ public class CounselorListResponse {
     private int reviewCount;         // 리뷰 수
     private String shortIntro;       // 짧은 소개
     private Integer status;          // 상담사 상태 (0: 대기/가능, 1: 상담 중/불가능)
+    private Integer counselorCode;
 }

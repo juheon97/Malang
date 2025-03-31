@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.auth.dto.request.CounselorProfileUpdateRequest;
 import org.example.backend.auth.dto.response.CounselorProfileResponse;
+import org.example.backend.auth.model.CounselorProfile;
 import org.example.backend.auth.model.User;
+import org.example.backend.auth.repository.CounselorProfileRepository;
 import org.example.backend.auth.repository.UserRepository;
 import org.example.backend.auth.service.CounselorProfileService;
 import org.example.backend.security.jwt.JwtTokenProvider;
@@ -32,6 +34,7 @@ public class CounselorProfileController {
     private final CounselorProfileService counselorProfileService;
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final CounselorProfileRepository counselorProfileRepository;
 
     /**
      * 상담사 프로필 조회 API
@@ -147,5 +150,43 @@ public class CounselorProfileController {
         }
 
         throw new IllegalStateException("인증 정보에서 사용자 ID를 추출할 수 없습니다.");
+    }
+
+    @PutMapping("/1")
+    public ResponseEntity<?> updateStatusIntoOne() {
+        try {
+            Long userId = getCurrentUserId();
+            log.info("상담사 busy 상태로 변경: userId={}", userId);
+
+            CounselorProfile profile = counselorProfileRepository.findByUserId(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("상담사 프로필을 찾을 수 없습니다."));
+
+            profile.updateStatus(1); // 1: 상담 중/불가능 상태로 직접 설정
+            counselorProfileRepository.save(profile);
+
+            return ResponseEntity.ok().build(); // 간단히 성공 응답만 반환
+        } catch (Exception e) {
+            log.error("상태 변경 실패: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/0")
+    public ResponseEntity<?> updateStatusIntoZero() {
+        try {
+            Long userId = getCurrentUserId();
+            log.info("상담사 busy 상태로 변경: userId={}", userId);
+
+            CounselorProfile profile = counselorProfileRepository.findByUserId(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("상담사 프로필을 찾을 수 없습니다."));
+
+            profile.updateStatus(0); // 1: 상담 중/불가능 상태로 직접 설정
+            counselorProfileRepository.save(profile);
+
+            return ResponseEntity.ok().build(); // 간단히 성공 응답만 반환
+        } catch (Exception e) {
+            log.error("상태 변경 실패: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
     }
 }

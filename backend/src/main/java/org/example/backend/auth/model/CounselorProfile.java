@@ -40,10 +40,13 @@ public class CounselorProfile {
     @Column(name = "status")
     private Integer status;
 
+    @Column(name="counselor_code")
+    private Integer counselorCode;
+
     @Builder
     public CounselorProfile(Long id, User user, String specialty, String years,
                             String certifications, String bio, Double ratingAvg,
-                            Integer reviewCount, Integer status) {
+                            Integer reviewCount, Integer status, Integer counselorCode) {
         this.id = id;
         this.user = user;
         this.specialty = specialty;
@@ -53,6 +56,7 @@ public class CounselorProfile {
         this.ratingAvg = ratingAvg;
         this.reviewCount = reviewCount;
         this.status = status != null ? status : 0; // 기본값 0 설정
+        this.counselorCode = counselorCode;
     }
 
     /**
