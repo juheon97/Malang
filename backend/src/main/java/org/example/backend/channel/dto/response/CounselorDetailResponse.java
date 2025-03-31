@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 /**
@@ -14,7 +15,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CounselorDetailResponse {
+public class CounselorDetailResponse implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Long id;                // 상담사 ID (String에서 Long으로 변경됨)
     private String name;              // 상담사 이름
     private String gender;            // 성별
