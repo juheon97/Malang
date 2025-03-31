@@ -143,7 +143,7 @@ const VoiceChannel = () => {
 
       if (isPasswordCorrect) {
         // 비밀번호가 맞으면 채널로 이동
-        navigate(`/voice-channel-video/${currentChannelId}`);
+        // navigate(`/voice-channel-video/${currentChannelId}`);
         setShowPasswordModal(false);
         setPasswordInput('');
         // 방장 수락 대기 모달 표시
@@ -383,6 +383,42 @@ const VoiceChannel = () => {
         
         </main>
       </div>
+       {/* 모달 컴포넌트 */}
+       {showPasswordModal && (
+        <div
+          ref={isAccessibleMode ? modalRef : null}
+          role={isAccessibleMode ? 'dialog' : undefined}
+          aria-modal={isAccessibleMode ? 'true' : undefined}
+          aria-label={isAccessibleMode ? '채널 비밀번호 입력' : undefined}
+          tabIndex={isAccessibleMode ? '-1' : undefined}
+        >
+          <PasswordModal
+            isOpen={showPasswordModal}
+            onClose={() => setShowPasswordModal(false)}
+            passwordInput={passwordInput}
+            setPasswordInput={setPasswordInput}
+            onSubmit={handlePasswordSubmit}
+          />
+        </div>
+      )}
+
+      {showWaitingModal && (
+        <div
+          ref={isAccessibleMode ? modalRef : null}
+          role={isAccessibleMode ? 'dialog' : undefined}
+          aria-modal={isAccessibleMode ? 'true' : undefined}
+          aria-label={isAccessibleMode ? '방장 수락 대기 중' : undefined}
+          tabIndex={isAccessibleMode ? '-1' : undefined}
+          aria-live={isAccessibleMode ? 'assertive' : undefined}
+        >
+          <WaitingModal
+            isOpen={showWaitingModal}
+            onCancel={handleCancelWaiting}
+            waitingFor="방장"
+            title="수락을 기다려주세요..."
+          />
+        </div>
+      )}
     </div>
   );
 };
