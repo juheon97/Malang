@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class CounselorProfile {
 
     @Id
-    @Column(name = "counselor_id", length = 36)
+    @Column(name = "counselor_id", columnDefinition = "CHAR(36)")
     private String id;
 
     @OneToOne
@@ -75,5 +75,13 @@ public class CounselorProfile {
         if (bio != null) {
             this.bio = bio;
         }
+    }
+
+    /**
+     * 상담사 상태 업데이트
+     * @param status 상태 (0: 대기/가능, 1: 상담 중/불가능)
+     */
+    public void updateStatus(Integer status) {
+        this.status = status;
     }
 }

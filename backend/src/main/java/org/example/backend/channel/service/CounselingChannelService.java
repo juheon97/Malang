@@ -149,7 +149,15 @@ public class CounselingChannelService {
 
         // 채널 저장
         Channel savedChannel = channelRepository.save(channel);
-        log.info("상담 채널 생성 완료: channelId={}, counselorId={}", channelId, counselor.getId());
+
+        // 상담사 프로필 상태 업데이트 (1: 상담 중/사용 불가)
+        CounselorProfile profile = counselorProfileRepository.findById(counselor.getId())
+                .orElseThrow(() -> new IllegalArgumentException("상담사 프로필을 찾을 수 없습니다."));
+        profile.updateStatus(1); // 상태를 '상담 중'으로 변경
+        counselorProfileRepository.save(profile);
+
+        log.info("상담 채널 생성 완료 및 상담사 상태 업데이트: channelId={}, counselorId={}, status=1",
+                channelId, counselor.getId());
 
         // 응답 DTO 반환
         return CounselingChannelResponse.from(savedChannel, user.getNickname());
@@ -224,6 +232,7 @@ public class CounselingChannelService {
             String[] certifications = new String[]{"심리상담사"};
             String shortIntro = counselor.getName() + " 상담사입니다.";
             int experience = 1;
+            Integer status = 0; // 기본 상태: 대기/가능
 
             // 프로필이 존재하면 정보 사용
             if (profileOpt.isPresent()) {
@@ -254,6 +263,9 @@ public class CounselingChannelService {
                         log.warn("경력 년수 변환 실패: {}", profile.getYears());
                     }
                 }
+
+                // 상담사 상태 정보 사용
+                status = profile.getStatus();
             }
 
             return CounselorListResponse.builder()
@@ -269,6 +281,7 @@ public class CounselingChannelService {
                     .satisfactionRate((int) satisfactionRate)
                     .reviewCount((int) reviewCount)
                     .shortIntro(shortIntro)
+                    .status(status) // 상담사 상태 추가
                     .build();
         });
     }
@@ -300,6 +313,7 @@ public class CounselingChannelService {
         String fullIntro = counselor.getName() + "입니다. 심리 상담을 전문으로 하고 있습니다.";
         int experience = 1;
         String certificationString = "심리상담사";
+        Integer status = 0; // 기본 상태: 대기/가능
 
         // 프로필이 존재하면 정보 사용
         if (profileOpt.isPresent()) {
@@ -329,6 +343,9 @@ public class CounselingChannelService {
                     log.warn("경력 년수 변환 실패: {}", profile.getYears());
                 }
             }
+
+            // 상담사 상태 정보 사용
+            status = profile.getStatus();
         }
 
         // 리뷰 정보 계산
@@ -349,6 +366,7 @@ public class CounselingChannelService {
                 .availableTimes(new String[]{"평일 오후", "주말 종일"})
                 .satisfactionRate((int) satisfactionRate)
                 .reviewCount((int) reviewCount)
+                .status(status) // 상담사 상태 추가
                 .build();
     }
 

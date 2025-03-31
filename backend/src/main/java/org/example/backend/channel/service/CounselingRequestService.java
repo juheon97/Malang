@@ -3,9 +3,11 @@ package org.example.backend.channel.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.auth.model.Counselor;
+import org.example.backend.auth.model.CounselorProfile;
 import org.example.backend.auth.model.User;
 import org.example.backend.auth.repository.UserRepository;
 import org.example.backend.auth.repository.CounselorRepository;
+import org.example.backend.auth.repository.CounselorProfileRepository;
 import org.example.backend.channel.dto.request.CounselingRequestDto;
 import org.example.backend.channel.model.Channel;
 import org.example.backend.channel.model.ChannelType;
@@ -26,6 +28,7 @@ public class CounselingRequestService {
     private final ChannelRepository channelRepository;
     private final UserRepository userRepository;
     private final CounselorRepository counselorRepository;
+    private final CounselorProfileRepository counselorProfileRepository;
 
     /**
      * 상담 요청 생성 - 수정된 로직에서는 사용하지 않으나 호환성을 위해 유지
@@ -81,7 +84,8 @@ public class CounselingRequestService {
     /**
      * 사용자가 참여 가능한 상담 채널 목록 조회 (상태: 0)
      *
-     * @return 참여 가능한 상담 채널 목록
+     * @return
+     * 가능한 상담 채널 목록
      */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getAvailableCounselingChannels() {
@@ -186,7 +190,13 @@ public class CounselingRequestService {
         channel.updateStatus(2);
         channelRepository.save(channel);
 
-        log.info("상담 종료 완료: channelId={}, counselorId={}, 상태=종료됨(2)",
+        // 상담사 프로필 상태 업데이트 (0: 대기/사용 가능)
+        CounselorProfile profile = counselorProfileRepository.findById(counselorId)
+                .orElseThrow(() -> new IllegalArgumentException("상담사 프로필을 찾을 수 없습니다."));
+        profile.updateStatus(0); // 상태를 '대기 중'으로 변경
+        counselorProfileRepository.save(profile);
+
+        log.info("상담 종료 완료 및 상담사 상태 업데이트: channelId={}, counselorId={}, 상태=종료됨(2), 상담사상태=0",
                 channel.getChannelId(), counselorId);
 
         // 응답 데이터 생성
