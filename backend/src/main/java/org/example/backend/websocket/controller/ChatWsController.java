@@ -29,18 +29,18 @@ public class ChatWsController {
             @DestinationVariable Long channel_id,
             ChatMessageRequest request) {
 
-        logger.info("Received chat message: channel_id={}, event={}, content_length={}",
-                channel_id, request.event(), request.content() != null ? request.content().length() : 0);
+        logger.info("Received chat message: channel_id={}, event={}, content_length={}, user={}, nickname={}",
+                channel_id, request.event(), request.content() != null ? request.content().length() : 0, request.userId(), request.nickname());
 
 
-        String processedContent = chatWsService.processMessage(request.event(), request.content());
+        String processedContent = chatWsService.processMessage(request.event(), request.content(), request.userId(), request.nickname());
 
         if ("send".equals(request.event())) {
             logger.info("Sent message to channel {}", channel_id);
-            return new ChatMessageResponse("message", processedContent);
+            return new ChatMessageResponse("message", processedContent, request.userId(), request.nickname());
         } else {
             logger.warn("Chat error for channel {}: {}", channel_id, processedContent);
-            return new ChatMessageResponse("error", processedContent);
+            return new ChatMessageResponse("message", processedContent, request.userId(), request.nickname());
         }
     }
 }

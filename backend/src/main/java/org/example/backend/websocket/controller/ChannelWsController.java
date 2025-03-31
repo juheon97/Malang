@@ -39,16 +39,24 @@ public class ChannelWsController {
             case "join":
                 channelWsService.joinChannel(channel_id, request.user_id());
                 logger.info("User {} joined channel {}", request.user_id(), channel_id);
-                return new ChannelEventResponse(channel_id, request.user_id(), "join");
+                return new ChannelEventResponse(channel_id, request.user_id(), "join", request.role());
 
             case "leave":
                 channelWsService.leaveChannel(channel_id, request.user_id());
                 logger.info("User {} left channel {}", request.user_id(), channel_id);
-                return new ChannelEventResponse(channel_id, request.user_id(), "leave");
+                return new ChannelEventResponse(channel_id, request.user_id(), "leave", request.role());
+
+            case "accepted":
+                logger.info("Counselor accepted session request from user {} in channel {}", request.user_id(), channel_id);
+                return new ChannelEventResponse(channel_id, request.user_id(), "page_move", request.role());
+
+            case "declined":
+                logger.info("Counselor declined session request from user {} in channel {}", request.user_id(), channel_id);
+                return new ChannelEventResponse(channel_id, request.user_id(), "page_stay", request.role());
 
             default:
                 logger.warn("Unknown channel event: {}", request.event());
-                return new ChannelEventResponse(channel_id, request.user_id(), "unknown");
+                return new ChannelEventResponse(channel_id, request.user_id(), "unknown", request.role());
         }
     }
 }
