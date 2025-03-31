@@ -1,4 +1,4 @@
-// src>api>communityApi.js
+// src>api>openViduApi.js
 import axios from 'axios';
 
 // API 기본 URL 설정
@@ -27,10 +27,13 @@ apiClient.interceptors.request.use(
 
 const openviduApi = {
   // 세션 생성 API
-  createSession: async () => {
+  createSession: async (channelId) => {
     try {
-      const response = await apiClient.post('channels/counsel', {});
-      return response.data.sessionId;
+      //const response = await apiClient.post('channels/counsel', {});
+      const response = await apiClient.post('openvidu/session', {
+        customSessionId: channelId
+      });
+        return response.data.sessionId;
     } catch (error) {
       console.error('세션 생성 오류:', error);
       throw error;
@@ -38,7 +41,7 @@ const openviduApi = {
   },
 
   // 토큰 발급 API
-  getToken: async sessionId => {
+  getToken: async (sessionId) => {
     try {
       const response = await apiClient.post('openvidu/token', { sessionId });
       return response.data.token;

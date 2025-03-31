@@ -1,5 +1,5 @@
-//OpenViduVideoComponent.jsx
-//src.components.video.Op
+//src>components>video>OpenViduVideoComponent.jsx
+
 import React, { useRef, useEffect } from 'react';
 
 export default function OpenViduVideoComponent({ streamManager, isSelf }) {

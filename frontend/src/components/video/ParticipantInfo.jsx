@@ -1,3 +1,4 @@
+//src>components>video>ParticipantInfo.jsx
 import React from 'react';
 
 const ParticipantInfo = ({ participant, isHost, onToggleControls, onToggleSpeaking, participantControls }) => {

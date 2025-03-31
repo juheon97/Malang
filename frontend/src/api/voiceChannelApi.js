@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+import openviduApi from './openViduApi';
 // API 기본 URL 설정
 // const BASE_URL = 'https://j12d110.p.ssafy.io/api';
 // const BASE_URL = 'https://10c0-116-36-40-48.ngrok-free.app/api';
@@ -36,21 +36,27 @@ const voiceChannelApi = {
   // 채널 생성 API
   createChannel: async channelData => {
     try {
+      // 1. 채널 생성 요청
       const response = await apiClient.post('/channels/voice', channelData);
-      return response; // 전체 response 객체를 반환
+      const channelId = response.data.channelId;
+      
+      // 2. OpenVidu 세션 생성 요청
+      const sessionId = await openviduApi.createSession(channelId);
+      
+      // 3. 토큰 발급 (선택적)
+      const token = await openviduApi.getToken(sessionId);
+      
+      // 4. 채널 정보와 세션 정보를 함께 반환
+      return {
+        ...response.data,
+        channelId,
+        sessionId,
+        token
+      };
     } catch (error) {
       console.error('채널 생성 오류:', error);
-      throw error; // 에러를 다시 throw하여 호출자에게 전달
+      throw error;
     }
-
-    // if (!token) throw new Error('인증 토큰이 없습니다.');
-
-    // return axios.post(`${VITE_API_URL}/create/talkChannel`, channelData, {
-    //   headers: {
-    //     Authorization: `Bearer ${token}`,
-    //     'Content-Type': 'application/json',
-    //   },
-    // });
   },
   // 채널 나가기 API
   leaveChannel: async channelId => {

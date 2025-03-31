@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import voiceChannelApi from '../../api/voiceChannelApi';
-import openviduApi from '../../api/openViduApi';
-
-import mockApi from '../../api/mockApi';
 
 function VoiceChannelRoom() {
   const navigate = useNavigate();
@@ -65,73 +62,53 @@ function VoiceChannelRoom() {
       maxPlayer: parseInt(formData.maxUsers),
     };
     console.log('음성채널 생성 데이터:', apiRequestData);
-    // // mockApi를 사용하여 채널 생성 요청
-    // const response = await mockApi.post(
-    //   '/api/create/talkChannel',
-    //   apiRequestData,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //       'Content-Type': 'application/json',
-    //     },
-    //   },
-    // );
-
-    // console.log('채널 생성 성공:', response.data);
-    // // 백엔드로 전송되는 데이터 확인을 위한 콘솔 로그
-    // console.log('=== 백엔드로 전송되는 데이터 ===');
-    // console.log('요청 URL:', '/api/create/talkChannel');
-    // console.log('요청 메서드:', 'POST');
-    // console.log('요청 본문:', apiRequestData);
-
+   
     try {
       // 1. 채널 생성
       const channelResponse =
         await voiceChannelApi.createChannel(apiRequestData);
       console.log('채널 생성 성공:', channelResponse.data);
-
-      // // 2. OpenVidu 세션 생성
-      // const sessionId = await openviduApi.createSession();
-      // console.log('OpenVidu 세션 생성 성공:', sessionId);
-
-      // // 3. OpenVidu 토큰 발급
-      // const token = await openviduApi.getToken(sessionId);
-      // console.log('OpenVidu 토큰 발급 성공:', token);
-
-      // // 세션 정보와 토큰 저장
-      // sessionStorage.setItem('openviduSessionId', sessionId);
-      // sessionStorage.setItem('openviduToken', token);
-
-      // 생성 성공 시 채널 ID를 가지고 다음 페이지로 이동
       const channelId = channelResponse.data.channelId;
       console.log('채널 ID:', channelId);
+      // navigate(`/voice-channel-video/${channelId}`);
+      // 2. OpenVidu 세션 생성 (openviduApi.createSession 사용)
+      const sessionId = await openviduApi.createSession(channelId);
+      // 3. 토큰 발급
+      const token = await openviduApi.getToken(sessionId);
+ 
+      // 4. 방장 정보 저장
+      sessionStorage.setItem('isChannelHost', 'true');
+      sessionStorage.setItem('openviduSessionId', sessionId);
+      sessionStorage.setItem('openviduToken', token);
+      
+      // 5. 화상 채팅 페이지로 이동
       navigate(`/voice-channel-video/${channelId}`);
+      } catch (error) {
+            console.error('채널 생성 실패:', error);
 
-      // navigate(`/voice-channel-video/${channelResponse.data.data.channelName}`);
-    } catch (error) {
-      console.error('채널 생성 실패:', error);
+            // 에러 처리
+            if (error.response) {
+              // 서버 응답이 있는 경우
+              setError(error.response.data.message || '채널 생성에 실패했습니다.');
 
-      // 에러 처리
-      if (error.response) {
-        // 서버 응답이 있는 경우
-        setError(error.response.data.message || '채널 생성에 실패했습니다.');
+              // 토큰 만료 에러인 경우 (401 Unauthorized)
+              if (error.response.status === 401) {
+                // 로그인 페이지로 리다이렉트하거나 토큰 갱신 로직 실행
+                navigate('/login', { state: { from: '/voice-channel-form' } });
+              }
+            } else if (error.request) {
+              // 요청은 보냈지만 응답이 없는 경우
+              setError('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.');
+            } else {
+              // 요청 설정 중 오류 발생
+              setError('요청 중 오류가 발생했습니다: ' + error.message);
+            }
+          } finally {
+            setIsLoading(false);
+          }
 
-        // 토큰 만료 에러인 경우 (401 Unauthorized)
-        if (error.response.status === 401) {
-          // 로그인 페이지로 리다이렉트하거나 토큰 갱신 로직 실행
-          navigate('/login', { state: { from: '/voice-channel-form' } });
-        }
-      } else if (error.request) {
-        // 요청은 보냈지만 응답이 없는 경우
-        setError('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.');
-      } else {
-        // 요청 설정 중 오류 발생
-        setError('요청 중 오류가 발생했습니다: ' + error.message);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+        };
 
   // 인증 로딩 중이거나 인증되지 않은 경우 로딩 표시
   if (!isAuthenticated) {
@@ -170,16 +147,7 @@ function VoiceChannelRoom() {
                   음성 채널
                 </span>
               </div>
-              {/* 
-              <div className="flex items-center bg-white border border-gray-200 rounded-lg p-3 cursor-pointer transition-all hover:bg-[#f0f9f4] hover:shadow-md">
-                <div className="text-gray-400 mr-2">○</div>
-                <span className="text-sm text-gray-600">그룹 상담</span>
-              </div>
-
-              <div className="flex items-center bg-white border border-gray-200 rounded-lg p-3 cursor-pointer transition-all hover:bg-[#f0f9f4] hover:shadow-md">
-                <div className="text-gray-400 mr-2">○</div>
-                <span className="text-sm text-gray-600">특화 상담</span>
-              </div> */}
+              
             </div>
             {/* 시각적 요소 추가 */}
             <div className="mt-6 bg-[#f5fbf7] rounded-lg p-3 border border-dashed border-[#b0daaf]">

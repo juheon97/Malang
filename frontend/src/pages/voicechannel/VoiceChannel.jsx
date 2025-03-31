@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAccessibility } from '../../contexts/AccessibilityContext';
 import PasswordModal from '../../components/modal/PasswordModal';
 import WaitingModal from '../../components/modal/WaitingModal';
+import useOpenVidu from '../../hooks/useOpenvidu';
 
 const VoiceChannel = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const VoiceChannel = () => {
   const [expandedChannel, setExpandedChannel] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { joinExistingSession } = useOpenVidu();
 
   // 모달 관련 상태
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -92,34 +94,46 @@ const VoiceChannel = () => {
 
 
   // 채널 참여 버튼 클릭 시
-  const handleJoinChannel = channel => {
-    console.log('채널 참여:', channel);
+const handleJoinChannel = async (channel) => {
+  console.log('채널 참여:', channel);
 
-    // 접근성 모드인 경우 현재 포커스 요소 저장
+  // 접근성 모드인 경우 현재 포커스 요소 저장
+  if (isAccessibleMode) {
+    previousFocusRef.current = document.activeElement;
+  }
+
+  // 참여자 정보 저장
+  sessionStorage.setItem('isChannelHost', 'false');
+
+  // 채널이 잠겨있는지 확인 (비밀번호 필요 여부)
+  if (channel.hasPassword) {
+    // 비밀번호가 필요한 채널인 경우
+    setCurrentChannelId(channel.channelId);
+    setShowPasswordModal(true);
+    setPasswordInput('');
+    setPasswordError('');
+
+    // 접근성 모드에서 모달에 포커스
     if (isAccessibleMode) {
-      previousFocusRef.current = document.activeElement;
+      setTimeout(() => {
+        if (modalRef.current) modalRef.current.focus();
+      }, 100);
     }
-
-    // 채널이 잠겨있는지 확인 (비밀번호 필요 여부)
-    if (channel.hasPassword) {
-      // 비밀번호가 필요한 채널인 경우
-      setCurrentChannelId(channel.channelId);
-      setShowPasswordModal(true);
-      setPasswordInput('');
-      setPasswordError('');
-
-      // 접근성 모드에서 모달에 포커스
-      if (isAccessibleMode) {
-        setTimeout(() => {
-          if (modalRef.current) modalRef.current.focus();
-        }, 100);
-      }
-    } else {
-      // 비밀번호가 필요 없는 경우
+  } else {
+    try {
+      // OpenVidu 세션 참여
+      await joinExistingSession(channel.channelId);
+      // 화상 채팅 페이지로 이동
       console.log(`비밀번호 없는 채널 ${channel.channelId} 입장`);
       navigate(`/voice-channel-video/${channel.channelId}`);
+    } catch (error) {
+      console.error('채널 참여 오류:', error);
+      setError('채널 참여 중 오류가 발생했습니다.');
     }
-  };
+  }
+};
+
+   
 
   // 비밀번호 제출 처리
   const handlePasswordSubmit = async () => {
@@ -127,6 +141,7 @@ const VoiceChannel = () => {
       setPasswordError('비밀번호를 입력해주세요.');
       return;
     }
+
     // 요청 전 데이터 확인
     console.log('요청할 데이터:', {
       channelId: currentChannelId,
@@ -140,6 +155,9 @@ const VoiceChannel = () => {
       );
 
       if (isPasswordCorrect) {
+        try {
+          // OpenVidu 세션 참여
+          await joinExistingSession(currentChannelId);
         // 비밀번호가 맞으면 채널로 이동
         // navigate(`/voice-channel-video/${currentChannelId}`);
         setShowPasswordModal(false);
@@ -148,19 +166,24 @@ const VoiceChannel = () => {
         setShowWaitingModal(true);
         // 서버에 비밀번호 검증 및 방장에게 요청을 보내는 로직 필요
         console.log(`채널 ${currentChannelId} 비밀번호 제출 후 방장 수락 대기`);
-      } else {
+      } catch (error){
+        console.error('Password submission failed:', error);
+        setPasswordError(
+          error.message || '비밀번호 확인 중 오류가 발생했습니다.');
+        }
+        } else{
         // 비밀번호가 틀리면 오류 메시지 표시
         setPasswordError('비밀번호가 올바르지 않습니다. 다시 시도해주세요.');
-      }
+      } 
     } catch (error) {
       console.error('Password submission failed:', error);
       setPasswordError(
-        error.message || '비밀번호 확인 중 오류가 발생했습니다.',
+        error.message || '비밀번호 확인 중 오류가 발생했습니다.'
       );
     }
+    
     console.log(passwordInput);
   };
-
   // 모달 닫기
   const handleCloseModal = () => {
     setShowPasswordModal(false);
