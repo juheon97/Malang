@@ -4,57 +4,41 @@ import SockJS from 'sockjs-client/dist/sockjs.min.js';
 class WebSocketService {
   constructor() {
     this.stompClient = null;
-    this.listeners = {};
     this.isConnected = false;
-
-    // 환경변수에서 API URL을 가져오고, '/ws' 엔드포인트를 붙임
     this.socketURL = `${import.meta.env.VITE_API_URL}/ws`;
   }
 
-  connect(channelId) {
-    if (this.stompClient && this.isConnected) {
-      return;
-    }
+  connect(channelId, chatCallback, channelCallback) {
+    if (this.stompClient && this.isConnected) return;
 
     this.stompClient = new Client({
-      webSocketFactory: () => {
-        // 토큰을 sessionStorage에서 불러오기
-        return new SockJS(`${import.meta.env.VITE_API_URL}/ws`);
-      },
-      // STOMP CONNECT 명령 시 헤더에 Authorization 추가
+      webSocketFactory: () => new SockJS(this.socketURL),
       connectHeaders: {
         Authorization: 'Bearer ' + sessionStorage.getItem('token'),
       },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
-    });
+      onConnect: () => {
+        this.isConnected = true;
 
-    this.stompClient.onConnect = () => {
-      this.isConnected = true;
-
-      // channelId가 있는 경우에만 기본 채팅 채널 구독
-      if (channelId) {
-        this.subscribe(`/sub/${channelId}`, message => {
-          try {
-            const data = JSON.parse(message.body);
-            if (this.listeners['message']) {
-              this.listeners['message'].forEach(callback => callback(data));
-            }
-          } catch (error) {
-            console.error('메시지 처리 오류:', error);
+        if (channelId) {
+          if (chatCallback) {
+            this.subscribe(`/sub/${channelId}/chat`, chatCallback);
           }
-        });
-      }
-    };
-
-    this.stompClient.onWebSocketClose = () => {
-      this.isConnected = false;
-    };
-
-    this.stompClient.onStompError = () => {
-      this.isConnected = false;
-    };
+          if (channelCallback) {
+            this.subscribe(`/sub/${channelId}`, channelCallback);
+          }
+        }
+      },
+      onWebSocketClose: () => {
+        this.isConnected = false;
+      },
+      onStompError: frame => {
+        console.error('STOMP 에러:', frame);
+        this.isConnected = false;
+      },
+    });
 
     this.stompClient.activate();
   }
@@ -71,18 +55,15 @@ class WebSocketService {
     if (!this.stompClient || !this.isConnected) {
       return null;
     }
-
     return this.stompClient.subscribe(destination, callback);
   }
 
   sendMessage(destination, payload) {
-    if (!this.stompClient || !this.isConnected) {
-      return false;
-    }
+    if (!this.stompClient || !this.isConnected) return false;
 
     try {
       this.stompClient.publish({
-        destination: destination,
+        destination,
         body: payload,
         headers: { 'content-type': 'application/json' },
       });
@@ -93,20 +74,27 @@ class WebSocketService {
     }
   }
 
-  addListener(event, callback) {
-    if (!this.listeners[event]) {
-      this.listeners[event] = [];
-    }
-    this.listeners[event].push(callback);
-    return () => this.removeListener(event, callback);
+  sendJoinEvent(channelId, userId) {
+    const payload = JSON.stringify({
+      event: 'join',
+      user_id: parseInt(userId, 10),
+      channel: parseInt(channelId, 10),
+    });
+    return this.sendMessage(`/pub/${channelId}`, payload);
   }
 
-  removeListener(event, callback) {
-    if (this.listeners[event]) {
-      this.listeners[event] = this.listeners[event].filter(
-        cb => cb !== callback,
-      );
-    }
+  sendLeaveEvent(channelId, userId) {
+    const payload = JSON.stringify({
+      event: 'leave',
+      user_id: parseInt(userId, 10),
+      channel: parseInt(channelId, 10),
+    });
+    return this.sendMessage(`/pub/${channelId}`, payload);
+  }
+
+  sendChatMessage(channelId, messageObj) {
+    const payload = JSON.stringify(messageObj);
+    return this.sendMessage(`/pub/${channelId}/chat`, payload);
   }
 }
 

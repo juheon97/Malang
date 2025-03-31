@@ -38,31 +38,35 @@ const ChatBox = ({
         className="p-3 overflow-y-auto flex-1"
         style={{ minHeight: '350px', maxHeight: '350px' }}
       >
-        {messages.map(message => (
-          <div
-            key={message.id}
-            className={`mb-2 flex ${
-              message.senderId === userId ? 'justify-end' : 'justify-start'
-            }`}
-          >
-            <div className="flex flex-col items-start max-w-[85%]">
-              {message.sender !== nickname && message.senderId !== userId && (
-                <span className="text-xs font-semibold text-gray-600 mb-1 ml-1">
-                  {message.sender}
-                </span>
-              )}
-              <div
-                className={`rounded-lg px-3 py-2 text-sm ${
-                  message.senderId === userId
-                    ? 'bg-[#D1F4CB] self-end'
-                    : 'bg-[#E9EDF2] self-start'
-                }`}
-              >
-                <p>{message.text}</p>
+        {messages.map(message => {
+          const displayName = message.nickname || message.sender || 'Unknown';
+          return (
+            <div
+              key={message.id}
+              className={`mb-2 flex ${
+                message.senderId === userId ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <div className="flex flex-col items-start max-w-[85%]">
+                {displayName !== nickname && message.senderId !== userId && (
+                  <span className="text-xs font-semibold text-gray-600 mb-1 ml-1">
+                    {displayName}
+                  </span>
+                )}
+                <div
+                  className={`rounded-lg px-3 py-2 text-sm ${
+                    message.senderId === userId
+                      ? 'bg-[#D1F4CB] self-end'
+                      : 'bg-[#E9EDF2] self-start'
+                  }`}
+                >
+                  <p>{message.text}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
+
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
             <p className="text-gray-400 text-sm">메시지가 없습니다.</p>
