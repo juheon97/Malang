@@ -1,3 +1,4 @@
+// VoiceChannelVideo.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import VideoLayout from '../../components/video/VideoLayout';
@@ -7,24 +8,26 @@ import useOpenVidu from '../../hooks/useOpenvidu';
 import useChat from '../../hooks/useChat';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
+import SockJS from 'sockjs-client/dist/sockjs.min.js';
+import { Client } from '@stomp/stompjs';
 
 function VoiceChannelVideo() {
-  const { channelId } = useParams(); // URL에서 channelId 추출
+  const { channelId } = useParams();
   const { currentUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // 상태 관리
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isVoiceTranslationOn, setIsVoiceTranslationOn] = useState(false);
   const [isSignLanguageOn, setIsSignLanguageOn] = useState(false);
   const [channelInfo, setChannelInfo] = useState(null);
   const [connectionError, setConnectionError] = useState('');
+  const stompClientRef = useRef(null);
+  const [channels, setChannels] = useState([]); // 채널 목록 상태
+  const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
 
-  // 초기화 여부 추적
   const hasJoined = useRef(false);
 
-  // 인증 확인
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login', {
@@ -32,39 +35,6 @@ function VoiceChannelVideo() {
       });
     }
   }, [isAuthenticated, navigate, channelId]);
-
-  // // 채널 정보 가져오기
-  // useEffect(() => {
-  //   const fetchChannelInfo = async () => {
-  //     try {
-  //       const token = sessionStorage.getItem('token');
-  //       if (!token) {
-  //         throw new Error('인증 토큰이 없습니다.');
-  //       }
-
-  //       const response = await axios.get(`/channels/voice/${channelId}`, {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           'Content-Type': 'application/json',
-  //         },
-  //       });
-
-  //       if (response.data && response.data.data) {
-  //         setChannelInfo(response.data.data);
-  //         return response.data.data;
-  //       } else {
-  //         throw new Error('채널 정보가 올바르지 않습니다.');
-  //       }
-  //     } catch (error) {
-  //       console.error('채널 정보 가져오기 실패:', error);
-  //       setConnectionError('채널 정보를 가져오는데 실패했습니다.');
-  //       return null;
-  //     }
-  //   };
-  //   if (isAuthenticated && channelId) {
-  //     fetchChannelInfo();
-  //   }
-  // }, [channelId, isAuthenticated]);
 
   // 커스텀 훅 사용
   const { participants, joinSession, leaveSession, toggleAudio, toggleVideo } =
@@ -79,26 +49,163 @@ function VoiceChannelVideo() {
     messages,
     newMessage,
     setNewMessage,
-    handleSendMessage,
     handleKeyDown,
     chatContainerRef,
+    addMessage,
   } = useChat(currentUser?.id || 'guest');
 
-  // 세션 참여
+  // 채팅 전송 함수
+  const handleSendMessage = e => {
+    e.preventDefault();
+    if (newMessage.trim() === '' || !stompClientRef.current?.connected) return;
+
+    // 웹소켓을 통해 메시지 전송
+    stompClientRef.current.publish({
+      destination: `/pub/${channelId}/chat`,
+      body: JSON.stringify({
+        event: 'send',
+        content: newMessage,
+      }),
+      headers: { 'content-type': 'application/json' },
+    });
+
+    // 로컬 UI에 메시지 추가
+    addMessage(
+      newMessage,
+      currentUser?.username || 'Me',
+      currentUser?.id || 'guest',
+    );
+    setNewMessage('');
+  };
+
+  // 웹소켓 연결 및 채널 입장 알림
   useEffect(() => {
-    if (isAuthenticated && channelId && !hasJoined.current) {
+    console.log('🎯 VoiceChannelVideo mounted');
+
+    const connectWebSocket = () => {
+      const API_URL = import.meta.env.VITE_API_URL;
+      const token = sessionStorage.getItem('token');
+
+      if (!token || !isAuthenticated || !channelId) return;
+
+      if (typeof window !== 'undefined' && !window.global) {
+        window.global = window;
+      }
+
+      const stompClient = new Client({
+        webSocketFactory: () => new SockJS(`${API_URL}/ws`),
+        connectHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+        onConnect: () => {
+          console.log('✅ 웹소켓 연결 성공');
+          setIsWebSocketConnected(true);
+
+          // 채팅 메시지 구독 (명세서에 맞게 수정)
+          stompClient.subscribe(`/sub/${channelId}/chat`, message => {
+            try {
+              const data = JSON.parse(message.body);
+              console.log('📩 채팅 메시지 수신:', data);
+
+              // 메시지 이벤트 처리
+              if (data.event === 'message') {
+                // 채팅 메시지 추가
+                addMessage(
+                  data.content,
+                  data.sender || 'Unknown',
+                  data.senderId || null,
+                );
+              }
+            } catch (e) {
+              console.error('❗ 메시지 파싱 오류:', e);
+            }
+          });
+
+          // 채널 이벤트 구독 (join, leave 등)
+          stompClient.subscribe(`/sub/${channelId}`, message => {
+            try {
+              const data = JSON.parse(message.body);
+              console.log('📩 채널 이벤트 수신:', data);
+
+              // 메시지 이벤트 처리 - 채팅 메시지도 여기서 수신
+              if (data.event === 'message') {
+                // 채팅 메시지 추가
+                addMessage(
+                  data.content,
+                  data.sender || 'Unknown',
+                  data.senderId || null,
+                );
+              }
+            } catch (e) {
+              console.error('❗ 채널 이벤트 파싱 오류:', e);
+            }
+          });
+
+          // 입장 이벤트 발행
+          stompClient.publish({
+            destination: `/pub/${channelId}`,
+            body: JSON.stringify({
+              event: 'join',
+              user_id: parseInt(currentUser?.id, 10),
+              channel: parseInt(channelId, 10),
+            }),
+            headers: { 'content-type': 'application/json' },
+          });
+
+          console.log('📢 채팅방 입장 알림 전송 완료');
+        },
+        onStompError: frame => {
+          console.error('💥 STOMP 에러 발생:', frame);
+          setConnectionError('웹소켓 연결에 실패했습니다.');
+          setIsWebSocketConnected(false);
+        },
+        onWebSocketClose: event => {
+          console.warn('🚫 웹소켓 연결 종료됨:', event);
+          setConnectionError('웹소켓 연결이 끊어졌습니다.');
+          setIsWebSocketConnected(false);
+        },
+      });
+
+      stompClient.activate();
+      stompClientRef.current = stompClient;
+    };
+
+    // 연결 조건 만족 시 1회만 연결
+    if (!hasJoined.current && isAuthenticated && channelId) {
       hasJoined.current = true;
+      connectWebSocket();
       joinSession();
     }
 
     return () => {
+      console.log('💨 VoiceChannelVideo unmounted');
+
       if (hasJoined.current) {
+        hasJoined.current = false;
+
+        if (stompClientRef.current?.connected) {
+          // 퇴장 이벤트 발행
+          stompClientRef.current.publish({
+            destination: `/pub/${channelId}`,
+            body: JSON.stringify({
+              event: 'leave',
+              user_id: parseInt(currentUser?.id, 10),
+              channel: parseInt(channelId, 10),
+            }),
+            headers: { 'content-type': 'application/json' },
+          });
+
+          console.log('🔌 웹소켓 연결 해제');
+          stompClientRef.current.deactivate();
+          setIsWebSocketConnected(false);
+        }
+
         leaveSession();
       }
     };
-  }, [channelId, isAuthenticated]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, channelId]);
 
-  // 토글 함수
   const toggleMic = () => {
     setIsMicOn(!isMicOn);
     toggleAudio(!isMicOn);
@@ -117,25 +224,61 @@ function VoiceChannelVideo() {
     setIsSignLanguageOn(!isSignLanguageOn);
   };
 
-  // 참가자 정보 렌더링
-  const renderParticipantInfo = participant => (
-    <>
-      <div className="absolute bottom-2 left-2 bg-black bg-opacity-30 text-white px-2 py-1 rounded text-xs">
-        {participant.name}
-        {participant.isSelf && ' (나)'}
-      </div>
-    </>
-  );
+  // 채널 목록 가져오기 함수
+  const fetchChannels = async () => {
+    try {
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다.');
+      }
 
+      const response = await axios.get('/api/channels', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.data && response.data.data) {
+        setChannels(response.data.data);
+      } else {
+        throw new Error('채널 목록을 가져오는 데 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('채널 목록 가져오기 실패:', error);
+      setConnectionError('채널 목록을 가져오는데 실패했습니다.');
+    }
+  };
+
+  // 채널 나가기 및 목록 새로고침
   const handleLeaveChannel = async () => {
     try {
+      if (stompClientRef.current && stompClientRef.current.connected) {
+        // API 명세서에 맞게 leave 이벤트 전송
+        stompClientRef.current.publish({
+          destination: `/pub/${channelId}`,
+          body: JSON.stringify({
+            event: 'leave',
+            user_id: parseInt(currentUser?.id, 10),
+            channel: parseInt(channelId, 10),
+          }),
+          headers: { 'content-type': 'application/json' },
+        });
+
+        // 웹소켓 연결 해제
+        stompClientRef.current.deactivate();
+        setIsWebSocketConnected(false);
+      }
+
+      // OpenVidu 세션 종료
       leaveSession();
 
-      // 채널 퇴장 API 호출
+      // 서버에 채널 퇴장 API 요청
       if (isAuthenticated) {
         const token = sessionStorage.getItem('token');
+        const API_URL = import.meta.env.VITE_API_URL;
         await axios.post(
-          `/api/channels/${channelId}/leave`,
+          `${API_URL}/channels/${channelId}/leave`,
           {},
           {
             headers: {
@@ -146,13 +289,18 @@ function VoiceChannelVideo() {
         );
       }
 
+      // 채널 목록 새로고침 (필요한 경우)
+      await fetchChannels();
+
+      // 채널 목록 페이지로 이동
       navigate('/voice-channel');
     } catch (error) {
       console.error('채널 퇴장 실패:', error);
+      // 오류가 발생해도 페이지 이동
+      navigate('/voice-channel');
     }
   };
 
-  // 인증 로딩 중이거나 인증되지 않은 경우 로딩 표시
   if (!isAuthenticated) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -166,7 +314,6 @@ function VoiceChannelVideo() {
       className="flex flex-col h-full bg-[#f5fdf5]"
       style={{ minHeight: 'calc(100vh - 75px)' }}
     >
-      {/* 방 정보 헤더 */}
       <div className="flex items-center justify-between p-4 rounded-lg bg-white m-4 mb-0 shadow-sm">
         <div className="flex items-center">
           <div className="w-10 h-10 rounded-full bg-[#00a173] flex items-center justify-center text-white mr-3">
@@ -189,14 +336,10 @@ function VoiceChannelVideo() {
             <h1 className="font-bold text-gray-800">
               {channelInfo?.channelName || '음성 채널'}
             </h1>
-            {/* <p className="text-sm text-gray-500">
-              참여자: {participants.length}/{channelInfo?.max_player || 4}
-            </p> */}
           </div>
         </div>
       </div>
 
-      {/* 에러 메시지 */}
       {connectionError && (
         <div className="mx-4 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between text-sm">
           <div className="flex items-center text-red-600">
@@ -224,29 +367,20 @@ function VoiceChannelVideo() {
         </div>
       )}
 
-      {/* 메인 컨텐츠 - 영상과 채팅 */}
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
-        {/* 영상 영역 */}
-        {/* <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
-          <VideoLayout
-            participants={participants}
-            renderParticipantInfo={renderParticipantInfo}
-          />
-        </div> */}
-
-        {/* ChatBox 컴포넌트 사용 */}
         <ChatBox
+          currentUserId={currentUser?.id}
+          channelId={channelId}
           messages={messages}
           newMessage={newMessage}
           setNewMessage={setNewMessage}
           handleSendMessage={handleSendMessage}
           handleKeyDown={handleKeyDown}
           chatContainerRef={chatContainerRef}
-          currentUserId={currentUser?.id || 'guest'}
+          isConnected={isWebSocketConnected}
         />
       </div>
 
-      {/* VideoControls 컴포넌트 사용 */}
       <VideoControls
         isMicOn={isMicOn}
         isCameraOn={isCameraOn}

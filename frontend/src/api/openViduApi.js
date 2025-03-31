@@ -1,8 +1,10 @@
+// src>api>communityApi.js
 import axios from 'axios';
 
 // API 기본 URL 설정
-const BASE_URL = 'https://J12D110.p.ssafy.io/api';
-
+// const BASE_URL = 'https://J12D110.p.ssafy.io/api';
+//const BASE_URL = 'https://10c0-116-36-40-48.ngrok-free.app/api';
+const BASE_URL = import.meta.env.VITE_API_URL;
 // axios 인스턴스 생성
 const apiClient = axios.create({
   baseURL: BASE_URL,

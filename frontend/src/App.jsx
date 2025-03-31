@@ -6,9 +6,8 @@ import { CounselorProfileProvider } from './contexts/CounselorProfileContext';
 import Layout from './components/layout/Layout';
 import Home from './pages/home/Home';
 import Login from './pages/login/Login';
-import CommunityList from './components/community/CommunityList';
+import Community from './pages/community/community';
 import CommunityWrite from './components/community/CommunityWrite';
-import CommunityDetail from './components/community/CommunityDetail';
 import Counsel from './pages/counsel/Counsel';
 import VoiceChannel from './pages/voicechannel/VoiceChannel';
 import Signup from './pages/signup/Signup';
@@ -26,15 +25,13 @@ function App() {
       <AuthProvider>
         <AccessibilityProvider>
           <CounselorProfileProvider>
-            <Layout>
-              <Routes>
-                {/* 공개 라우트 - 인증 필요 없음 */}
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/Signup" element={<Signup />} />
-                <Route path="/community" element={<CommunityList />} />
-                <Route path="/community/:id" element={<CommunityDetail />} />
-
+          <Layout>
+            <Routes>
+              {/* 공개 라우트 - 인증 필요 없음 */}
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/Signup" element={<Signup />} />
+              <Route path="/community/*" element={<Community />} />
                 {/* 보호된 라우트 - 인증 필요 */}
                 <Route
                   path="/mypage"

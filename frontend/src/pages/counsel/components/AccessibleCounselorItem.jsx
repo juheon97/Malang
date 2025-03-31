@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * 접근성 모드에서 사용되는 상담사 아이템 컴포넌트
+ * 시각 장애인용 상담사 아이템 컴포넌트
  */
 const AccessibleCounselorItem = ({
   counselor,

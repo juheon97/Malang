@@ -11,7 +11,7 @@ class WebSocketService {
     this.socketURL = `${import.meta.env.VITE_API_URL}/ws`;
   }
 
-  connect() {
+  connect(channelId) {
     if (this.stompClient && this.isConnected) {
       return;
     }
@@ -33,16 +33,19 @@ class WebSocketService {
     this.stompClient.onConnect = () => {
       this.isConnected = true;
 
-      this.subscribe('/sub/chat', message => {
-        try {
-          const data = JSON.parse(message.body);
-          if (this.listeners['message']) {
-            this.listeners['message'].forEach(callback => callback(data));
+      // channelId가 있는 경우에만 기본 채팅 채널 구독
+      if (channelId) {
+        this.subscribe(`/sub/${channelId}`, message => {
+          try {
+            const data = JSON.parse(message.body);
+            if (this.listeners['message']) {
+              this.listeners['message'].forEach(callback => callback(data));
+            }
+          } catch (error) {
+            console.error('메시지 처리 오류:', error);
           }
-        } catch (error) {
-          console.error('메시지 처리 오류:', error);
-        }
-      });
+        });
+      }
     };
 
     this.stompClient.onWebSocketClose = () => {
@@ -72,7 +75,7 @@ class WebSocketService {
     return this.stompClient.subscribe(destination, callback);
   }
 
-  sendMessage(event, content, destination = '/pub/chat') {
+  sendMessage(destination, payload) {
     if (!this.stompClient || !this.isConnected) {
       return false;
     }
@@ -80,11 +83,12 @@ class WebSocketService {
     try {
       this.stompClient.publish({
         destination: destination,
-        body: JSON.stringify({ event, content }),
+        body: payload,
         headers: { 'content-type': 'application/json' },
       });
       return true;
     } catch (error) {
+      console.error('메시지 전송 오류:', error);
       return false;
     }
   }
