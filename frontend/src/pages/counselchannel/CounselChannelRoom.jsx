@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import counselorChannel from '../../api/counselorChannel';
+import axios from 'axios';
 
 function CounselChannelRoom() {
   const navigate = useNavigate();
@@ -53,12 +55,77 @@ function CounselChannelRoom() {
     }));
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
     console.log('상담채널 생성 데이터:', formData);
-    // API 호출 로직 추가
-    navigate('/counsel-channel-video');
+
+    try {
+      // 토큰 확인
+      const token = sessionStorage.getItem('token');
+      console.log('현재 토큰:', token);
+
+      if (!token) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      // 채널 타입 변환 (일반상담 -> NORMAL, 그룹상담 -> GROUP)
+      const channelType = formData.roomType === '일반상담' ? 'NORMAL' : 'GROUP';
+
+      // API 요청 데이터 구성
+      const channelData = {
+        channelName: formData.roomName,
+        maxPlayer: parseInt(formData.maxUsers),
+        channelType: channelType,
+        description: formData.description || '',
+      };
+
+      console.log('API 요청 데이터:', channelData);
+
+      // API 호출 - 올바른 엔드포인트 사용
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/channels/counseling/create`,
+        channelData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      console.log('채널 생성 성공:', response.data);
+
+      // 세션 스토리지에 채널 정보 저장 (선택사항)
+      sessionStorage.setItem('currentChannel', JSON.stringify(response.data));
+
+      // 생성된 채널 ID로 이동 (URL 파라미터 사용)
+      navigate(`/counsel-channel-video/${response.data.channelId}`);
+    } catch (error) {
+      console.error('채널 생성 실패:', error);
+
+      // 오류 메시지 표시
+      let errorMessage = '상담 채널 생성에 실패했습니다.';
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        errorMessage = error.response.data.message;
+      } else if (error.response && error.response.status === 401) {
+        errorMessage = '인증에 실패했습니다. 다시 로그인해주세요.';
+      }
+
+      alert(errorMessage);
+    }
   };
+
+  // const handleSubmit = e => {
+  //   e.preventDefault();
+  //   console.log('상담채널 생성 데이터:', formData);
+  //   // API 호출 로직 추가
+  //   navigate('/counsel-channel-video');
+  // };
 
   return (
     <div className="flex justify-center items-center p-4 mt-8">
@@ -92,12 +159,7 @@ function CounselChannelRoom() {
                 onClick={() => handleRoomTypeChange('일반상담')}
               >
                 <div
-                  className={
-                    formData.roomType === '일반상담'
-                      ? 'text-green-600'
-                      : 'text-gray-400'
-                  }
-                  mr-2
+                  className={`${formData.roomType === '일반상담' ? 'text-green-600' : 'text-gray-400'} mr-2`}
                 >
                   {formData.roomType === '일반상담' ? '✓' : '○'}
                 </div>
@@ -117,12 +179,11 @@ function CounselChannelRoom() {
                 onClick={() => handleRoomTypeChange('그룹상담')}
               >
                 <div
-                  className={
+                  className={`${
                     formData.roomType === '그룹상담'
                       ? 'text-green-600'
                       : 'text-gray-400'
-                  }
-                  mr-2
+                  } mr-2`}
                 >
                   {formData.roomType === '그룹상담' ? '✓' : '○'}
                 </div>
