@@ -203,6 +203,7 @@ public class CounselingChannelService {
             String shortIntro = counselor.getName() + " 상담사입니다.";
             int experience = 1;
             Integer status = 0; // 기본 상태: 대기/가능
+            Integer counselorCode = null;
 
             // 프로필이 존재하면 정보 사용
             if (profileOpt.isPresent()) {
@@ -236,6 +237,7 @@ public class CounselingChannelService {
 
                 // 상담사 상태 정보 사용
                 status = profile.getStatus();
+                counselorCode = profile.getCounselorCode();
             }
 
             return CounselorListResponse.builder()
@@ -252,6 +254,7 @@ public class CounselingChannelService {
                     .reviewCount((int) reviewCount)
                     .shortIntro(shortIntro)
                     .status(status) // 상담사 상태 추가
+                    .counselorCode(counselorCode)
                     .build();
         });
     }

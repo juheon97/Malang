@@ -160,13 +160,14 @@ public class AuthService {
         // 상담사 정보 저장
         Counselor savedCounselor = counselorRepository.save(counselor);
         logger.info("상담사 정보 저장 완료: {}", savedCounselor.getId());
-
+        Integer counselorCode = generateCounselorCode();
         // 상담사 프로필 엔티티 생성 (자격증 정보 포함)
         CounselorProfile counselorProfile = CounselorProfile.builder()
                 .id(counselorId)
                 .user(savedUser)
                 .certifications(request.getCertificationString()) // Y 또는 N
                 .status(0) // 기본 상태 (0)
+                .counselorCode(counselorCode)
                 .build();
 
         // 상담사 프로필 정보 저장
@@ -185,9 +186,20 @@ public class AuthService {
         Long maxId = counselorRepository.findAll().stream()
                 .map(Counselor::getId)
                 .max(Long::compareTo)
-                .orElse(0L);
+                .orElse(1000L);
 
         return maxId + 1;
+    }
+
+    private Integer generateCounselorCode() {
+        // 기존에 존재하는 상담사 프로필의 코드 중 최대값 + 1 을 반환
+        Integer maxCode = counselorProfileRepository.findAll().stream()
+                .map(CounselorProfile::getCounselorCode)
+                .filter(code -> code != null) // null 값 제외
+                .max(Integer::compareTo)
+                .orElse(10000); // 기본값을 10000으로 설정하여 첫 코드가 10001이 되도록
+
+        return maxCode + 1;
     }
 
     /**
