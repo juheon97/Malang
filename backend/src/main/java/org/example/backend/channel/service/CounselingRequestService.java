@@ -95,24 +95,35 @@ public class CounselingRequestService {
         List<Map<String, Object>> responseList = new ArrayList<>();
 
         for (Channel channel : availableChannels) {
-            // 상담사 정보 조회
-            Counselor counselor = counselorRepository.findById(channel.getCounselorId())
-                    .orElseThrow(() -> new IllegalArgumentException("상담사 정보를 찾을 수 없습니다."));
+            try {
+                // counselorId가 null인지 확인
+                if (channel.getCounselorId() == null) {
+                    log.warn("상담사 ID가 null인 채널 발견: channelId={}", channel.getChannelId());
+                    continue; // null인 경우 이 채널은 건너뜀
+                }
 
-            User counselorUser = userRepository.findById(counselor.getUser().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("상담사 사용자 정보를 찾을 수 없습니다."));
+                // 상담사 정보 조회
+                Counselor counselor = counselorRepository.findById(channel.getCounselorId())
+                        .orElseThrow(() -> new IllegalArgumentException("상담사 정보를 찾을 수 없습니다."));
 
-            Map<String, Object> channelInfo = new HashMap<>();
-            channelInfo.put("channelId", channel.getChannelId());
-            channelInfo.put("channelName", channel.getChannelName());
-            channelInfo.put("channelType", channel.getChannelName().startsWith("GROUP") ? "GROUP" : "NORMAL");
-            channelInfo.put("counselorName", counselorUser.getNickname());
-            channelInfo.put("counselorId", counselor.getId());
-            channelInfo.put("createdAt", channel.getCreatedAt());
-            channelInfo.put("scheduledTime", channel.getScheduledTime());
-            channelInfo.put("description", channel.getDescription());
+                User counselorUser = userRepository.findById(counselor.getUser().getId())
+                        .orElseThrow(() -> new IllegalArgumentException("상담사 사용자 정보를 찾을 수 없습니다."));
 
-            responseList.add(channelInfo);
+                Map<String, Object> channelInfo = new HashMap<>();
+                channelInfo.put("channelId", channel.getChannelId());
+                channelInfo.put("channelName", channel.getChannelName());
+                channelInfo.put("channelType", channel.getChannelName().startsWith("GROUP") ? "GROUP" : "NORMAL");
+                channelInfo.put("counselorName", counselorUser.getNickname());
+                channelInfo.put("counselorId", counselor.getId());
+                channelInfo.put("createdAt", channel.getCreatedAt());
+                channelInfo.put("scheduledTime", channel.getScheduledTime());
+                channelInfo.put("description", channel.getDescription());
+
+                responseList.add(channelInfo);
+            } catch (Exception e) {
+                // 개별 채널 처리 중 오류가 발생해도 전체 목록 조회에 영향이 없도록 예외 처리
+                log.error("채널 정보 처리 중 오류 발생: channelId={}, error={}", channel.getChannelId(), e.getMessage());
+            }
         }
 
         return responseList;
