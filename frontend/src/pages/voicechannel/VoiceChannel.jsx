@@ -1,24 +1,51 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MagnifyingGlassIcon as SearchIcon } from '@heroicons/react/24/outline';
 import ChannelList from '../../components/voicechannel/ChannelList';
+import VoiceChannelList from '../../components/voicechannel/VoiceChannelList';
 import voiceChannelApi from '../../api/voiceChannelApi';
 import { useNavigate } from 'react-router-dom';
+import { useAccessibility } from '../../contexts/AccessibilityContext';
+import PasswordModal from '../../components/modal/PasswordModal';
 
 const VoiceChannel = () => {
   const navigate = useNavigate();
   const [channels, setChannels] = useState([]);
   const [searchInput, setSearchInput] = useState('');
   const [expandedChannel, setExpandedChannel] = useState(null);
-  const [isAccessibleMode, setIsAccessibleMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // 모달 관련 상태
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [showWaitingModal, setShowWaitingModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const { isAccessibleMode, setAccessibleMode } = useAccessibility();
+  const [currentChannelId, setCurrentChannelId] = useState(null);
+
+  // 모달용 포커스 관리
+  const previousFocusRef = useRef(null);
+  const modalRef = useRef(null);
+
+  // 세션 스토리지에서 시각장애인 설정 확인
+  useEffect(() => {
+    const userSettings = JSON.parse(
+      sessionStorage.getItem('userSettings') || '{}',
+    );
+
+    if (userSettings.isVisuallyImpaired === false) {
+      setAccessibleMode(false);
+    } else if (userSettings.isVisuallyImpaired === true) {
+      setAccessibleMode(true);
+    }
+  }, [setAccessibleMode]);
 
   // 채널 목록 가져오기
   const fetchChannels = async () => {
     setIsLoading(true);
     try {
       const data = await voiceChannelApi.listChannels();
-      console.log('채널 목록:', data); // API에서 가져온 채널 데이터를 콘솔에 출력
+      console.log('채널 목록:', data);
       setChannels(data);
       setError(null);
     } catch (error) {
@@ -35,8 +62,8 @@ const VoiceChannel = () => {
 
   // 검색어에 따라 필터링된 채널 목록 계산
   const filteredChannels = useMemo(() => {
-    console.log('검색어:', searchInput); // 검색어를 콘솔에 출력
-    console.log('전체 채널 목록:', channels); // 필터링 전 채널 목록을 출력
+    console.log('검색어:', searchInput);
+    console.log('전체 채널 목록:', channels);
     if (searchInput.trim() === '') {
       return channels;
     } else {
@@ -48,30 +75,148 @@ const VoiceChannel = () => {
 
   // 채널 참여 버튼 클릭 시
   const handleJoinChannel = channel => {
-    console.log('채널 참여:', channel); // 참여하려는 채널 정보를 콘솔에 출력
-    navigate(`/voice-channel-video/${channel.channelId}`);
+    console.log('채널 참여:', channel);
+
+    // 접근성 모드인 경우 현재 포커스 요소 저장
+    if (isAccessibleMode) {
+      previousFocusRef.current = document.activeElement;
+    }
+
+    // 채널이 잠겨있는지 확인 (비밀번호 필요 여부)
+    if (channel.hasPassword) {
+      // 비밀번호가 필요한 채널인 경우
+      setCurrentChannelId(channel.channelId);
+      setShowPasswordModal(true);
+      setPasswordInput('');
+      setPasswordError('');
+
+      // 접근성 모드에서 모달에 포커스
+      if (isAccessibleMode) {
+        setTimeout(() => {
+          if (modalRef.current) modalRef.current.focus();
+        }, 100);
+      }
+    } else {
+      // 비밀번호가 필요 없는 경우
+      console.log(`비밀번호 없는 채널 ${channel.channelId} 입장`);
+      navigate(`/voice-channel-video/${channel.channelId}`);
+    }
   };
 
-  // 채널 확장/축소 토글
+  // 비밀번호 제출 처리
+  const handlePasswordSubmit = async () => {
+    if (!passwordInput.trim()) {
+      setPasswordError('비밀번호를 입력해주세요.');
+      return;
+    }
+    // 요청 전 데이터 확인
+    console.log('요청할 데이터:', {
+      channelId: currentChannelId,
+      password: passwordInput,
+    });
+
+    try {
+      const isPasswordCorrect = await voiceChannelApi.checkChannelPassword(
+        currentChannelId,
+        passwordInput,
+      );
+
+      if (isPasswordCorrect) {
+        // 비밀번호가 맞으면 채널로 이동
+        navigate(`/voice-channel-video/${currentChannelId}`);
+        setShowPasswordModal(false);
+        setPasswordInput('');
+      } else {
+        // 비밀번호가 틀리면 오류 메시지 표시
+        setPasswordError('비밀번호가 올바르지 않습니다. 다시 시도해주세요.');
+      }
+    } catch (error) {
+      console.error('Password submission failed:', error);
+      setPasswordError(
+        error.message || '비밀번호 확인 중 오류가 발생했습니다.',
+      );
+    }
+    console.log(passwordInput);
+  };
+
+  // 모달 닫기
+  const handleCloseModal = () => {
+    setShowPasswordModal(false);
+    setPasswordInput('');
+    setPasswordError('');
+  };
+
+  // // 비밀번호 제출 및 방장 수락 대기 처리
+  // const handlePasswordSubmit = () => {
+  //   // 비밀번호 모달 닫기
+  //   setShowPasswordModal(false);
+  //   setPasswordInput('');
+
+  //   // 방장 수락 대기 모달 표시
+  //   setShowWaitingModal(true);
+
+  //   // 서버에 비밀번호 검증 및 방장에게 요청을 보내는 로직 필요
+  //   console.log(`채널 ${currentChannelId} 비밀번호 제출 후 방장 수락 대기`);
+
+  //   // 여기서 비밀번호 검증 후 성공 시 navigate 호출
+  //   // 예: 비밀번호 검증 성공 시
+  //   // navigate(`/voice-channel-video/${currentChannelId}`);
+  // };
+
+  // 대기 취소
+  const handleCancelWaiting = () => {
+    setShowWaitingModal(false);
+    console.log('입장 요청 취소');
+
+    // 접근성 모드에서 이전 포커스 요소로 돌아가기
+    if (isAccessibleMode && previousFocusRef.current) {
+      previousFocusRef.current.focus();
+    }
+  };
+
+  // 모달 닫기 (모든 모달을 닫는 통합 함수)
+  const closeModal = () => {
+    setShowPasswordModal(false);
+    setShowWaitingModal(false);
+
+    // 접근성 모드에서 이전 포커스 요소로 돌아가기
+    if (isAccessibleMode && previousFocusRef.current) {
+      previousFocusRef.current.focus();
+    }
+  };
+
+  // 채널 확장/축소 토글 (시각장애인 모드)
   const toggleChannelExpand = channelId => {
-    console.log('확장된 채널 ID:', channelId); // 확장된 채널 ID를 출력
+    console.log('확장된 채널 ID:', channelId);
     setExpandedChannel(expandedChannel === channelId ? null : channelId);
   };
 
   // 접근성 모드 토글
   const toggleAccessibleMode = () => {
-    console.log('접근성 모드 변경:', !isAccessibleMode); // 접근성 모드 상태를 출력
-    setIsAccessibleMode(!isAccessibleMode);
+    console.log('접근성 모드 변경:', !isAccessibleMode);
+    setAccessibleMode(!isAccessibleMode);
     setExpandedChannel(null); // 모드 변경 시 확장된 채널 초기화
   };
 
   // 새로 고침 버튼 클릭 시
   const handleRefresh = () => {
-    fetchChannels(); // 채널 목록을 새로 고침
+    fetchChannels();
+  };
+
+  // 원형 그라데이션
+  const pageStyle = {
+    backgroundImage: `
+      radial-gradient(circle at 10% 30%, rgba(121, 231, 183, 0.2) 0%, rgba(255, 255, 255, 0) 15%),
+      radial-gradient(circle at 30% 18%, rgba(233, 230, 47, 0.2) 0%, rgba(255, 255, 255, 0) 15%),
+      radial-gradient(circle at 80% 80%, rgba(8, 151, 110, 0.1) 0%, rgba(255, 255, 255, 0) 25%),
+      radial-gradient(circle at 10% 90%, rgba(200, 230, 255, 0.1) 0%, rgba(255, 255, 255, 0) 20%)
+    `,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" style={pageStyle}>
       <div className="w-full bg-transparent py-12">
         <main className="max-w-6xl mx-auto px-6 relative">
           {/* 방 생성 버튼 */}
@@ -135,7 +280,7 @@ const VoiceChannel = () => {
                   <p className="text-red-500">{error}</p>
                 </div>
               ) : (
-                <ChannelList
+                <VoiceChannelList
                   channels={filteredChannels}
                   isAccessibleMode={isAccessibleMode}
                   onJoinChannel={handleJoinChannel}
@@ -143,6 +288,14 @@ const VoiceChannel = () => {
                   expandedChannel={expandedChannel}
                 />
               )}
+              {/* 비밀번호 모달 */}
+              <PasswordModal
+                isOpen={showPasswordModal}
+                onClose={handleCloseModal}
+                passwordInput={passwordInput}
+                setPasswordInput={setPasswordInput}
+                onSubmit={handlePasswordSubmit}
+              />
             </div>
           </div>
         </main>

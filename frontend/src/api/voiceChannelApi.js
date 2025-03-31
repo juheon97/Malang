@@ -73,6 +73,41 @@ const voiceChannelApi = {
       throw error;
     }
   },
+  // 채널 비밀번호 확인 함수
+  checkChannelPassword: async (channelId, password) => {
+    // 요청 데이터 확인
+    console.log('API 요청 데이터:', { channelId, password });
+    try {
+      const response = await apiClient.post(
+        `/channels/voice/${channelId}/password-check`,
+        { password },
+      );
+      console.log('API 응답 데이터:', response.data); // 응답 데이터 출력
+      return response.data.isPasswordCorrect;
+    } catch (error) {
+      console.error('Password check failed:', error);
+
+      // 에러 응답에 따른 처리
+      if (error.response && error.response.data) {
+        const { errorCode } = error.response.data;
+
+        switch (errorCode) {
+          case 'S0001':
+            throw new Error('잘못된 요청입니다.');
+          case 'S0002':
+            throw new Error('인증이 필요합니다.');
+          case 'S0003':
+            throw new Error('접근이 거부되었습니다.');
+          case 'S0005':
+            throw new Error('서버 내부 오류가 발생했습니다.');
+          default:
+            throw new Error('알 수 없는 오류가 발생했습니다.');
+        }
+      }
+
+      throw error;
+    }
+  },
 };
 
 export default voiceChannelApi;

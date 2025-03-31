@@ -77,9 +77,9 @@ const ChannelItem = ({
             <button
               onClick={() => onJoinChannel(channel)}
               className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition duration-200"
-              aria-label={`${channel.channelName} 채널 참여하기`}
+              aria-label={`${channel.channelName} 채널 입장장하기`}
             >
-              참여하기
+              입장하기기
             </button>
           </div>
         )}
@@ -119,7 +119,7 @@ const ChannelItem = ({
           onClick={() => onJoinChannel(channel)}
           className="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition duration-200 whitespace-nowrap"
         >
-          참여하기
+          입장하기
         </button>
       </div>
     );
