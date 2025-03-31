@@ -9,35 +9,34 @@ import LikeButton from './LikeButton';
 const CommunityDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   // Post 스토어에서 상태와 액션 가져오기
-  const { 
-    currentPost: post, 
+  const {
+    currentPost: post,
     comments,
-    loading, 
+    loading,
     error,
     fetchPostById,
-    resetCurrentPost
+    resetCurrentPost,
   } = usePostStore();
-  
-  // 현재 사용자 정보 (실제로는 인증 시스템에서 가져와야 함)
-  const currentUser = {
+
+  // 현재 사용자 정보 (세션 스토리지에서 가져오기)
+  const currentUser = JSON.parse(sessionStorage.getItem('user')) || {
     id: 1,
-    username: '익명의 리뷰어'
+    username: '익명의 리뷰어',
   };
 
   // 게시글 데이터 불러오기
   useEffect(() => {
     fetchPostById(id);
-    
+
     // 컴포넌트 언마운트 시 상태 초기화
     return () => {
       resetCurrentPost();
     };
   }, [id, fetchPostById, resetCurrentPost]);
 
-  if (loading)
-    return <div className="text-center py-10">로딩 중...</div>;
+  if (loading) return <div className="text-center py-10">로딩 중...</div>;
   if (error)
     return <div className="text-center py-10 text-red-500">{error}</div>;
   if (!post)
@@ -52,25 +51,21 @@ const CommunityDetail = () => {
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="p-6">
           {/* 게시글 내용 컴포넌트 */}
-          <PostContent 
-            post={post} 
-            currentUser={currentUser} 
-            navigate={navigate} 
+          <PostContent
+            post={post}
+            currentUser={currentUser}
+            navigate={navigate}
           />
-          
+
           {/* 댓글 섹션 컴포넌트 */}
-          <CommentSection 
-            postId={id} 
+          <CommentSection
+            postId={id}
             comments={comments}
-            currentUser={currentUser} 
+            currentUser={currentUser}
           />
-          
+
           {/* 좋아요 버튼 컴포넌트 */}
-          <LikeButton 
-            postId={id} 
-            likes={post.likes} 
-            isLiked={post.isLiked}
-          />
+          <LikeButton postId={id} likes={post.likes} isLiked={post.isLiked} />
         </div>
       </div>
     </div>
