@@ -91,7 +91,13 @@ public class SecurityConfig {
                 "https://*.ngrok-free.app",  // 이건 반드시 allowedOriginPatterns 로만 가능
                 "https://backend.takustory.site",
                 "https://sjh.takustory.site",
-                "https://tsw.takustory.site"
+                "https://tsw.takustory.site",
+                "https://ydw.takustory.site",
+                "https://ydh.takustory.site",
+                "https://lsw.takustory.site"
+
+
+
 
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
