@@ -9,6 +9,9 @@ const CounselorCard = ({
   onBioClick,
   onRequestClick,
 }) => {
+  // status 값이 1이면 상담 가능, 아니면 불가능
+  const isAvailable = counselor.status === 1;
+
   return (
     <div
       className="bg-white rounded-xl overflow-hidden transform transition-all duration-300 hover:scale-100 hover:-translate-y-1"
@@ -193,15 +196,15 @@ const CounselorCard = ({
         <button
           className="w-1/2 mx-auto block text-white py-2 rounded-full font-medium transition duration-200 transform hover:scale-105 mt-auto"
           style={{
-            background: counselor.isAvailable
+            background: isAvailable
               ? 'linear-gradient(to right,rgb(125, 233, 188),rgb(64, 193, 126))'
               : 'linear-gradient(to right, #9CA3AF, #6B7280)',
-            boxShadow: counselor.isAvailable
+            boxShadow: isAvailable
               ? '0 4px 6px -1px rgba(8, 151, 110, 0.3), 0 2px 4px -1px rgba(8, 151, 110, 0.1)'
               : '0 4px 6px -1px rgba(107, 114, 128, 0.3), 0 2px 4px -1px rgba(107, 114, 128, 0.1)',
           }}
           onClick={() => onRequestClick(counselor)}
-          disabled={!counselor.isAvailable}
+          disabled={!isAvailable}
         >
           상담 요청
         </button>

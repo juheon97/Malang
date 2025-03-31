@@ -190,18 +190,35 @@ const counselorChannel = {
 
   /**
    * 상담사 리뷰 조회
-   * @param {string|number} counselorId - 상담사 ID
+   * @param {string} counselorId 상담사 ID
    * @param {Object} params - 페이징 및 정렬 파라미터
    * @param {number} [params.page=1] - 페이지 번호
    * @param {number} [params.size=10] - 페이지당 항목 수
-   * @param {string} [params.sort='latest'] - 정렬 기준 (최신순: 'latest', 평점 높은순: 'rating_high', 평점 낮은순: 'rating_low')
+   * @param {string} [params.sort='createdAt,desc'] - 정렬 기준
    * @returns {Promise<Object>} 리뷰 목록 및 페이징 정보
    */
   getCounselorReviews: async (counselorId, params = {}) => {
     try {
       // 타임스탬프 추가 (캐시 방지)
       const timestamp = new Date().getTime();
-      const updatedParams = { ...params, _t: timestamp };
+
+      // 정렬 파라미터 변환
+      let sortParam = params.sort || 'createdAt,desc'; // 기본값 설정
+
+      // 'latest', 'rating_high', 'rating_low' 같은 문자열 변환
+      if (sortParam === 'latest') {
+        sortParam = 'createdAt,desc';
+      } else if (sortParam === 'rating_high') {
+        sortParam = 'score,desc';
+      } else if (sortParam === 'rating_low') {
+        sortParam = 'score,asc';
+      }
+
+      const updatedParams = {
+        ...params,
+        sort: sortParam,
+        _t: timestamp,
+      };
 
       const response = await apiClient.get(
         `/channels/counseling/counselors/${counselorId}/reviews`,
