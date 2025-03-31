@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 public class Channel extends BaseTimeEntity {
 
     @Id
-    @Column(name = "channel_id", columnDefinition = "CHAR(36)")
-    private String channelId;
+    @Column(name = "channel_id")
+    private Long channelId;
 
     @Column(name = "channel_name", length = 20, nullable = false)
     private String channelName;
@@ -30,8 +30,8 @@ public class Channel extends BaseTimeEntity {
     @Column(name = "category", nullable = false)
     private int category; // ChannelType을 숫자로 저장 (0: VOICE, 1: COUNSELING)
 
-    @Column(name = "counselor_id", columnDefinition = "CHAR(36)", nullable = true)
-    private String counselorId; // 음성 채널은 null 허용
+    @Column(name = "counselor_id", nullable = true)
+    private Long counselorId; // 음성 채널은 null 허용
 
     @Column(name = "password")
     private String password;
@@ -63,8 +63,8 @@ public class Channel extends BaseTimeEntity {
     }
 
     @Builder
-    public Channel(String channelId, String channelName, int maxPlayer, Long userId,
-                   String counselorId, ChannelType channelType, String password, String description,
+    public Channel(Long channelId, String channelName, int maxPlayer, Long userId,
+                   Long counselorId, ChannelType channelType, String password, String description,
                    Integer status, Integer participantsCount, LocalDateTime scheduledTime) {
         this.channelId = channelId;
         this.channelName = channelName;

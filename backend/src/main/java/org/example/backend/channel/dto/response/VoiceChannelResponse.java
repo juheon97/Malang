@@ -14,10 +14,10 @@ import java.time.LocalDateTime;
 @Builder
 public class VoiceChannelResponse {
 
-    private String channelId;
+    private Long channelId;          // 채널 ID (String에서 Long으로 변경됨)
     private String channelName;
     private int maxPlayer;
-    private boolean hasPassword; // 비밀번호 유무만 표시 (보안)
+    private boolean hasPassword;     // 비밀번호 유무만 표시 (보안)
     private String description;
     private Long creatorId;
     private String creatorNickname;

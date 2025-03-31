@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 public class Counselor {
 
     @Id
-    @Column(name = "counselor_id", columnDefinition = "char(36)")
-    private String id;
+    @Column(name = "counselor_id")
+    private Long id;
 
     @OneToOne
     @JoinColumn(name = "user_id")
@@ -32,7 +32,7 @@ public class Counselor {
     private LocalDateTime birthdate;
 
     @Builder
-    public Counselor(String id, User user, String name, String gender, LocalDateTime birthdate) {
+    public Counselor(Long id, User user, String name, String gender, LocalDateTime birthdate) {
         this.id = id;
         this.user = user;
         this.name = name;
@@ -40,7 +40,7 @@ public class Counselor {
         this.birthdate = birthdate;
     }
 
-    public static Counselor of(String id) {
+    public static Counselor of(Long id) {
         Counselor counselor = new Counselor();
         counselor.id = id;
         return counselor;

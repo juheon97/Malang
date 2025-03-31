@@ -145,8 +145,8 @@ public class AuthService {
         User savedUser = userRepository.save(user);
         logger.info("사용자 정보 저장 완료: {}", savedUser.getEmail());
 
-        // UUID 생성 (상담사 ID)
-        String counselorId = java.util.UUID.randomUUID().toString();
+        // 상담사 ID 생성 - UUID 대신 Long 타입 사용
+        Long counselorId = generateCounselorId();
 
         // 상담사 엔티티 생성
         Counselor counselor = Counselor.builder()
@@ -175,6 +175,21 @@ public class AuthService {
 
         return savedCounselor;
     }
+
+    /**
+     * Long 타입의 상담사 ID 생성 메서드
+     * @return 생성된 상담사 ID
+     */
+    private Long generateCounselorId() {
+        // 기존에 존재하는 상담사 ID 중 최대값 + 1 을 반환
+        Long maxId = counselorRepository.findAll().stream()
+                .map(Counselor::getId)
+                .max(Long::compareTo)
+                .orElse(0L);
+
+        return maxId + 1;
+    }
+
     /**
      * 로그인 처리
      *

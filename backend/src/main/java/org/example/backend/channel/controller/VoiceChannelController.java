@@ -88,7 +88,7 @@ public class VoiceChannelController {
      * @return 채널 정보
      */
     @GetMapping("/{channelId}")
-    public ResponseEntity<?> getVoiceChannel(@PathVariable String channelId) {
+    public ResponseEntity<?> getVoiceChannel(@PathVariable Long channelId) {
         try {
             log.info("음성 채널 조회 요청: channelId={}", channelId);
 
@@ -117,7 +117,7 @@ public class VoiceChannelController {
      */
     @PostMapping("/{channelId}/password-check")
     public ResponseEntity<?> checkChannelPassword(
-            @PathVariable String channelId,
+            @PathVariable Long channelId,
             @RequestBody Map<String, String> requestBody) {
         try {
             String password = requestBody.get("password");
@@ -181,7 +181,7 @@ public class VoiceChannelController {
     }
 
     @DeleteMapping("/{channelId}")
-    public ResponseEntity<?> deleteVoiceChannel(@PathVariable String channelId) {
+    public ResponseEntity<?> deleteVoiceChannel(@PathVariable Long channelId) {
         try {
             log.info("음성 채널 삭제 요청: channelId={}", channelId);
 

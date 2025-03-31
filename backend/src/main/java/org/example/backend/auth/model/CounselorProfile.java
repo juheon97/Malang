@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 public class CounselorProfile {
 
     @Id
-    @Column(name = "counselor_id", columnDefinition = "CHAR(36)")
-    private String id;
+    @Column(name = "counselor_id")
+    private Long id;
 
     @OneToOne
     @JoinColumn(name = "user_id")
@@ -41,7 +41,7 @@ public class CounselorProfile {
     private Integer status;
 
     @Builder
-    public CounselorProfile(String id, User user, String specialty, String years,
+    public CounselorProfile(Long id, User user, String specialty, String years,
                             String certifications, String bio, Double ratingAvg,
                             Integer reviewCount, Integer status) {
         this.id = id;

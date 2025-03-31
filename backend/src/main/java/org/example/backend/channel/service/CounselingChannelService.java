@@ -63,48 +63,18 @@ public class CounselingChannelService {
     }
 
     /**
-     * 순차적 채널 ID 생성
-     *
-     * @param prefix ID 접두사 (C: 상담채널, R: 상담요청)
-     * @return 생성된 순차적 ID
+     * 상담 채널 ID 생성 - Long 타입으로 변경
+     * @return 생성된 채널 ID
      */
-    private String generateSequentialChannelId(String prefix) {
-        // 모든 상담 채널(category=1) 가져오기
-        List<Channel> counselingChannels = channelRepository.findByCategory(1);
+    private Long generateCounselingChannelId() {
+        // 기존 방식(String)에서 Long으로 변경
+        Long maxId = channelRepository.findByCategory(1) // 상담 채널(category=1)
+                .stream()
+                .map(Channel::getChannelId)
+                .max(Long::compareTo)
+                .orElse(10000L); // 상담 채널 ID는 10000부터 시작 (음성 채널과 구분)
 
-        // 채널이 없는 경우 접두사+1 반환
-        if (counselingChannels.isEmpty()) {
-            return prefix + "1";
-        }
-
-        // 해당 접두사로 시작하는 채널 찾기
-        List<Channel> prefixedChannels = counselingChannels.stream()
-                .filter(channel -> channel.getChannelId().startsWith(prefix))
-                .collect(Collectors.toList());
-
-        // 해당 접두사의 채널이 없으면 접두사+1 반환
-        if (prefixedChannels.isEmpty()) {
-            return prefix + "1";
-        }
-
-        // 기존 채널 ID 중 가장 큰 숫자 찾기
-        long maxId = 0;
-        for (Channel channel : prefixedChannels) {
-            try {
-                // 접두사 제거 후 숫자만 추출
-                String idNumber = channel.getChannelId().substring(prefix.length());
-                long id = Long.parseLong(idNumber);
-                if (id > maxId) {
-                    maxId = id;
-                }
-            } catch (NumberFormatException | IndexOutOfBoundsException e) {
-                // 숫자로 변환할 수 없는 ID나 형식이 맞지 않는 ID는 무시
-                continue;
-            }
-        }
-
-        // 최대 ID + 1 반환 (접두사 추가)
-        return prefix + (maxId + 1);
+        return maxId + 1L;
     }
 
     /**
@@ -132,8 +102,8 @@ public class CounselingChannelService {
             throw new IllegalArgumentException("그룹 상담은 최대 3명까지 가능합니다.");
         }
 
-        // 순차적 채널 ID 생성 (C 접두사 사용)
-        String channelId = generateSequentialChannelId("C");
+        // 새로운 채널 ID 생성
+        Long channelId = generateCounselingChannelId();
 
         // 채널 엔티티 생성
         Channel channel = Channel.builder()
@@ -294,7 +264,7 @@ public class CounselingChannelService {
      */
     @Cacheable(value = "counselors", key = "#counselorId")
     @Transactional(readOnly = true)
-    public CounselorDetailResponse getCounselorDetail(String counselorId) {
+    public CounselorDetailResponse getCounselorDetail(Long counselorId) {
         log.info("상담사 상세 정보 조회 요청 (DB에서): counselorId={}", counselorId);
 
         // 상담사 정보 조회
@@ -378,7 +348,7 @@ public class CounselingChannelService {
      * @return 상담사 리뷰 목록
      */
     @Transactional(readOnly = true)
-    public Page<CounselorReviewResponse> getCounselorReviews(String counselorId, Pageable pageable) {
+    public Page<CounselorReviewResponse> getCounselorReviews(Long counselorId, Pageable pageable) {
         // 상담사 존재 확인
         if (!counselorRepository.existsById(counselorId)) {
             throw new IllegalArgumentException("상담사를 찾을 수 없습니다.");
@@ -423,8 +393,8 @@ public class CounselingChannelService {
         // 상담 타입에 따른 최대 인원 설정
         int maxPlayer = "GROUP".equals(request.getCounselingType()) ? 3 : 1;
 
-        // 순차적 채널 ID 생성 (R 접두사 사용 - 상담 요청을 의미)
-        String channelId = generateSequentialChannelId("R");
+        // 새로운 채널 ID 생성
+        Long channelId = generateCounselingChannelId();
 
         // 채널 엔티티 생성
         Channel channel = Channel.builder()
@@ -459,7 +429,7 @@ public class CounselingChannelService {
      * @param counselorId 상담사 ID
      * @return 만족도 비율 (0-100)
      */
-    private double calculateSatisfactionRate(String counselorId) {
+    private double calculateSatisfactionRate(Long counselorId) {
         // 리뷰 평균 점수 계산 (5점 만점)
         Double avgScore = counselingReviewRepository.findAverageScoreByCounselorId(counselorId);
 

@@ -12,7 +12,7 @@ import java.util.Optional;
 /**
  * 상담사 프로필 정보 접근을 위한 Repository 인터페이스
  */
-public interface CounselorProfileRepository extends JpaRepository<CounselorProfile, String> {
+public interface CounselorProfileRepository extends JpaRepository<CounselorProfile, Long> {
 
     /**
      * 사용자 ID로 상담사 프로필 조회
@@ -55,5 +55,5 @@ public interface CounselorProfileRepository extends JpaRepository<CounselorProfi
      * @return 상담사 프로필
      */
     @Override
-    Optional<CounselorProfile> findById(String counselorId);
+    Optional<CounselorProfile> findById(Long counselorId);
 }

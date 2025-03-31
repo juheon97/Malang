@@ -15,7 +15,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class CounselorDetailResponse {
-    private String id;                // 상담사 ID
+    private Long id;                // 상담사 ID (String에서 Long으로 변경됨)
     private String name;              // 상담사 이름
     private String gender;            // 성별
     private LocalDate birthDate;      // 생년월일

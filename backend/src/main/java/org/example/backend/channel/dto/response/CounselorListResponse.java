@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CounselorListResponse {
-    private String id;               // 상담사 ID
+    private Long id;               // 상담사 ID (String에서 Long으로 변경됨)
     private String name;             // 상담사 이름
     private String profileImage;     // 프로필 이미지 URL
     private String title;            // 직함 (예: "심리 상담 전문가")

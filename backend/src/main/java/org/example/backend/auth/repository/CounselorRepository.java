@@ -13,7 +13,7 @@ import java.util.Optional;
 /**
  * 상담사 정보 접근을 위한 Repository 인터페이스
  */
-public interface CounselorRepository extends JpaRepository<Counselor, String> {
+public interface CounselorRepository extends JpaRepository<Counselor, Long> {
 
     /**
      * 사용자로 상담사 조회

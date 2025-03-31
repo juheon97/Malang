@@ -56,7 +56,7 @@ public class CounselingRequestService {
      * @return 대기중인 상담 채널 목록
      */
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> getCounselingRequests(String counselorId) {
+    public List<Map<String, Object>> getCounselingRequests(Long counselorId) {
         // 해당 상담사의 대기중(0) 상태인 상담 채널 목록 조회
         List<Channel> waitingChannels = channelRepository.findByCounselorIdAndStatus(counselorId, 0);
 
@@ -84,8 +84,7 @@ public class CounselingRequestService {
     /**
      * 사용자가 참여 가능한 상담 채널 목록 조회 (상태: 0)
      *
-     * @return
-     * 가능한 상담 채널 목록
+     * @return 참여 가능한 상담 채널 목록
      */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getAvailableCounselingChannels() {
@@ -127,7 +126,7 @@ public class CounselingRequestService {
      * @return 상담 요청 결과
      */
     @Transactional
-    public Map<String, Object> requestCounseling(String channelId, Long userId) {
+    public Map<String, Object> requestCounseling(Long channelId, Long userId) {
         // 채널 존재 확인
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new IllegalArgumentException("채널을 찾을 수 없습니다."));
@@ -166,7 +165,7 @@ public class CounselingRequestService {
      * @return 종료된 채널 정보
      */
     @Transactional
-    public Map<String, Object> endCounseling(String channelId, String counselorId) {
+    public Map<String, Object> endCounseling(Long channelId, Long counselorId) {
         // 채널 존재 확인
         Channel channel = channelRepository.findById(channelId)
                 .orElseThrow(() -> new IllegalArgumentException("채널을 찾을 수 없습니다."));
