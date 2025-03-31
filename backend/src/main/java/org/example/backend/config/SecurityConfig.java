@@ -89,7 +89,10 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "https://j12d110.p.ssafy.io",
                 "https://*.ngrok-free.app",  // 이건 반드시 allowedOriginPatterns 로만 가능
-                "https://backend.takustory.site"
+                "https://backend.takustory.site",
+                "https://sjh.takustory.site",
+                "https://tsw.takustory.site"
+
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList
