@@ -28,9 +28,6 @@ export default defineConfig({
     allowedHosts: ['j12d110.p.ssafy.io'],
   },
   server: {
-    allowedHosts: [
-      'j12d110.p.ssafy.io', // 팀장 노트북 서버 켜져야 작동됨
-      '3c49-59-151-219-8.ngrok-free.app',
-    ],
+    allowedHosts: ['j12d110.p.ssafy.io', '18f4-14-46-141-158.ngrok-free.app'],
   },
 });
