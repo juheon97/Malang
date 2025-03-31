@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class CounselorSignupResponse {
 
     private Long userId;
-    private String counselorId;
+    private Long counselorId;
     private String email;
     private String nickname;
     private String name;

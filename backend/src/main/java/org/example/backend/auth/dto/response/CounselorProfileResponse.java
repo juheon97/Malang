@@ -27,7 +27,7 @@ public class CounselorProfileResponse {
     private String profileUrl;
 
     // Counselor 엔티티 관련 필드
-    private String counselorId;
+    private Long counselorId;
     private String name;
     private String gender;
     private LocalDateTime birthdate;

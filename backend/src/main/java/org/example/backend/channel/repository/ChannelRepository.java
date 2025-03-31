@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface ChannelRepository extends JpaRepository<Channel, String> {
+public interface ChannelRepository extends JpaRepository<Channel, Long> {
 
     // 특정 카테고리(채널 타입)의 모든 채널 조회
     List<Channel> findByCategory(int category);
@@ -23,10 +23,10 @@ public interface ChannelRepository extends JpaRepository<Channel, String> {
     Optional<Channel> findByChannelNameAndUserId(String channelName, Long userId);
 
     // 특정 상담사의 채널 조회 (상담 채널용)
-    List<Channel> findByCounselorId(String counselorId);
+    List<Channel> findByCounselorId(Long counselorId);
 
     // 특정 상담사의 특정 상태 채널 조회 (상담 요청 목록용)
-    List<Channel> findByCounselorIdAndStatus(String counselorId, Integer status);
+    List<Channel> findByCounselorIdAndStatus(Long counselorId, Integer status);
 
     // 특정 사용자의 특정 상태 채널 조회
     List<Channel> findByUserIdAndStatus(Long userId, Integer status);

@@ -92,7 +92,7 @@ public class CounselingRequestController {
      * @return 상담 요청 결과
      */
     @PostMapping("/{channelId}")
-    public ResponseEntity<?> requestCounseling(@PathVariable String channelId) {
+    public ResponseEntity<?> requestCounseling(@PathVariable Long channelId) {
         try {
             Long userId = getCurrentUserId();
 
@@ -120,7 +120,7 @@ public class CounselingRequestController {
      * @return 종료된 상담 정보
      */
     @PostMapping("/{channelId}/end")
-    public ResponseEntity<?> endCounseling(@PathVariable String channelId) {
+    public ResponseEntity<?> endCounseling(@PathVariable Long channelId) {
         try {
             Long userId = getCurrentUserId();
 

@@ -14,12 +14,12 @@ import java.time.LocalDateTime;
 @Builder
 public class CounselingChannelResponse {
 
-    private String channelId;
+    private Long channelId;          // 채널 ID (String에서 Long으로 변경됨)
     private String channelName;
     private int maxPlayer;
-    private String channelType; // "NORMAL" 또는 "GROUP"
+    private String channelType;      // "NORMAL" 또는 "GROUP"
     private String description;
-    private Long counselorId;
+    private Long counselorId;        // 상담사 ID (String에서 Long으로 변경됨)
     private String counselorNickname;
     private LocalDateTime createdAt;
 

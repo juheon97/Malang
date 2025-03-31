@@ -24,8 +24,8 @@ public class CounselingReview {
     @Column(name = "counseling_review_id")
     private Integer counselingReviewId;
 
-    @Column(name = "counselor_id", nullable = false, columnDefinition = "CHAR(36)")
-    private String counselorId;
+    @Column(name = "counselor_id", nullable = false)
+    private Long counselorId;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;

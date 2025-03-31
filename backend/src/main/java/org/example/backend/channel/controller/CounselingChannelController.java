@@ -4,8 +4,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.backend.auth.model.Counselor;
 import org.example.backend.auth.model.Role;
 import org.example.backend.auth.model.User;
+import org.example.backend.auth.repository.CounselorRepository;
 import org.example.backend.auth.repository.UserRepository;
 import org.example.backend.channel.dto.request.CounselingChannelCreateRequest;
 import org.example.backend.channel.dto.request.CounselingRequestDto;
@@ -40,6 +42,7 @@ public class CounselingChannelController {
     private final CounselingChannelService counselingChannelService;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+    private final CounselorRepository counselorRepository;
 
     /**
      * 상담 채널 생성 (상담사만 가능)
@@ -168,7 +171,7 @@ public class CounselingChannelController {
      * @return 상담사 상세 정보 응답
      */
     @GetMapping("/counselors/{counselorId}")
-    public ResponseEntity<?> getCounselorDetail(@PathVariable String counselorId) {
+    public ResponseEntity<?> getCounselorDetail(@PathVariable Long counselorId) {
         log.info("상담사 상세 정보 조회 요청: counselorId={}", counselorId);
 
         try {
@@ -197,7 +200,7 @@ public class CounselingChannelController {
      */
     @GetMapping("/counselors/{counselorId}/reviews")
     public ResponseEntity<?> getCounselorReviews(
-            @PathVariable String counselorId,
+            @PathVariable Long counselorId,
             @PageableDefault(size = 5) Pageable pageable) {
 
         log.info("상담사 리뷰 조회 요청: counselorId={}", counselorId);

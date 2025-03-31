@@ -10,7 +10,7 @@ import org.springframework.context.ApplicationEvent;
 public class CounselorProfileUpdatedEvent extends ApplicationEvent {
 
     private final Long userId;
-    private final String counselorId;
+    private final Long counselorId; // String에서 Long으로 변경
 
     /**
      * 상담사 프로필 업데이트 이벤트 생성
@@ -19,7 +19,7 @@ public class CounselorProfileUpdatedEvent extends ApplicationEvent {
      * @param userId 사용자 ID
      * @param counselorId 상담사 ID
      */
-    public CounselorProfileUpdatedEvent(Object source, Long userId, String counselorId) {
+    public CounselorProfileUpdatedEvent(Object source, Long userId, Long counselorId) {
         super(source);
         this.userId = userId;
         this.counselorId = counselorId;

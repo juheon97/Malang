@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 public class CounselingRequestDto {
 
     @NotBlank(message = "상담사 ID는 필수 입력 항목입니다.")
-    private String counselorId;  // 상담사 ID
+    private Long counselorId;  // 상담사 ID
 
     @NotBlank(message = "상담 유형은 필수 입력 항목입니다.")
     private String counselingType;  // 상담 유형 ("NORMAL" 또는 "GROUP")

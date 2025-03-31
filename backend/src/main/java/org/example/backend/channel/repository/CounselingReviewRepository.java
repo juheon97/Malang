@@ -19,7 +19,7 @@ public interface CounselingReviewRepository extends JpaRepository<CounselingRevi
      * @param pageable 페이징 정보
      * @return 리뷰 목록
      */
-    Page<CounselingReview> findByCounselorId(String counselorId, Pageable pageable);
+    Page<CounselingReview> findByCounselorId(Long counselorId, Pageable pageable);
 
     /**
      * 특정 상담사의 리뷰 수 조회
@@ -27,7 +27,7 @@ public interface CounselingReviewRepository extends JpaRepository<CounselingRevi
      * @param counselorId 상담사 ID
      * @return 리뷰 수
      */
-    long countByCounselorId(String counselorId);
+    long countByCounselorId(Long counselorId);
 
     /**
      * 특정 상담사의 리뷰 평균 점수 조회
@@ -36,5 +36,5 @@ public interface CounselingReviewRepository extends JpaRepository<CounselingRevi
      * @return 평균 점수 (1-5 사이의 값)
      */
     @Query("SELECT AVG(cr.score) FROM CounselingReview cr WHERE cr.counselorId = :counselorId")
-    Double findAverageScoreByCounselorId(@Param("counselorId") String counselorId);
+    Double findAverageScoreByCounselorId(@Param("counselorId") Long counselorId);
 }

@@ -60,7 +60,7 @@ public class ChannelWsService {
         redisTemplate.delete(channelKey);
 
         // 기존 voice 채널 서비스의 삭제 메서드 호출
-        voiceChannelService.deleteVoiceChannel(channelId.toString());
+        voiceChannelService.deleteVoiceChannel(Long.valueOf(channelId.toString()));
     }
 
     /**
