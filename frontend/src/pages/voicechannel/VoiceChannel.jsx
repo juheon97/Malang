@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { MagnifyingGlassIcon as SearchIcon } from '@heroicons/react/24/outline';
-import ChannelList from '../../components/voicechannel/ChannelList';
 import VoiceChannelList from '../../components/voicechannel/VoiceChannelList';
 import voiceChannelApi from '../../api/voiceChannelApi';
 import { useNavigate } from 'react-router-dom';
@@ -175,22 +173,6 @@ const VoiceChannel = () => {
     }
   };
 
-  // // 비밀번호 제출 및 방장 수락 대기 처리
-  // const handlePasswordSubmit = () => {
-  //   // 비밀번호 모달 닫기
-  //   setShowPasswordModal(false);
-  //   setPasswordInput('');
-
-  //   // 방장 수락 대기 모달 표시
-  //   setShowWaitingModal(true);
-
-  //   // 서버에 비밀번호 검증 및 방장에게 요청을 보내는 로직 필요
-  //   console.log(`채널 ${currentChannelId} 비밀번호 제출 후 방장 수락 대기`);
-
-  //   // 여기서 비밀번호 검증 후 성공 시 navigate 호출
-  //   // 예: 비밀번호 검증 성공 시
-  //   // navigate(`/voice-channel-video/${currentChannelId}`);
-  // };
 
   // 대기 취소
   const handleCancelWaiting = () => {
@@ -219,13 +201,6 @@ const VoiceChannel = () => {
     console.log('확장된 채널 ID:', channelId);
     setExpandedChannel(expandedChannel === channelId ? null : channelId);
   };
-
-  // // 접근성 모드 토글
-  // const toggleAccessibleMode = () => {
-  //   console.log('접근성 모드 변경:', !isAccessibleMode);
-  //   setAccessibleMode(!isAccessibleMode);
-  //   setExpandedChannel(null); // 모드 변경 시 확장된 채널 초기화
-  // };
 
   // 새로 고침 버튼 클릭 시
   const handleRefresh = () => {
@@ -287,6 +262,7 @@ const VoiceChannel = () => {
               입장할 수 있습니다. 잠금 표시가 있는 채널은 비밀번호가 필요합니다.
             </p>
           )}
+
          {/* 검색창 */}
          <div className="mb-12 flex justify-left">
             <div className="bg-white p-2 rounded-xl shadow-md w-full max-w-md">
@@ -318,9 +294,7 @@ const VoiceChannel = () => {
                   </button>
                 </form>
               </div>
-              
             </div>
-            
           </div>
 
           {/* 스크린 리더를 위한 검색 결과 알림 영역 */}
@@ -332,23 +306,10 @@ const VoiceChannel = () => {
             ></div>
           )}
 
-        
             <div className="max-w-7xl mx-auto">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-                
-               
                   <div className="relative flex-grow sm:flex-grow-0">
-                   
-                  
                   </div>
-                  {/* <button
-                    onClick={toggleAccessibleMode}
-                    className="px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50"
-                  >
-                    {isAccessibleMode ? '일반 모드' : '접근성 모드'}
-                  </button> */}
-                 
-              
               </div>
 
               {isLoading ? (
@@ -380,7 +341,6 @@ const VoiceChannel = () => {
                 onSubmit={handlePasswordSubmit}
               />
             </div>
-        
         </main>
       </div>
        {/* 모달 컴포넌트 */}
