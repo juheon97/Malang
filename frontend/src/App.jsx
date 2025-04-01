@@ -25,13 +25,13 @@ function App() {
       <AuthProvider>
         <AccessibilityProvider>
           <CounselorProfileProvider>
-          <Layout>
-            <Routes>
-              {/* 공개 라우트 - 인증 필요 없음 */}
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/Signup" element={<Signup />} />
-              <Route path="/community/*" element={<Community />} />
+            <Layout>
+              <Routes>
+                {/* 공개 라우트 - 인증 필요 없음 */}
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/Signup" element={<Signup />} />
+                <Route path="/community/*" element={<Community />} />
                 {/* 보호된 라우트 - 인증 필요 */}
                 <Route
                   path="/mypage"
@@ -49,14 +49,6 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                {/* <Route
-                  path="/counsel-channel"
-                  element={
-                    <ProtectedRoute>
-                      <Counsel />
-                    </ProtectedRoute>
-                  }
-                /> */}
                 <Route path="/counsel-channel" element={<Counsel />} />
                 <Route
                   path="/voice-channel"
@@ -98,16 +90,9 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+
                 <Route
-                  path="/counsel-channel-video"
-                  element={
-                    <ProtectedRoute>
-                      <CounselChannelVideo />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/counsel-channel-video/:channelId"
+                  path="/counsel-channel-video/:counselorCode"
                   element={
                     <ProtectedRoute>
                       <CounselChannelVideo />
