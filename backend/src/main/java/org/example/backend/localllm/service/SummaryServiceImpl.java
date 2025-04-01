@@ -25,7 +25,7 @@ public class SummaryServiceImpl implements SummaryService {
     }
 
     @Override
-    public void summarizeAndSave(SummaryRequest dto) {
+    public void summarizeAndSave(SummaryRequest dto, Long counselorUserId) {
         SummaryResponse summary = llmClient.requestSummary(dto.getMessages());
 
         if (summary.getSummary_topic() == null) {
@@ -34,7 +34,7 @@ public class SummaryServiceImpl implements SummaryService {
 
         Summary entity = Summary.builder()
                 .user(User.of(dto.getUserId()))
-                .counselor(User.of(dto.getCounselorUserId()))
+                .counselor(User.of(counselorUserId))
                 .summaryTopic(summary.getSummary_topic())
                 .symptoms(summary.getSymptoms())
                 .treatment(summary.getTreatment())

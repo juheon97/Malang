@@ -20,7 +20,7 @@ public class SummaryRequest {
     @Schema(example = "1")
     private Long userId;
 
-    @Schema(example = "3")
+    @Schema(example = "2")
     private Long counselorUserId;
 
     @Schema(example = "1")
