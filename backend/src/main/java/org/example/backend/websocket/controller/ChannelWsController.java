@@ -53,7 +53,19 @@ public class ChannelWsController {
             case "declined":
                 logger.info("Counselor declined session request from user {} in channel {}", request.user_id(), channel_id);
                 return new ChannelEventResponse(channel_id, request.user_id(), "page_stay", request.role());
-
+            case "con_leave":
+                logger.info("Counselor leaved session request from user {} in channel {}", request.user_id(), channel_id);
+                return new ChannelEventResponse(channel_id, request.user_id(), "con_leaved", request.role());
+            case "start":
+                logger.info("Counselor started conversation request from user {} in channel {}", request.user_id(), channel_id);
+                return new ChannelEventResponse(channel_id, request.user_id(), "started", request.role());
+            case "end":
+                logger.info("Counselor ended conversation request from user {} in channel {}", request.user_id(), channel_id);
+                return new ChannelEventResponse(channel_id, request.user_id(), "ended", request.role());
+            case "user_leave":
+                logger.info("User leaved counsel session request from user {} in channel {}", request.user_id(), channel_id);
+                channelWsService.counselStatusChange(request.user_id());
+                return new ChannelEventResponse(channel_id, request.user_id(), "user_leaved", request.role());
             default:
                 logger.warn("Unknown channel event: {}", request.event());
                 return new ChannelEventResponse(channel_id, request.user_id(), "unknown", request.role());

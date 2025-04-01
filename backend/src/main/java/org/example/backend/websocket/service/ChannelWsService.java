@@ -2,8 +2,10 @@ package org.example.backend.websocket.service;
 
 
 
+import org.example.backend.auth.controller.CounselorProfileController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.example.backend.channel.service.VoiceChannelService; // 기존 voice 채널 서비스 가정
@@ -17,6 +19,10 @@ public class ChannelWsService {
 
     private final StringRedisTemplate redisTemplate;
     private final VoiceChannelService voiceChannelService; // 기존 서비스 주입
+
+    @Autowired
+    private final CounselorProfileController counselorProfileController;
+
     private static final Logger logger = LoggerFactory.getLogger(ChannelWsService.class);
 
     /**
@@ -50,6 +56,16 @@ public class ChannelWsService {
             deleteEmptyChannel(channelId);
         }
     }
+    public void counselStatusChange(Long userId) {
+        try {
+            counselorProfileController.updateStatusIntoZero();
+            logger.info("Counselor status changed to 0 (busy) for userId={}", userId);
+        } catch (Exception e) {
+            logger.error("Failed to change counselor status: {}", e.getMessage());
+        }
+    }
+
+
 
     /**
      * 비어있는 채널을 삭제합니다.
