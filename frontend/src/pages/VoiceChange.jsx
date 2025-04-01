@@ -1,28 +1,110 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import voiceChangeApi from '../api/voiceChangeApi';
 
 const VoiceChange = () => {
-  const [transcribedText, setTranscribedText] =
-    useState('안녕하세요, 만나서 반갑습니다.');
+  const [transcribedText, setTranscribedText] = useState('안녕하세요, 만나서 반갑습니다.');
   const [isRecording, setIsRecording] = useState(false);
   const [isAccessibleMode, setIsAccessibleMode] = useState(false);
-
-  const startRecording = () => {
-    setIsRecording(true);
-    // 실제 녹음 로직 구현
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [improvedAudioUrl, setImprovedAudioUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 16000, // 16kHz 샘플링 레이트 (STT에 적합)
+          channelCount: 1,   // 모노 채널
+          echoCancellation: true,
+          noiseSuppression: true,
+        } 
+      });
+      
+      // WAV 형식으로 녹음 (대부분의 브라우저에서 지원)
+      mediaRecorderRef.current = new MediaRecorder(stream, {
+        mimeType: 'audio/webm', // 대부분의 브라우저에서 지원하는 형식
+      });
+      
+      audioChunksRef.current = [];
+      
+      mediaRecorderRef.current.addEventListener('dataavailable', (event) => {
+        audioChunksRef.current.push(event.data);
+      });
+      
+      mediaRecorderRef.current.addEventListener('stop', async () => {
+        // 녹음된 오디오를 WAV 형식으로 변환
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        
+        setIsLoading(true);
+        try {
+          // API를 통해 WAV 파일을 텍스트로 변환
+          const result = await voiceChangeApi.convertSpeechToText(audioBlob);
+          
+          console.log('STT 응답:', result); // 응답 로깅
+          
+          // 응답이 빈 객체가 아니고 텍스트가 있는 경우
+          if (result && Object.keys(result).length > 0) {
+            setTranscribedText(result);
+          } else {
+            console.warn('STT 응답이 비어있습니다:', result);
+            setTranscribedText('음성을 인식하지 못했습니다. 다시 시도해주세요.');
+          }
+        } catch (error) {
+          console.error('음성 변환 처리 오류:', error);
+          setTranscribedText('음성 변환 중 오류가 발생했습니다. 다시 시도해주세요.');
+        } finally {
+          setIsLoading(false);
+        }
+      });
+      
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('녹음 시작 오류:', error);
+    }
   };
 
   const stopRecording = () => {
-    setIsRecording(false);
-    // 녹음 중지 로직 구현
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      // 스트림 트랙 중지
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
   };
 
   const regenerateWithVoice = () => {
-    // 음성으로 재생성 로직 구현
+    // 텍스트를 음성으로 변환하는 로직
+    const utterance = new SpeechSynthesisUtterance(transcribedText);
+    utterance.lang = 'ko-KR';
+    window.speechSynthesis.speak(utterance);
   };
 
   const playAudio = () => {
-    // 오디오 재생 로직 구현
+    // 녹음된 오디오 재생
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      audio.play();
+    }
   };
+
+  // 컴포넌트 언마운트 시 리소스 정리
+  useEffect(() => {
+    return () => {
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+      if (improvedAudioUrl) {
+        URL.revokeObjectURL(improvedAudioUrl);
+      }
+    };
+  }, [audioUrl, improvedAudioUrl]);
 
   const pageStyle = {
     backgroundImage: `
@@ -63,9 +145,9 @@ const VoiceChange = () => {
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             className="w-20 h-20 text-[#55BCA4] mb-4"
           >
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -84,6 +166,7 @@ const VoiceChange = () => {
                 : 'bg-[#55BCA4] text-white hover:bg-[#55BCA6]'
             }`}
             onClick={isRecording ? stopRecording : startRecording}
+            disabled={isLoading}
           >
             {isRecording ? '녹음 중지' : '녹음 시작'}
           </button>
@@ -94,10 +177,16 @@ const VoiceChange = () => {
             변환된 텍스트
           </div>
           <div className="bg-[#F8F8F8] rounded-lg p-4 min-h-[100px] shadow-lg text-[#878282] font-semibold">
-            <p>{transcribedText}</p>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-full">
+                <p>변환 중...</p>
+              </div>
+            ) : (
+              <p>{transcribedText}</p>
+            )}
           </div>
           <div
-            className="w-full bg-[#98D5B0] text-white py-3 rounded-xl font-semibold shadow-lg  text-lg flex justify-center items-center"
+            className="w-full bg-[#98D5B0] text-white py-3 rounded-xl font-semibold shadow-lg text-lg flex justify-center items-center cursor-pointer"
             onClick={regenerateWithVoice}
           >
             음성으로 재생하기
@@ -106,6 +195,7 @@ const VoiceChange = () => {
             <button
               className="w-13 h-13 bg-[#55BCA4] rounded-full flex items-center justify-center m-3"
               onClick={playAudio}
+              disabled={!audioUrl || isLoading}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -122,4 +212,5 @@ const VoiceChange = () => {
     </div>
   );
 };
+
 export default VoiceChange;
