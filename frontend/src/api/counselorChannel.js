@@ -8,7 +8,7 @@ const isDevelopment = import.meta.env
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: BASE_URL.endsWith('') ? BASE_URL : `${BASE_URL}`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -161,7 +161,7 @@ const counselorChannel = {
 
       // API 요청 - PUT 메서드로 변경
       const response = await apiClient.put(
-        `/api/counselor/profile/${counselorId}`,
+        `/counselor/profile/${counselorId}`,
         channelData,
       );
 
@@ -571,15 +571,15 @@ const counselorChannel = {
         `상담사(${counselorId}) 상태 업데이트: ${isAvailable ? '가능' : '불가능'}`,
       );
 
-      // API 기본 URL 중복 /api 문제 해결
+      // API 기본 URL 중복  문제 해결
       const API_BASE = import.meta.env.VITE_API_URL;
-      const FIXED_URL = API_BASE.endsWith('/api')
-        ? API_BASE.slice(0, -4) // '/api' 제거
+      const FIXED_URL = API_BASE.endsWith('')
+        ? API_BASE.slice(0, -4) // '' 제거
         : API_BASE;
 
       // API 요청 - PUT 메서드로 상담사 프로필 상태 업데이트
       const response = await apiClient.put(
-        `${FIXED_URL}/api/counselor/profile/${counselorId}`,
+        `${FIXED_URL}/counselor/profile/${counselorId}`,
         { status: statusValue },
       );
 
@@ -618,7 +618,7 @@ const counselorChannel = {
 
       // API 요청 - PUT 메서드로 상담사 프로필 상태 업데이트
       const response = await apiClient.put(
-        `/api/counselor/profile/${counselorId}`,
+        `/counselor/profile/${counselorId}`,
         { status: statusValue },
       );
 

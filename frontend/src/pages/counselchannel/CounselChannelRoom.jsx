@@ -70,7 +70,7 @@ function CounselChannelRoom() {
 
       // 하드코딩된 URL로 API 호출 (환경 변수 사용하지 않음)
       const response = await axios.put(
-        `https://sjh.takustory.site/api/counselor/profile/1`, // 하드코딩된 URL
+        `/api/counselor/profile/1`, // 하드코딩된 URL
         channelData,
         {
           headers: {
@@ -80,9 +80,7 @@ function CounselChannelRoom() {
         },
       );
 
-      console.log(
-        '요청한 URL: https://sjh.takustory.site/api/counselor/profile/1',
-      );
+      console.log('요청한 URL: /api/counselor/profile/1');
       console.log('채널 생성 응답 전체:', response);
       console.log('채널 생성 응답 데이터:', response.data);
 
@@ -130,7 +128,8 @@ function CounselChannelRoom() {
       const channelInfo = {
         ...response.data,
         counselorCode: counselorCode,
-        channelId: counselorCode.toString(), // 채널 ID로도 사용
+        channelId: counselorCode.toString(),
+        channelName: formData.roomName,
         status: 'INACTIVE', // 초기 상태
         isActive: false,
       };
@@ -147,7 +146,7 @@ function CounselChannelRoom() {
       try {
         // 상담사 상태 업데이트 API 호출 - 직접 URL 사용
         await axios.put(
-          `https://sjh.takustory.site/api/counselor/profile/1`,
+          `/api/counselor/profile/1`,
           { status: 0 }, // false는 0 (불가능)
           {
             headers: {

@@ -342,6 +342,7 @@ const useProfileData = currentUser => {
         console.log('프로필 업데이트 요청 URL:', `/api/counselor/profile`);
         console.log('프로필 업데이트 요청 데이터:', requestData);
 
+        console.log('프로필 저장 요청 데이터:', requestData);
         const response = await axios.put(
           `/api/counselor/profile`,
           requestData,
@@ -352,6 +353,7 @@ const useProfileData = currentUser => {
             },
           },
         );
+        console.log('프로필 저장 응답:', response.data);
 
         console.log('프로필 업데이트 응답:', response.data);
 
