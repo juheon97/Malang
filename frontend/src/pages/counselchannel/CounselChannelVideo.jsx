@@ -8,6 +8,7 @@ import useParticipantControls from '../../hooks/useParticipantControls';
 import useChat from '../../hooks/useChat';
 import axios from 'axios';
 import counselorChannel from '../../api/counselorChannel';
+import counselWebSocketService from '../../services/counselwebsocketService';
 
 function CounselChannelVideo() {
   // URL에서 파라미터 가져오기 (counselor_code)
@@ -43,6 +44,7 @@ function CounselChannelVideo() {
     // 디버깅 출력
     console.log('사용자 정보:', userObj);
     console.log('사용자 역할:', userRole);
+    console.log('토큰 존재 여부:', !!token);
 
     // 사용자 정보의 role이 ROLE_COUNSELOR이거나 userRole이 COUNSELOR인 경우
     const isCounselor =
@@ -55,16 +57,55 @@ function CounselChannelVideo() {
     return isCounselor;
   };
 
+  // 웹소켓 상태 확인 함수
+  const logWebSocketStatus = () => {
+    console.log('===== 웹소켓 연결 상태 =====');
+    console.log('URL:', counselWebSocketService.socketURL);
+    console.log('연결 여부:', counselWebSocketService.isConnected);
+    if (counselWebSocketService.stompClient) {
+      console.log('세션 ID:', counselWebSocketService.stompClient.sessionId);
+    } else {
+      console.log('스톰프 클라이언트가 없음');
+    }
+    const subscriptions = Array.from(
+      counselWebSocketService.subscriptions.keys(),
+    );
+    console.log('구독 목록:', subscriptions.length ? subscriptions : '없음');
+    console.log('===========================');
+  };
+
+  // 디버깅 정보 출력을 위한 useEffect
+  useEffect(() => {
+    console.log('===== CounselChannelVideo 마운트 =====');
+    console.log('상담사 코드:', counselorCode);
+    console.log('API URL:', import.meta.env.VITE_API_URL);
+    console.log('웹소켓 URL:', `${import.meta.env.VITE_API_URL}/ws`);
+
+    // 웹소켓 상태 로깅
+    logWebSocketStatus();
+
+    // 5초 후 웹소켓 상태 다시 확인 (비동기 연결 완료 확인)
+    const checkTimeout = setTimeout(() => {
+      console.log('===== 5초 후 웹소켓 상태 =====');
+      logWebSocketStatus();
+    }, 5000);
+
+    return () => {
+      clearTimeout(checkTimeout);
+      console.log('===== CounselChannelVideo 언마운트 =====');
+    };
+  }, [counselorCode]);
+
   // 방 정보 가져오기
   useEffect(() => {
     const fetchChannelInfo = async () => {
       try {
         setIsLoading(true);
+        console.log('방 정보 가져오기 시작');
 
         // 상담사 권한 확인
         const isCounselor = checkIsCounselor();
         setIsHost(isCounselor);
-
         console.log('isHost 설정됨:', isCounselor);
 
         // 세션 스토리지에서 먼저 확인
@@ -72,11 +113,13 @@ function CounselChannelVideo() {
 
         if (storedChannelInfo) {
           const channelData = JSON.parse(storedChannelInfo);
+          console.log('세션 스토리지에서 가져온 채널 정보:', channelData);
 
           // 저장된 counselorCode와 URL 파라미터가 다르면 업데이트
           if (channelData.counselorCode?.toString() !== counselorCode) {
             console.log(
               '저장된 counselorCode와 URL 파라미터 불일치, 업데이트함',
+              `저장된 코드: ${channelData.counselorCode}, URL 코드: ${counselorCode}`,
             );
             channelData.counselorCode = counselorCode;
             sessionStorage.setItem(
@@ -93,7 +136,10 @@ function CounselChannelVideo() {
 
           // 채널 상태 확인 및 세션 시작 여부 설정
           if (channelData.status === 'ACTIVE' || channelData.isActive) {
+            console.log('채널 상태: 활성화됨');
             setIsSessionStarted(true);
+          } else {
+            console.log('채널 상태: 비활성화됨');
           }
 
           setIsLoading(false);
@@ -101,17 +147,26 @@ function CounselChannelVideo() {
         }
 
         // 세션 스토리지에 없으면 API 호출
+        console.log('세션 스토리지에 채널 정보 없음, API 호출');
         const token = sessionStorage.getItem('token');
+        const API_URL = import.meta.env.VITE_API_URL;
+        console.log(
+          'API 호출 URL:',
+          `${API_URL}/channels/counseling/${counselorCode}`,
+        );
+
         try {
           // 기존 엔드포인트 사용
           const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/channels/counseling/${counselorCode}`,
+            `${API_URL}/channels/counseling/${counselorCode}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
             },
           );
+
+          console.log('API 응답 데이터:', response.data);
 
           if (response.data) {
             // counselorCode 설정
@@ -131,13 +186,21 @@ function CounselChannelVideo() {
 
             // 채널 상태 확인 및 세션 시작 여부 설정
             if (response.data.status === 'ACTIVE' || response.data.isActive) {
+              console.log('API 응답 - 채널 상태: 활성화됨');
               setIsSessionStarted(true);
+            } else {
+              console.log('API 응답 - 채널 상태: 비활성화됨');
             }
           }
         } catch (error) {
           console.error('API로 채널 정보 가져오기 실패:', error);
+          console.log('에러 상세:', {
+            status: error.response?.status,
+            message: error.response?.data?.message || error.message,
+          });
 
           // API 호출 실패 시 기본 정보 설정 및 저장
+          console.log('기본 채널 정보 사용');
           const defaultChannelInfo = {
             counselorCode: counselorCode,
             channelName: '상담방',
@@ -188,22 +251,89 @@ function CounselChannelVideo() {
     chatContainerRef,
   } = useChat(currentUserId);
 
-  // 세션 참여
   useEffect(() => {
     if (!hasJoined.current && !isLoading) {
       console.log('OpenVidu 세션 참여, counselor_code:', counselorCode);
+
+      // 웹소켓 연결 확인
+      console.log('세션 참여 전 웹소켓 상태:');
+      logWebSocketStatus();
+
+      // 웹소켓이 연결되어 있지 않으면 연결 시도
+      if (!counselWebSocketService.isConnected) {
+        console.log('웹소켓 연결이 없어 새로 연결 시도');
+
+        // 콜백 함수 정의 - 상담사 모드에서 특별히 처리
+        const handleAccessCallback = message => {
+          console.log('[상담사] 입장 요청 메시지 수신:', message);
+
+          // 상담사인 경우에만 입장 요청을 처리
+          if (isHost) {
+            // role이 USER_ROLE인 경우 (일반 사용자의 입장 요청)
+            if (message.role === 'USER_ROLE' && message.event === 'join_con') {
+              console.log('===== 새로운 입장 요청 =====');
+              console.log('요청자 이름:', message.name);
+              console.log('요청자 생년월일:', message.생년월일);
+              console.log('요청자 ID:', message.user);
+              console.log('채널:', message.channel);
+              console.log('역할:', message.role);
+              console.log('===========================');
+
+              // 여기에서 입장 요청에 대한 UI 처리 (알림 표시 등)를 추가할 수 있음
+              // 예: 알림창 표시
+              const confirmJoin = window.confirm(
+                `${message.name}님(${message.생년월일})이 입장을 요청했습니다. 수락하시겠습니까?`,
+              );
+
+              if (confirmJoin) {
+                // 입장 요청 수락
+                console.log('입장 요청 수락:', message.user);
+                counselWebSocketService.sendAcceptRequest(
+                  counselorCode,
+                  message.user,
+                );
+              } else {
+                // 입장 요청 거절
+                console.log('입장 요청 거절:', message.user);
+                counselWebSocketService.sendDeclineRequest(
+                  counselorCode,
+                  message.user,
+                );
+              }
+            }
+          }
+        };
+
+        const handleChannelCallback = message => {
+          console.log('[상담사] 채널 이벤트 메시지 수신:', message);
+        };
+
+        const handleChatCallback = message => {
+          console.log('[상담사] 채팅 메시지 수신:', message);
+        };
+
+        counselWebSocketService.connect(
+          counselorCode,
+          handleAccessCallback,
+          handleChannelCallback,
+          handleChatCallback,
+        );
+      }
+
       hasJoined.current = true;
       joinSession();
     }
 
     return () => {
+      console.log('세션 종료 시작');
       leaveSession();
     };
-  }, [isLoading, joinSession, leaveSession, counselorCode]);
+  }, [isLoading, joinSession, leaveSession, counselorCode, isHost]);
 
   // 참가자 제어 초기화
   useEffect(() => {
     if (participants && participants.length > 0) {
+      console.log('참가자 목록:', participants);
       initParticipantControls(participants);
     }
   }, [participants, initParticipantControls]);
@@ -215,28 +345,38 @@ function CounselChannelVideo() {
 
   // 토글 함수
   const toggleMic = () => {
+    console.log('마이크 토글:', !isMicOn);
     setIsMicOn(!isMicOn);
     toggleAudio(!isMicOn);
   };
 
   const toggleCamera = () => {
+    console.log('카메라 토글:', !isCameraOn);
     setIsCameraOn(!isCameraOn);
     toggleVideo(!isCameraOn);
   };
 
   const toggleVoiceTranslation = () => {
+    console.log('음성 번역 토글:', !isVoiceTranslationOn);
     setIsVoiceTranslationOn(!isVoiceTranslationOn);
   };
 
   const toggleSignLanguage = () => {
+    console.log('수화 토글:', !isSignLanguageOn);
     setIsSignLanguageOn(!isSignLanguageOn);
   };
 
   // 상담 세션 시작 처리
   const handleStartSession = async () => {
     try {
+      console.log('상담 세션 시작 요청:', counselorCode);
+
       // 채널 상태 업데이트 API 호출 (counselor_code 사용)
-      await counselorChannel.updateChannelStatus(counselorCode, true);
+      const result = await counselorChannel.updateChannelStatus(
+        counselorCode,
+        true,
+      );
+      console.log('상담 세션 시작 응답:', result);
 
       // 상태 업데이트
       setIsSessionStarted(true);
@@ -252,8 +392,14 @@ function CounselChannelVideo() {
   // 상담 세션 종료 처리 함수 수정
   const handleEndSession = async () => {
     try {
+      console.log('상담 세션 종료 요청:', counselorCode);
+
       // 채널 상태 업데이트 API 호출 (counselor_code 사용)
-      await counselorChannel.updateChannelStatus(counselorCode, false);
+      const result = await counselorChannel.updateChannelStatus(
+        counselorCode,
+        false,
+      );
+      console.log('상담 세션 종료 응답:', result);
 
       // 상태 업데이트
       setIsSessionStarted(false);
@@ -266,31 +412,30 @@ function CounselChannelVideo() {
     }
   };
 
-  // 참가자 정보 렌더링
-  const renderParticipantInfo = participant => (
-    <>
-      <div className="absolute bottom-2 left-2 bg-black bg-opacity-30 text-white px-2 py-1 rounded text-xs">
-        {participant.name}
-        {participant.isSelf && ' (나)'}
-      </div>
-    </>
-  );
-
   // 방 나가기 처리 함수
   const handleLeaveChannel = async () => {
     try {
+      console.log('방 나가기 처리 시작, 상담사 여부:', isHost);
+
+      // 웹소켓 상태 로깅
+      logWebSocketStatus();
+
       // OpenVidu 세션 종료
       leaveSession();
+      console.log('OpenVidu 세션 종료됨');
 
       // 상담사인 경우 방 종료 API 호출
       if (isHost) {
+        console.log('상담사 방 종료 API 호출:', counselorCode);
         // counselor_code 사용
-        await counselorChannel.leaveCounselorChannel(counselorCode);
-        console.log('상담방 종료 완료 (상담사)');
+        const result =
+          await counselorChannel.leaveCounselorChannel(counselorCode);
+        console.log('상담방 종료 완료 (상담사):', result);
       } else {
         // 일반 사용자인 경우
-        await counselorChannel.leaveChannel(counselorCode);
-        console.log('상담방 나가기 완료 (내담자)');
+        console.log('내담자 방 나가기 API 호출:', counselorCode);
+        const result = await counselorChannel.leaveChannel(counselorCode);
+        console.log('상담방 나가기 완료 (내담자):', result);
       }
 
       // 리스트 페이지로 이동
@@ -442,7 +587,14 @@ function CounselChannelVideo() {
         <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
           <VideoLayout
             participants={participants}
-            renderParticipantInfo={renderParticipantInfo}
+            renderParticipantInfo={participant => (
+              <>
+                <div className="absolute bottom-2 left-2 bg-black bg-opacity-30 text-white px-2 py-1 rounded text-xs">
+                  {participant.name}
+                  {participant.isSelf && ' (나)'}
+                </div>
+              </>
+            )}
           />
         </div>
 

@@ -167,16 +167,16 @@ const counselorChannel = {
 
       console.log('상담방 생성 원본 응답:', response.data);
 
-      // 응답에서 counselor_code 가져오기
       let counselorCode = null;
-      if (response.data && response.data.counselor_code) {
-        counselorCode = response.data.counselor_code;
-      } else if (response.data && response.data.counselorCode) {
-        counselorCode = response.data.counselorCode;
+      if (
+        response.data &&
+        (response.data.counselor_code || response.data.counselorCode)
+      ) {
+        counselorCode =
+          response.data.counselorCode || response.data.counselor_code;
       } else {
-        // 기본값 10001 사용 (테스트용)
-        counselorCode = 10001;
-        console.warn('응답에서 counselor_code를 찾을 수 없어 기본값 사용');
+        alert('상담사 코드를 찾을 수 없습니다. 다시 로그인해주세요.');
+        throw new Error('counselorCode not found in response');
       }
 
       // 응답 데이터에 counselorCode 추가

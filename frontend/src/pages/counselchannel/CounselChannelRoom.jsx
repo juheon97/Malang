@@ -17,6 +17,7 @@ function CounselChannelRoom() {
   useEffect(() => {
     // 환경 변수 확인
     console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+    console.log('웹소켓 URL:', `${import.meta.env.VITE_API_URL}/ws`);
 
     // 로그인 상태 확인
     const token = sessionStorage.getItem('token');
@@ -46,7 +47,10 @@ function CounselChannelRoom() {
     try {
       // 토큰 확인 강화
       const token = sessionStorage.getItem('token');
-      console.log('현재 토큰:', token);
+      console.log(
+        '현재 토큰:',
+        token ? `${token.substring(0, 15)}...` : 'null',
+      );
 
       // 토큰이 없거나 비어있으면 재로그인 안내
       if (!token || token.trim() === '') {
@@ -67,7 +71,12 @@ function CounselChannelRoom() {
         description: formData.description || '',
       };
 
+      console.log('===== API 요청 정보 =====');
       const API_BASE_URL = import.meta.env.VITE_API_URL;
+      console.log('API 기본 URL:', API_BASE_URL);
+      console.log('요청 엔드포인트:', `${API_BASE_URL}/counselor/profile/1`);
+      console.log('요청 데이터:', channelData);
+      console.log('=========================');
 
       const response = await axios.put(
         `${API_BASE_URL}/counselor/profile/1`,
@@ -81,45 +90,35 @@ function CounselChannelRoom() {
       );
 
       console.log(`요청한 URL: ${API_BASE_URL}/counselor/profile/1`);
-      console.log('채널 생성 응답 전체:', response);
+      console.log('채널 생성 응답 상태:', response.status);
       console.log('채널 생성 응답 데이터:', response.data);
 
-      // 응답에서 counselor_code 추출
+      // PUT 응답 후, 백엔드에서 가공된 counselorCode를 GET API를 통해 받아옴
+      const profileResponse = await axios.get(
+        `${API_BASE_URL}/counselor/profile`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      console.log('프로필 응답 데이터:', profileResponse.data);
+
       let counselorCode = null;
-
-      // 세션 스토리지에서 사용자 정보 가져오기
-      const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
-
-      if (response.data && response.data.counselor_code) {
-        counselorCode = response.data.counselor_code;
-      } else if (response.data && response.data.counselorCode) {
-        counselorCode = response.data.counselorCode;
-      } else if (userObj && userObj.counselorCode) {
-        // 사용자 정보에서 상담사 코드 가져오기
-        counselorCode = userObj.counselorCode;
+      if (
+        profileResponse.data &&
+        (profileResponse.data.counselorCode ||
+          profileResponse.data.counselor_code)
+      ) {
+        counselorCode =
+          profileResponse.data.counselorCode ||
+          profileResponse.data.counselor_code;
       } else {
-        // API 응답이나 사용자 정보에서도 찾을 수 없는 경우
-        console.warn(
-          '응답에서 counselor_code를 찾을 수 없어 현재 로그인한 상담사 ID를 사용합니다',
-        );
-
-        // 현재 상담사의 ID를 사용 (하드코딩된 값 대신)
-        if (userObj && userObj.id) {
-          // API 응답에서 counselorCode가 없는 경우, 상담사 ID + 10000 사용
-          counselorCode = 10000 + parseInt(userObj.id);
-        } else {
-          // 최후의 방법으로 URL에서 파라미터 추출
-          const urlParams = new URLSearchParams(window.location.search);
-          const idFromUrl = urlParams.get('id');
-          if (idFromUrl) {
-            counselorCode = parseInt(idFromUrl);
-          } else {
-            // 아무것도 없는 경우 경고 메시지 표시
-            alert('상담사 코드를 찾을 수 없습니다. 다시 로그인해주세요.');
-            navigate('/login');
-            return;
-          }
-        }
+        alert('상담사 코드를 찾을 수 없습니다. 다시 로그인해주세요.');
+        navigate('/login');
+        return;
       }
 
       console.log('사용할 counselor_code:', counselorCode);
@@ -136,6 +135,10 @@ function CounselChannelRoom() {
       sessionStorage.setItem('currentChannel', JSON.stringify(channelInfo));
 
       // 웹소켓 연결 및 구독 추가
+      console.log('===== 웹소켓 연결 시작 =====');
+      console.log('웹소켓 URL:', `${API_BASE_URL}/ws`);
+      console.log('상담사 코드:', counselorCode);
+
       const handleAccessCallback = message => {
         console.log('웹소켓 입장 요청 메시지 수신:', message);
       };
@@ -152,6 +155,29 @@ function CounselChannelRoom() {
         handleChannelCallback,
         handleChatCallback,
       );
+
+      // setTimeout으로 웹소켓 연결 후 상태를 확인
+      setTimeout(() => {
+        console.log('===== 웹소켓 연결 상태 확인 =====');
+        console.log('연결 여부:', counselWebSocketService.isConnected);
+        console.log(
+          '스톰프 클라이언트 존재 여부:',
+          !!counselWebSocketService.stompClient,
+        );
+        if (counselWebSocketService.stompClient) {
+          console.log(
+            '세션 ID:',
+            counselWebSocketService.stompClient.sessionId,
+          );
+        }
+        console.log(
+          '구독 목록:',
+          Array.from(counselWebSocketService.subscriptions.keys()),
+        );
+        console.log('===============================');
+      }, 1000);
+
+      console.log('===========================');
 
       // counselor_code로 비디오 페이지 이동
       navigate(`/counsel-channel-video/${counselorCode}`);

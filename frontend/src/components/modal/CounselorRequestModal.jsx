@@ -1,3 +1,4 @@
+// CounselorRequestModal.jsx
 import React, { useState, useEffect } from 'react';
 
 const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
@@ -5,11 +6,67 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
   const [birthdate, setBirthdate] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  // counselorCode 상태 추가
+  const [counselorCode, setCounselorCode] = useState(null);
 
-  // 모달이 열릴 때마다 상담사 코드를 콘솔에 출력
+  // 모달이 열릴 때마다 상담사 정보를 콘솔에 출력
   useEffect(() => {
-    if (isOpen && counselor && counselor.counselorCode) {
-      console.log('상담사 코드 확인:', counselor.counselorCode);
+    if (isOpen && counselor) {
+      console.log('===== 상담 요청 모달 디버깅 =====');
+      console.log('1. 전체 상담사 객체:', counselor);
+
+      // counselor가 객체인 경우와 숫자인 경우를 모두 처리
+      let code = null;
+
+      if (typeof counselor === 'object') {
+        // counselor가 객체인 경우 counselorCode 또는 counselor_code 속성 확인
+        console.log('2. 상담사 코드(counselorCode):', counselor.counselorCode);
+        console.log(
+          '3. 상담사 코드(counselor_code):',
+          counselor.counselor_code,
+        );
+        code = counselor.counselorCode || counselor.counselor_code;
+      } else if (typeof counselor === 'number') {
+        // counselor가 숫자인 경우 해당 숫자를 상담사 ID로 간주하고 counselorCode로 변환
+        console.log('2. 상담사 코드(counselorCode): undefined');
+        console.log('3. 상담사 코드(counselor_code): undefined');
+        code = typeof counselor === 'number' ? counselor : null;
+      }
+
+      // 세션 스토리지에 저장된 정보 확인
+      const currentChannel = JSON.parse(
+        sessionStorage.getItem('currentChannel') || '{}',
+      );
+      console.log('4. 세션 스토리지에 저장된 채널 정보:', currentChannel);
+
+      if (currentChannel && currentChannel.counselorCode) {
+        console.log(
+          '5. 세션에 저장된 상담사 코드:',
+          currentChannel.counselorCode,
+        );
+        // 세션 스토리지에 있는 counselorCode를 우선 사용
+        if (!code) {
+          code = currentChannel.counselorCode;
+        }
+      }
+
+      // 최종적으로 사용할 counselorCode 결정 (counselor에서 가져온 코드 우선 사용)
+      const finalCounselorCode = code;
+      setCounselorCode(finalCounselorCode);
+
+      console.log(
+        '6. 현재 입장하려는 방의 counselorCode:',
+        finalCounselorCode || '상담사 코드를 찾을 수 없음',
+      );
+
+      // 상담사 코드가 없는 경우 경고
+      if (!finalCounselorCode) {
+        console.warn(
+          '⚠️ 주의: 상담사 객체에 counselorCode 또는 counselor_code 속성이 없습니다!',
+        );
+      }
+
+      console.log('===============================');
     }
   }, [isOpen, counselor]);
 
@@ -63,8 +120,21 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
       return;
     }
 
-    // 상담사 코드 확인
-    if (!counselor?.counselorCode) {
+    // 상담사 코드 확인 - 여러 출처에서 시도
+    let finalCounselorCode = counselorCode;
+
+    // 코드가 없으면 session storage에서 다시 한번 확인
+    if (!finalCounselorCode) {
+      const currentChannel = JSON.parse(
+        sessionStorage.getItem('currentChannel') || '{}',
+      );
+      finalCounselorCode = currentChannel.counselorCode;
+    }
+
+    console.log('입장 요청 처리 - 사용할 상담사 코드:', finalCounselorCode);
+
+    if (!finalCounselorCode) {
+      console.error('상담사 코드를 찾을 수 없음:', counselor);
       setError('상담사 정보가 올바르지 않습니다.');
       return;
     }
@@ -75,12 +145,16 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
     onSubmit({
       name,
       birthdate,
-      counselor_code: counselor.counselorCode,
+      counselor_code: finalCounselorCode,
     });
 
     setName('');
     setBirthdate('');
   };
+
+  // 상담사 이름 표시 처리
+  const counselorName =
+    typeof counselor === 'object' && counselor.name ? counselor.name : '';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -96,7 +170,7 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
 
         <div className="bg-white rounded-b-md shadow-xl p-5 z-10">
           <h2 className="text-md font-bold text-center mb-3">
-            {counselor?.name ? `${counselor.name}에게 ` : ''}상담 요청
+            {counselorName ? `${counselorName}에게 ` : ''}상담 요청
           </h2>
           <p className="text-center font-bold text-gray-600 text-xs mb-4">
             입력하신 정보는 상담에만 사용됩니다.
@@ -159,7 +233,6 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
 };
 
 export default CounselorRequestModal;
-
 // import React, { useState } from 'react';
 
 // const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
