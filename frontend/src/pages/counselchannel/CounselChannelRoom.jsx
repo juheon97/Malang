@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import counselorChannel from '../../api/counselorChannel';
 import axios from 'axios';
+import counselWebSocketService from '../../services/counselwebsocketService';
 
 function CounselChannelRoom() {
   const navigate = useNavigate();
@@ -66,11 +67,10 @@ function CounselChannelRoom() {
         description: formData.description || '',
       };
 
-      console.log('API 요청 데이터:', channelData);
+      const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-      // 하드코딩된 URL로 API 호출 (환경 변수 사용하지 않음)
       const response = await axios.put(
-        `https://sjh.takustory.site/api/counselor/profile/1`, // 하드코딩된 URL
+        `${API_BASE_URL}/counselor/profile/1`,
         channelData,
         {
           headers: {
@@ -80,9 +80,7 @@ function CounselChannelRoom() {
         },
       );
 
-      console.log(
-        '요청한 URL: https://sjh.takustory.site/api/counselor/profile/1',
-      );
+      console.log(`요청한 URL: ${API_BASE_URL}/counselor/profile/1`);
       console.log('채널 생성 응답 전체:', response);
       console.log('채널 생성 응답 데이터:', response.data);
 
@@ -137,38 +135,23 @@ function CounselChannelRoom() {
       console.log('세션 스토리지에 저장할 채널 정보:', channelInfo);
       sessionStorage.setItem('currentChannel', JSON.stringify(channelInfo));
 
-      // 추가: 상담사 정보를 콘솔에 출력
-      console.log('상담사 정보:', userObj);
-      console.log('상담사 코드 (사용자 정보):', userObj.counselorCode);
-      console.log('상담사 ID (사용자 정보):', userObj.id);
+      // 웹소켓 연결 및 구독 추가
+      const handleAccessCallback = message => {
+        console.log('웹소켓 입장 요청 메시지 수신:', message);
+      };
+      const handleChannelCallback = message => {
+        console.log('웹소켓 채널 이벤트 메시지 수신:', message);
+      };
+      const handleChatCallback = message => {
+        console.log('웹소켓 채팅 메시지 수신:', message);
+      };
 
-      // 상담사 상태를 '상담 불가능'으로 업데이트
-      try {
-        // 상담사 상태 업데이트 API 호출 - 직접 URL 사용
-        await axios.put(
-          `https://sjh.takustory.site/api/counselor/profile/1`,
-          { status: 0 }, // false는 0 (불가능)
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-        console.log('상담사 상태 업데이트: 불가능으로 설정됨');
-
-        // 상태 변경 이벤트 발생
-        const statusChangeEvent = new CustomEvent('counselor:statusChange', {
-          detail: {
-            isAvailable: false,
-            counselorId: 1,
-          },
-        });
-        window.dispatchEvent(statusChangeEvent);
-      } catch (statusError) {
-        console.error('상담사 상태 업데이트 실패:', statusError);
-        // 상태 업데이트 실패해도 계속 진행
-      }
+      counselWebSocketService.connect(
+        counselorCode,
+        handleAccessCallback,
+        handleChannelCallback,
+        handleChatCallback,
+      );
 
       // counselor_code로 비디오 페이지 이동
       navigate(`/counsel-channel-video/${counselorCode}`);

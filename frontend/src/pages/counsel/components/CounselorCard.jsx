@@ -28,12 +28,11 @@ const CounselorCard = ({
 
   // 상담 요청 버튼 클릭 핸들러
   const handleRequestClick = () => {
-    // 상담사 코드를 콘솔에 출력
-    console.log('상담 요청: 상담사 코드:', counselor.counselorCode);
-    console.log('상담사:', counselor.name);
-
-    // 원래의 onRequestClick 함수 호출
-    onRequestClick(counselor);
+    if (!counselor.counselorCode) {
+      console.error('상담사 코드가 없습니다.');
+      return;
+    }
+    onRequestClick(counselor.counselorCode, counselor);
   };
 
   return (

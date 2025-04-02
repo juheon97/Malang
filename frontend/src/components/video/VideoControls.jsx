@@ -24,9 +24,9 @@ const VideoControls = ({
     setLocalSessionStarted(isSessionStarted);
   }, [isSessionStarted]);
 
-  console.log('VideoControls에서 받은 isHost:', isHost);
-  console.log('VideoControls에서 받은 isSessionStarted:', isSessionStarted);
-  console.log('로컬 상태 localSessionStarted:', localSessionStarted);
+  // console.log('VideoControls에서 받은 isHost:', isHost);
+  // console.log('VideoControls에서 받은 isSessionStarted:', isSessionStarted);
+  // console.log('로컬 상태 localSessionStarted:', localSessionStarted);
 
   // 버튼 클릭 핸들러 - 로컬 상태 즉시 업데이트 + 부모 함수 호출
   const handleStartSession = () => {
