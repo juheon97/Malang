@@ -2,6 +2,8 @@ package org.example.backend.websocket.service;
 
 
 
+import io.openvidu.java.client.OpenVidu;
+import io.openvidu.java.client.Session;
 import org.example.backend.auth.controller.CounselorProfileController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,7 @@ public class ChannelWsService {
 
     private final StringRedisTemplate redisTemplate;
     private final VoiceChannelService voiceChannelService; // 기존 서비스 주입
+    private final OpenVidu openvidu;
 
     @Autowired
     private final CounselorProfileController counselorProfileController;
@@ -51,9 +54,22 @@ public class ChannelWsService {
         // 채널에 남은 사용자 수 확인
         Long remainingUsers = redisTemplate.opsForSet().size(channelKey);
 
-        // 사용자가 없으면 채널 삭제
+        // 사용자가 없으면 채널 삭제 및 OpenVidu 세션 정리
         if (remainingUsers != null && remainingUsers == 0) {
             deleteEmptyChannel(channelId);
+
+            // OpenVidu 세션 정리
+            try {
+                // 채널 ID를 세션 ID로 사용한다고 가정
+                String sessionId = channelId.toString();
+                Session session = openvidu.getActiveSession(sessionId);
+                if (session != null) {
+                    session.close();
+                    logger.info("OpenVidu 세션 삭제 완료: {}", sessionId);
+                }
+            } catch (Exception e) {
+                logger.error("OpenVidu 세션 삭제 중 오류 발생: {}", e.getMessage());
+            }
         }
     }
     public void counselStatusChange(Long userId) {
@@ -64,8 +80,6 @@ public class ChannelWsService {
             logger.error("Failed to change counselor status: {}", e.getMessage());
         }
     }
-
-
 
     /**
      * 비어있는 채널을 삭제합니다.
