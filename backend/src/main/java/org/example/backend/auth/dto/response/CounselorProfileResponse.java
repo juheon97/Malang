@@ -42,6 +42,7 @@ public class CounselorProfileResponse {
     private Double ratingAvg;
     private Integer reviewCount;
     private Integer status;
+    private Integer CounselorCode;
 
     /**
      * 엔티티에서 DTO로 변환하는 정적 팩토리 메서드
@@ -65,6 +66,7 @@ public class CounselorProfileResponse {
         response.setGender(counselor.getGender());
         response.setBirthdate(counselor.getBirthdate());
 
+
         // 생년월일 포맷팅 (YYYY-MM-DD 형식)
         if (counselor.getBirthdate() != null) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -86,6 +88,7 @@ public class CounselorProfileResponse {
             response.setRatingAvg(profile.getRatingAvg());
             response.setReviewCount(profile.getReviewCount());
             response.setStatus(profile.getStatus());
+            response.setCounselorCode(profile.getCounselorCode());
         }
 
         return response;

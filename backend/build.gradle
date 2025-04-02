@@ -62,6 +62,9 @@ dependencies {
 
     // json parding 설정
     implementation 'org.json:json:20231013'
+
+    // openVidu
+    implementation 'io.openvidu:openvidu-java-client:2.31.0'
 }
 
 tasks.named('test') {
