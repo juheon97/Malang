@@ -130,7 +130,6 @@ function CounselChannelRoom() {
       const channelInfo = {
         ...response.data,
         counselorCode: counselorCode,
-        channelId: counselorCode.toString(), // 채널 ID로도 사용
         status: 'INACTIVE', // 초기 상태
         isActive: false,
       };

@@ -10,9 +10,9 @@ import axios from 'axios';
 import counselorChannel from '../../api/counselorChannel';
 
 function CounselChannelVideo() {
-  // URL에서 파라미터 가져오기 (channelId로 정의되어 있지만 실제로는 counselor_code)
-  const { channelId } = useParams();
-  console.log('URL 파라미터 (counselor_code):', channelId);
+  // URL에서 파라미터 가져오기 (counselor_code)
+  const { counselorCode } = useParams();
+  console.log('URL 파라미터 (counselor_code):', counselorCode);
 
   // 상태 관리
   const [isMicOn, setIsMicOn] = useState(true);
@@ -74,12 +74,11 @@ function CounselChannelVideo() {
           const channelData = JSON.parse(storedChannelInfo);
 
           // 저장된 counselorCode와 URL 파라미터가 다르면 업데이트
-          if (channelData.counselorCode?.toString() !== channelId) {
+          if (channelData.counselorCode?.toString() !== counselorCode) {
             console.log(
               '저장된 counselorCode와 URL 파라미터 불일치, 업데이트함',
             );
-            channelData.counselorCode = channelId;
-            channelData.channelId = channelId;
+            channelData.counselorCode = counselorCode;
             sessionStorage.setItem(
               'currentChannel',
               JSON.stringify(channelData),
@@ -106,7 +105,7 @@ function CounselChannelVideo() {
         try {
           // 기존 엔드포인트 사용
           const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/channels/counseling/${channelId}`,
+            `${import.meta.env.VITE_API_URL}/channels/counseling/${counselorCode}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -115,9 +114,8 @@ function CounselChannelVideo() {
           );
 
           if (response.data) {
-            // counselorCode와 channelId 설정
-            response.data.counselorCode = channelId;
-            response.data.channelId = channelId;
+            // counselorCode 설정
+            response.data.counselorCode = counselorCode;
 
             // 세션 스토리지에 저장
             sessionStorage.setItem(
@@ -141,8 +139,7 @@ function CounselChannelVideo() {
 
           // API 호출 실패 시 기본 정보 설정 및 저장
           const defaultChannelInfo = {
-            counselorCode: channelId,
-            channelId: channelId,
+            counselorCode: counselorCode,
             channelName: '상담방',
             maxPlayer: 4,
             description: '',
@@ -163,7 +160,7 @@ function CounselChannelVideo() {
     };
 
     fetchChannelInfo();
-  }, [channelId]);
+  }, [counselorCode]);
 
   // 커스텀 훅 사용
   const {
@@ -173,12 +170,7 @@ function CounselChannelVideo() {
     leaveSession,
     toggleAudio,
     toggleVideo,
-  } = useOpenVidu(
-    channelId, // counselor_code를 OpenVidu 세션 이름으로 사용
-    'randomNickname',
-    isMicOn,
-    isCameraOn,
-  );
+  } = useOpenVidu(counselorCode, 'randomNickname', isMicOn, isCameraOn);
 
   const {
     participantControls,
@@ -199,7 +191,7 @@ function CounselChannelVideo() {
   // 세션 참여
   useEffect(() => {
     if (!hasJoined.current && !isLoading) {
-      console.log('OpenVidu 세션 참여, counselor_code:', channelId);
+      console.log('OpenVidu 세션 참여, counselor_code:', counselorCode);
       hasJoined.current = true;
       joinSession();
     }
@@ -207,7 +199,7 @@ function CounselChannelVideo() {
     return () => {
       leaveSession();
     };
-  }, [isLoading, joinSession, leaveSession]);
+  }, [isLoading, joinSession, leaveSession, counselorCode]);
 
   // 참가자 제어 초기화
   useEffect(() => {
@@ -244,7 +236,7 @@ function CounselChannelVideo() {
   const handleStartSession = async () => {
     try {
       // 채널 상태 업데이트 API 호출 (counselor_code 사용)
-      await counselorChannel.updateChannelStatus(channelId, true);
+      await counselorChannel.updateChannelStatus(counselorCode, true);
 
       // 상태 업데이트
       setIsSessionStarted(true);
@@ -261,7 +253,7 @@ function CounselChannelVideo() {
   const handleEndSession = async () => {
     try {
       // 채널 상태 업데이트 API 호출 (counselor_code 사용)
-      await counselorChannel.updateChannelStatus(channelId, false);
+      await counselorChannel.updateChannelStatus(counselorCode, false);
 
       // 상태 업데이트
       setIsSessionStarted(false);
@@ -293,11 +285,11 @@ function CounselChannelVideo() {
       // 상담사인 경우 방 종료 API 호출
       if (isHost) {
         // counselor_code 사용
-        await counselorChannel.leaveCounselorChannel(channelId);
+        await counselorChannel.leaveCounselorChannel(counselorCode);
         console.log('상담방 종료 완료 (상담사)');
       } else {
         // 일반 사용자인 경우
-        await counselorChannel.leaveChannel(channelId);
+        await counselorChannel.leaveChannel(counselorCode);
         console.log('상담방 나가기 완료 (내담자)');
       }
 
@@ -382,7 +374,7 @@ function CounselChannelVideo() {
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          사용 중인 상담사 코드: {channelId}
+          사용 중인 상담사 코드: {counselorCode}
         </div>
       </div>
 
