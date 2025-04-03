@@ -144,7 +144,34 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
         console.log('[웹소켓] 연결 시도...');
         // 웹소켓 콜백 (메시지 수신시 처리)
         const handleWebSocketMessages = message => {
+          // 콘솔에 입장 요청/응답 메시지 출력
+          if (message.event === 'join_con') {
+            if (message.role === 'USER_ROLE') {
+              console.log(
+                '유저 입장 REQUEST (/pub/' + counselorCode + '/access):',
+                {
+                  event: message.event,
+                  name: message.name,
+                  생년월일: message.생년월일,
+                  user: message.user,
+                  channel: message.channel,
+                  role: message.role,
+                },
+              );
+            } else if (message.role === 'COUNSEL_ROLE') {
+              console.log('상담사 RESPONSE:', {
+                event: message.event,
+                name: message.name,
+                생년월일: message.생년월일,
+                user: message.user,
+                channel: message.channel,
+                role: message.role,
+              });
+            }
+          }
+
           console.log('[웹소켓] 메시지 수신:', message);
+
           // 메시지 타입에 따라 처리 (수락/거절 등)
           if (message.event === 'accept_con') {
             alert('상담사가 요청을 수락했습니다. 상담방으로 이동합니다.');

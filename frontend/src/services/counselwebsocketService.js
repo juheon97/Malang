@@ -81,19 +81,23 @@ class CounselWebSocketService {
 
     if (accessCallback) {
       const topic = `/sub/${counselorCode}/access`;
-      console.log(`[웹소켓] 입장 요청 구독: ${topic}`);
+      console.log(`[웹소켓] 입장 요청 구독 시도: ${topic}`);
       const sub = this.stompClient.subscribe(topic, message => {
+        console.log(`[웹소켓] ${topic}에서 메시지 수신:`, message);
         try {
           const parsed = JSON.parse(message.body);
+          console.log(`[웹소켓] 파싱된 메시지:`, parsed);
           accessCallback(parsed);
         } catch (err) {
           console.error('[웹소켓] 메시지 파싱 실패:', err);
         }
       });
       this.subscriptions.set(`access-${counselorCode}`, sub);
+      console.log(`[웹소켓] ${topic} 구독 성공!`);
     }
   }
 
+  // 입장 요청 전송 메서드 추가
   // 입장 요청 전송 메서드 추가
   sendJoinRequest(counselorCode, userData) {
     if (!this.stompClient || !this.isConnected) {

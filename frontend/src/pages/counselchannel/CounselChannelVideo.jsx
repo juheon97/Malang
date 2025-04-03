@@ -251,6 +251,12 @@ function CounselChannelVideo() {
     chatContainerRef,
   } = useChat(currentUserId);
 
+  // CounselChannelVideo.jsx의 웹소켓 연결 및 입장 요청 처리 부분
+
+  // useEffect 내부에서 웹소켓 연결 및 콜백 함수 설정
+  // CounselChannelVideo.jsx의 웹소켓 연결 및 입장 요청 처리 부분
+
+  // useEffect 내부에서 웹소켓 연결 및 콜백 함수 설정
   useEffect(() => {
     if (!hasJoined.current && !isLoading) {
       console.log('OpenVidu 세션 참여, counselor_code:', counselorCode);
@@ -265,7 +271,34 @@ function CounselChannelVideo() {
 
         // 콜백 함수 정의 - 상담사 모드에서 특별히 처리
         const handleAccessCallback = message => {
-          console.log('[웹소켓] 입장 요청 메시지 수신:', message);
+          // 모든 웹소켓 메시지 로깅
+          console.log('[웹소켓] 메시지 수신:', message);
+
+          // 입장 요청/응답 메시지 출력
+          if (message.event === 'join_con') {
+            if (message.role === 'USER_ROLE') {
+              console.log(
+                '유저 입장 REQUEST (/pub/' + counselorCode + '/access):',
+                {
+                  event: message.event,
+                  name: message.name,
+                  생년월일: message.생년월일,
+                  user: message.user,
+                  channel: message.channel,
+                  role: message.role,
+                },
+              );
+            } else if (message.role === 'COUNSEL_ROLE') {
+              console.log('상담사 RESPONSE:', {
+                event: message.event,
+                name: message.name,
+                생년월일: message.생년월일,
+                user: message.user,
+                channel: message.channel,
+                role: message.role,
+              });
+            }
+          }
 
           // 상담사인 경우에만 입장 요청을 처리
           if (isHost) {
@@ -288,18 +321,14 @@ function CounselChannelVideo() {
                 // 입장 요청 수락
                 console.log('입장 요청 수락:', message.user);
 
-                // 상담사 응답 메시지 콘솔에 출력
-                const responseMessage = {
-                  event: 'join_con',
+                // 상담사 응답 메시지 송신
+                counselWebSocketService.sendCounselorResponse(counselorCode, {
                   name: message.name,
                   생년월일: message.생년월일,
                   user: message.user,
-                  channel: message.channel,
-                  role: 'COUNSEL_ROLE',
-                };
-                console.log('상담사 RESPONSE:', responseMessage);
+                });
 
-                // 수락 메시지 전송
+                // 이후 수락 메시지 전송
                 counselWebSocketService.sendAcceptRequest(
                   counselorCode,
                   message.user,
