@@ -21,29 +21,29 @@ public class ChannelAccessWsController {
             @DestinationVariable Long channel_id,
             ChannelAccessEventRequest request) {
 
-        logger.info("Received channel access event: channel_id={}, userId={}, event={}, name={}, role={}",
-                channel_id, request.userId(), request.Event(), request.name(), request.role());
+        logger.info("Received channel access event: channel_id={}, userId={}, event={}, name={}, role={}, birth={}",
+                channel_id, request.user(), request.event(), request.name(), request.role(), request.birth());
 
-        if ("join_con".equals(request.Event())) {
-            logger.info("User {} requested to join counseling session in channel {}", request.userId(), channel_id);
+        if ("join_con".equals(request.event())) {
+            logger.info("User {} requested to join counseling session in channel {}", request.user(), channel_id);
 
             // 요청 정보를 그대로 응답에 포함시키고 role 정보 추가
             return new ChannelAccessEventResponse(
-                    request.Event(),
+                    request.event(),
                     request.name(),
                     request.birth(),
-                    request.userId(),
-                    request.channelId(),
+                    request.user(),
+                    request.channel(),
                     request.role()  // 요청에 맞게 role 설정
             );
         } else {
-            logger.warn("Unknown channel access event: {}", request.Event());
+            logger.warn("Unknown channel access event: {}", request.event());
             return new ChannelAccessEventResponse(
                     "error",
                     request.name(),
                     request.birth(),
-                    request.userId(),
-                    request.channelId(),
+                    request.user(),
+                    request.channel(),
                     "UNKNOWN"
             );
         }

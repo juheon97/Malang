@@ -1,4 +1,4 @@
 package org.example.backend.websocket.dto.response;
 
-public record ChannelAccessEventResponse(String Event, String name, String birth, Long userId, Long channelId, String role) {
+public record ChannelAccessEventResponse(String event, String name, String birth, Long user, Long channel, String role) {
 }
