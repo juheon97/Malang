@@ -218,30 +218,50 @@ function CounselChannelVideo() {
     chatContainerRef,
   } = useChat(currentUserId);
 
-  // 요청 수락 처리
+  // 요청 수락 처리 (업데이트됨)
   const handleAcceptRequest = () => {
     if (requestUserInfo) {
       console.log(
         `[웹소켓] 입장 요청 수락: 사용자 ${requestUserInfo.userId}, 채널 ${counselorCode}`,
       );
-      counselWebSocketService.sendAcceptRequest(
+
+      // 웹소켓으로 수락 메시지 전송
+      const success = counselWebSocketService.sendAcceptRequest(
         counselorCode,
         requestUserInfo.userId,
       );
+
+      if (success) {
+        console.log('[웹소켓] 수락 메시지가 성공적으로 전송되었습니다.');
+      } else {
+        console.error('[웹소켓] 수락 메시지 전송 실패');
+        alert('요청 수락 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      }
+
       setShowRequestAlert(false);
     }
   };
 
-  // 요청 거절 처리
+  // 요청 거절 처리 (업데이트됨)
   const handleDeclineRequest = () => {
     if (requestUserInfo) {
       console.log(
         `[웹소켓] 입장 요청 거절: 사용자 ${requestUserInfo.userId}, 채널 ${counselorCode}`,
       );
-      counselWebSocketService.sendDeclineRequest(
+
+      // 웹소켓으로 거절 메시지 전송
+      const success = counselWebSocketService.sendDeclineRequest(
         counselorCode,
         requestUserInfo.userId,
       );
+
+      if (success) {
+        console.log('[웹소켓] 거절 메시지가 성공적으로 전송되었습니다.');
+      } else {
+        console.error('[웹소켓] 거절 메시지 전송 실패');
+        alert('요청 거절 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      }
+
       setShowRequestAlert(false);
     }
   };
@@ -315,6 +335,15 @@ function CounselChannelVideo() {
               });
             }
           }
+          // 새로운 이벤트 처리: 수락/거절
+          else if (message.event === 'accepted') {
+            console.log('[웹소켓] 상담사 수락 메시지 수신:', message);
+            alert('입장 요청이 수락되었습니다.');
+          } else if (message.event === 'declined') {
+            console.log('[웹소켓] 상담사 거절 메시지 수신:', message);
+            alert('입장 요청이 거절되었습니다. 상담 목록으로 돌아갑니다.');
+            navigate('/counsel-channel');
+          }
 
           // 사용자가 입장 요청을 취소한 경우
           if (message.event === 'cancel_con') {
@@ -326,12 +355,11 @@ function CounselChannelVideo() {
               setShowRequestAlert(false);
             }
           } else if (message.event === 'accept_con') {
-            // 상담사가 요청을 수락한 경우
+            // 상담사가 요청을 수락한 경우 (이전 버전 호환)
             console.log('[웹소켓] 상담사가 입장 요청을 수락했습니다.');
             alert('상담사가 입장 요청을 수락했습니다.');
-            // 이 부분에서 추가 처리가 필요하다면 구현
           } else if (message.event === 'decline_con') {
-            // 상담사가 요청을 거절한 경우
+            // 상담사가 요청을 거절한 경우 (이전 버전 호환)
             console.log('[웹소켓] 상담사가 입장 요청을 거절했습니다.');
             alert(
               '상담사가 입장 요청을 거절했습니다. 상담 목록으로 돌아갑니다.',

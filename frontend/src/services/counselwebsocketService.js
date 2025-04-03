@@ -197,7 +197,12 @@ class CounselWebSocketService {
                 parsed,
               );
             }
+          } else if (parsed.event === 'accepted') {
+            console.log('[웹소켓] 상담사 수락 메시지 수신:', parsed);
+          } else if (parsed.event === 'declined') {
+            console.log('[웹소켓] 상담사 거절 메시지 수신:', parsed);
           }
+
           accessCallback(parsed);
         } catch (err) {
           console.error('[웹소켓] 메시지 파싱 실패:', err);
@@ -282,7 +287,7 @@ class CounselWebSocketService {
     }
   }
 
-  // 상담사가 입장 요청을 수락하는 메서드
+  // 상담사가 입장 요청을 수락하는 메서드 (최종 수정)
   sendAcceptRequest(counselorCode, userId) {
     if (!this.stompClient || !this.isConnected) {
       console.error('[웹소켓] 연결되어 있지 않아 요청을 보낼 수 없습니다.');
@@ -290,19 +295,23 @@ class CounselWebSocketService {
     }
 
     try {
+      // 명세에 정확히 맞게 메시지 구조 수정
       const responseMessage = {
-        event: 'accept_con',
+        event: 'accepted',
         user: userId,
         channel: counselorCode,
+        role: 'ROLE_COUNSELOR',
       };
 
+      // JSON 문자열로 변환하여 로그 출력
+      const messageString = JSON.stringify(responseMessage, null, 2);
       console.log(
-        `[웹소켓] 입장 요청 수락: /pub/${counselorCode}/access`,
-        responseMessage,
+        `[웹소켓] 상담사 수락 메시지 전송: /pub/${counselorCode}\n${messageString}`,
       );
 
+      // /pub/{channel_id} 형식 - 백엔드 명세에 맞게 정확히 설정
       this.stompClient.publish({
-        destination: `/pub/${counselorCode}/access`,
+        destination: `/pub/${counselorCode}`,
         body: JSON.stringify(responseMessage),
       });
 
@@ -313,7 +322,7 @@ class CounselWebSocketService {
     }
   }
 
-  // 상담사가 입장 요청을 거절하는 메서드
+  // 상담사가 입장 요청을 거절하는 메서드 (최종 수정)
   sendDeclineRequest(counselorCode, userId) {
     if (!this.stompClient || !this.isConnected) {
       console.error('[웹소켓] 연결되어 있지 않아 요청을 보낼 수 없습니다.');
@@ -321,19 +330,23 @@ class CounselWebSocketService {
     }
 
     try {
+      // 명세에 정확히 맞게 메시지 구조 수정
       const responseMessage = {
-        event: 'decline_con',
+        event: 'declined',
         user: userId,
         channel: counselorCode,
+        role: 'ROLE_COUNSELOR',
       };
 
+      // JSON 문자열로 변환하여 로그 출력
+      const messageString = JSON.stringify(responseMessage, null, 2);
       console.log(
-        `[웹소켓] 입장 요청 거절: /pub/${counselorCode}/access`,
-        responseMessage,
+        `[웹소켓] 상담사 거절 메시지 전송: /pub/${counselorCode}\n${messageString}`,
       );
 
+      // /pub/{channel_id} 형식 - 백엔드 명세에 맞게 정확히 설정
       this.stompClient.publish({
-        destination: `/pub/${counselorCode}/access`,
+        destination: `/pub/${counselorCode}`,
         body: JSON.stringify(responseMessage),
       });
 

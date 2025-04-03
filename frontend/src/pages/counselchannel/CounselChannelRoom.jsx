@@ -33,12 +33,6 @@ function CounselChannelRoom() {
     console.log('사용자 정보:', user);
     console.log('사용자 역할:', userRole);
     console.log('=======================');
-
-    // 상담사 역할 명시적 설정 (이미 설정되어 있지 않은 경우)
-    if (!userRole || userRole === '') {
-      console.log('상담사 역할 명시적 설정');
-      sessionStorage.setItem('userRole', 'ROLE_COUNSELOR');
-    }
   }, []);
 
   const handleChange = e => {
@@ -64,20 +58,6 @@ function CounselChannelRoom() {
         // 로그인 페이지로 리다이렉트
         navigate('/login');
         return;
-      }
-
-      // 역할 명시적 설정 (상담사 역할)
-      sessionStorage.setItem('userRole', 'ROLE_COUNSELOR');
-
-      // 사용자 정보 가져오기
-      const userStr = sessionStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        // 사용자 정보에도 역할 추가
-        if (!user.role) {
-          user.role = 'ROLE_COUNSELOR';
-          sessionStorage.setItem('user', JSON.stringify(user));
-        }
       }
 
       // 채널 타입은 항상 NORMAL로 설정
@@ -149,7 +129,6 @@ function CounselChannelRoom() {
         counselorCode: counselorCode,
         status: 'INACTIVE', // 초기 상태
         isActive: false,
-        role: 'ROLE_COUNSELOR', // 명시적 역할 설정
       };
 
       console.log('세션 스토리지에 저장할 채널 정보:', channelInfo);
@@ -162,21 +141,7 @@ function CounselChannelRoom() {
 
       const handleAccessCallback = message => {
         console.log('[웹소켓] 입장 요청 메시지 수신:', message);
-
-        // 입장 요청 메시지는 Video 컴포넌트에서 처리되므로 여기서는 로깅만 함
-        if (message.event === 'join_con' && message.role === 'ROLE_USER') {
-          console.log(
-            '[웹소켓] 사용자 입장 요청이 왔지만 Video 컴포넌트에서 처리됩니다.',
-            {
-              name: message.name,
-              birth: message.birth,
-              userId: message.user,
-              channelId: message.channel,
-            },
-          );
-        }
       };
-
       const handleChannelCallback = message => {
         console.log('웹소켓 채널 이벤트 메시지 수신:', message);
       };
