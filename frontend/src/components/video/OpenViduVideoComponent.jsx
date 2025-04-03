@@ -7,36 +7,35 @@ export default function OpenViduVideoComponent({ streamManager, isSelf }) {
     if (streamManager && videoRef.current) {
       console.log('Setting up video element for stream:', streamManager);
       
-      // First clean up any existing video elements
-      try {
-        streamManager.removeAllVideos();
-      } catch (err) {
-        console.log('No videos to remove');
-      }
+      // 비디오 요소가 준비되었는지 확인
+      const setupVideo = () => {
+        try {
+          // 기존 비디오 요소 제거 (정리)
+          streamManager.removeAllVideos();
+          
+          // 비디오 요소 추가
+          streamManager.addVideoElement(videoRef.current);
+          console.log('Video element successfully added to', streamManager);
+        } catch (error) {
+          console.error('Error adding video element:', error);
+        }
+      };
       
-      // Add the video element with a small delay to ensure DOM is ready
-      setTimeout(() => {
-        if (videoRef.current) {
+      // DOM 요소가 준비될 시간을 주기 위해 작은 지연 추가
+      const timeoutId = setTimeout(setupVideo, 100);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        if (streamManager) {
           try {
-            streamManager.addVideoElement(videoRef.current);
-            console.log('Video element successfully added');
-          } catch (error) {
-            console.error('Error adding video element:', error);
+            console.log('Cleaning up video element');
+            streamManager.removeAllVideos();
+          } catch (err) {
+            console.log('Error during cleanup:', err);
           }
         }
-      }, 100);
+      };
     }
-
-    return () => {
-      if (streamManager) {
-        try {
-          console.log('Cleaning up video element');
-          streamManager.removeAllVideos();
-        } catch (err) {
-          console.log('Error during cleanup:', err);
-        }
-      }
-    };
   }, [streamManager]);
 
   return (
@@ -46,7 +45,7 @@ export default function OpenViduVideoComponent({ streamManager, isSelf }) {
         playsInline={true}
         ref={videoRef}
         className="w-full h-full object-cover"
-        muted={isSelf}
+        muted={isSelf} // 자신의 오디오는 뮤트 처리
       />
     </div>
   );

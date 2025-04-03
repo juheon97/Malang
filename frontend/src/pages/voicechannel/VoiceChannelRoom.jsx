@@ -71,32 +71,51 @@ function VoiceChannelRoom() {
     };
     console.log('1. 방생성 버튼 누르고 : 음성채널 생성 데이터:', apiRequestData);
    
+
     try {
-      // 1. 채널 생성
-      const channelResponse =
-        await voiceChannelApi.createChannel(apiRequestData);
-        const channelId = channelResponse.data.channelId;
-        // voicechannelapi가 먼저 호출되고 
-      console.log('3. voiceChannelRoom 채널 생성 성공:', channelResponse.data);
-   
-   // 2. OpenVidu 세션 생성 및 연결 (단일 호출)
-   const connectionSuccess = await createAndJoinSession(channelId);
-
-   if(connectionSuccess) {
-     navigate(`/voice-channel-video/${channelId}`, {
-       state: { 
-         sessionConfig: {
+      // 채널 생성만 시킴
+      const channelResponse = await voiceChannelApi.createChannel(apiRequestData);
+      const { channelId, creatorNickname, channelName } = channelResponse.data;
+      // 화면 이동만 수행 (세션 초기화는 다음 페이지에서)
+    navigate(`/voice-channel-video/${channelId}`, {
+      state: { 
+        sessionConfig: {
           channelId,
-           isHost: true,
-           channelName: formData.roomName // ✅ 채널명 추가 전달
-         }
-       }
-     });
-     console.log('방장, 방 이동 완료: voicechannelroom 완료');
-   }
+          creatorNickname, // 방장 닉네임 전달
+          channelName
+        }
+      }
+    });
 
 
-    } catch (error) {
+    }
+  //   try {
+  //     // 1. 채널 생성
+  //     const channelResponse =
+  //       await voiceChannelApi.createChannel(apiRequestData);
+  //       const channelId = channelResponse.data.channelId;
+  //       // voicechannelapi가 먼저 호출되고 
+  //     console.log('3. voiceChannelRoom 채널 생성 성공:', channelResponse.data);
+   
+  //  // 2. OpenVidu 세션 생성 및 연결 (단일 호출)
+  //  const connectionSuccess = await createAndJoinSession(channelId);
+
+  //  if(connectionSuccess) {
+  //    navigate(`/voice-channel-video/${channelId}`, {
+  //      state: { 
+  //        sessionConfig: {
+  //         channelId,
+  //          isHost: true,
+  //          channelName: formData.roomName // ✅ 채널명 추가 전달
+  //        }
+  //      }
+  //    });
+  //    console.log('방장, 방 이동 완료: voicechannelroom 완료');
+  //  }
+
+
+  //   } 
+  catch (error) {
       console.error('채널 생성 실패:', error);
 
       // 에러 처리

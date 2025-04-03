@@ -21,7 +21,8 @@ function VoiceChannelVideo() {
   const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
   const hasJoined = useRef(false);
   const {state} = useLocation();
-  
+  const creatorNickname = state?.sessionConfig?.creatorNickname;
+const isCreator = currentUser?.username === creatorNickname;
   // Destructure with all the available properties returned by useOpenVidu
   const {  
     createAndJoinSession, 
@@ -110,25 +111,45 @@ function VoiceChannelVideo() {
     if (!hasJoined.current && isAuthenticated && channelId) {
       hasJoined.current = true;
       connectWebSocket();
-      
-      // Initialize video session
-      const isHost = sessionStorage.getItem('isChannelHost') === 'true';
-      console.log('세션 시작:', isHost ? '방장' : '참여자', 'mode');
-      
-      if (isHost) {
-        createAndJoinSession(channelId).then(success => {
-          if (!success) {
-            setConnectionError('비디오 세션 생성에 실패했습니다.');
-          }
-        });
-      } else {
-        joinExistingSession().then(success => {
-          if (!success) {
-            setConnectionError('비디오 세션 참여에 실패했습니다.');
-          }
-        });
+      if (isCreator){
+        console.log('video.jsx에서 방장모드로 고고')
+        createAndJoinSession(channelId)
+        
+      }else{
+        console.log('video.jsx에서 참여자모드로')
+        joinExistingSession();
       }
+
+      // Initialize video session
+      // const isHost = sessionStorage.getItem('isChannelHost') === 'true';
+      // console.log('세션 시작:', isHost ? '방장' : '참여자', 'mode');
+      
+      // if (isHost) {
+      //   createAndJoinSession(channelId).then(success => {
+      //     if (!success) {
+      //       setConnectionError('비디오 세션 생성에 실패했습니다.');
+      //     }
+      //   });
+      // } else {
+      //   joinExistingSession().then(success => {
+      //     if (!success) {
+      //       setConnectionError('비디오 세션 참여에 실패했습니다.');
+      //     }
+      //   });
+      // }
     }
+
+    // if (isAuthenticated && channelId && !window.__SESSION_INITIALIZED__) {
+    //   window.__SESSION_INITIALIZED__ = true;
+      
+    //   if (isCreator) {
+    //     console.log('방장 모드로 세션 생성');
+    //     createAndJoinSession(channelId);
+    //   } else {
+    //     console.log('참가자 모드로 세션 참여');
+    //     joinExistingSession();
+    //   }
+    // }
 
     return () => {
       if (hasJoined.current) {
@@ -139,7 +160,7 @@ function VoiceChannelVideo() {
         hasJoined.current = false;
       }
     };
-  }, [isAuthenticated, channelId, currentUser?.id]);
+  }, [isAuthenticated, channelId, isCreator]);
 
   const handleSendMessage = e => {
     e.preventDefault();
