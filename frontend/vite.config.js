@@ -9,13 +9,6 @@ export default defineConfig({
     allowedHosts: ['j12d110.p.ssafy.io'],
   },
   server: {
-    proxy: {
-      '/api': {
-        target: 'https://j12d110.p.ssafy.io',
-        changeOrigin: true,
-        secure: true,
-      },
-    },
     allowedHosts: ['j12d110.p.ssafy.io', '3c49-59-151-219-8.ngrok-free.app'],
   },
 });

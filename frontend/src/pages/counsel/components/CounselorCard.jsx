@@ -227,7 +227,7 @@ const CounselorCard = ({
             className="w-1/2 mx-auto block text-white py-2 rounded-full font-medium transition duration-200 transform hover:scale-105 mt-auto"
             style={{
               background: isAvailable
-                ? 'linear-gradient(to right,rgb(125, 233, 188),rgb(64, 193, 126))'
+                ? 'linear-gradient(to right,rgb(99, 223, 172),rgb(64, 188, 124))'
                 : 'linear-gradient(to right, #9CA3AF, #6B7280)',
               boxShadow: isAvailable
                 ? '0 4px 6px -1px rgba(8, 151, 110, 0.3), 0 2px 4px -1px rgba(8, 151, 110, 0.1)'

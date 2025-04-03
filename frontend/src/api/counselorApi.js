@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 /**
  * 상담사 프로필 관련 API 서비스
  */
@@ -15,8 +17,8 @@ const counselorApi = {
         throw new Error('인증 토큰이 없습니다.');
       }
 
-      // 프록시를 통해 API 호출 (전체 URL 대신 상대 경로 사용)
-      const response = await axios.get(`/api/counselor/profile`, {
+      // 환경 변수에서 base URL 사용
+      const response = await axios.get(`${BASE_URL}/counselor/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -41,13 +43,17 @@ const counselorApi = {
         throw new Error('인증 토큰이 없습니다.');
       }
 
-      // 프록시를 통해 API 호출
-      const response = await axios.put(`/api/counselor/profile`, profileData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+      // 환경 변수에서 base URL 사용
+      const response = await axios.put(
+        `${BASE_URL}/counselor/profile`,
+        profileData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         },
-      });
+      );
 
       return response.data;
     } catch (error) {
@@ -68,9 +74,9 @@ const counselorApi = {
         throw new Error('인증 토큰이 없습니다.');
       }
 
-      // 프록시를 통해 API 호출
+      // 환경 변수에서 base URL 사용
       const response = await axios.put(
-        `/api/counselor/profile/certification`,
+        `${BASE_URL}/counselor/profile/certification`,
         null,
         {
           headers: {
