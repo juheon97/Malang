@@ -1,47 +1,45 @@
-// hooks/useParticipantControls.js
-import { useState } from 'react';
+// // hooks/useParticipantControls.js
+// import { useState } from 'react';
 
-export default function useParticipantControls(isHost) {
-  const [participantControls, setParticipantControls] = useState({});
+// export default function useParticipantControls(isHost) {
+//   const [participantControls, setParticipantControls] = useState({});
 
-  const toggleParticipantSpeaking = participantId => {
-    if (!isHost) return false;
+//   const toggleParticipantSpeaking = participantId => {
+//     setParticipantControls(prev => ({
+//       ...prev,
+//       [participantId]: {
+//         ...prev[participantId],
+//         canSpeak: !prev[participantId]?.canSpeak,
+//       },
+//     }));
 
-    setParticipantControls(prev => ({
-      ...prev,
-      [participantId]: {
-        ...prev[participantId],
-        canSpeak: !prev[participantId]?.canSpeak,
-      },
-    }));
+//     return !participantControls[participantId]?.canSpeak;
+//   };
 
-    return !participantControls[participantId]?.canSpeak;
-  };
+//   const toggleParticipantControls = participantId => {
+//     setParticipantControls(prev => ({
+//       ...prev,
+//       [participantId]: {
+//         ...prev[participantId],
+//         showControls: !prev[participantId]?.showControls,
+//       },
+//     }));
+//   };
 
-  const toggleParticipantControls = participantId => {
-    setParticipantControls(prev => ({
-      ...prev,
-      [participantId]: {
-        ...prev[participantId],
-        showControls: !prev[participantId]?.showControls,
-      },
-    }));
-  };
+//   const initParticipantControls = participants => {
+//     const initialControls = {};
+//     participants.forEach(p => {
+//       if (!p.isSelf) {
+//         initialControls[p.id] = { showControls: false, canSpeak: p.canSpeak };
+//       }
+//     });
+//     setParticipantControls(initialControls);
+//   };
 
-  const initParticipantControls = participants => {
-    const initialControls = {};
-    participants.forEach(p => {
-      if (!p.isSelf) {
-        initialControls[p.id] = { showControls: false, canSpeak: p.canSpeak };
-      }
-    });
-    setParticipantControls(initialControls);
-  };
-
-  return {
-    participantControls,
-    toggleParticipantSpeaking,
-    toggleParticipantControls,
-    initParticipantControls,
-  };
-}
+//   return {
+//     participantControls,
+//     toggleParticipantSpeaking,
+//     toggleParticipantControls,
+//     initParticipantControls,
+//   };
+// }
