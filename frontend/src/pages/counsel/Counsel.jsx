@@ -4,6 +4,7 @@ import CounselorRequestModal from '../../components/modal/CounselorRequestModal'
 import WaitingModal from '../../components/modal/WaitingModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAccessibility } from '../../contexts/AccessibilityContext';
+import counselWebSocketService from '../../services/counselwebsocketService';
 
 // 커스텀 훅과 컴포넌트 임포트
 import useCounselors from './hooks/useCounselors';
@@ -74,22 +75,60 @@ const Counsel = () => {
     }, 100);
   };
 
-  // 상담 요청 제출 처리
   const handleRequestSubmit = async userInfo => {
     try {
       console.log('상담 요청:', userInfo, '상담사:', selectedCounselor?.name);
-
       // 사용자 요청 정보 저장
       setUserRequestInfo(userInfo);
+
+      // userInfo에서 counselor_code를 문자열로 변환하여 사용
+      const counselorCode = String(userInfo.counselor_code);
+      if (counselorCode) {
+        console.log(`웹소켓 연결 시도: 상담사 코드 ${counselorCode}`);
+
+        // 연결 후 /sub/{counselorCode}/access 주소로 구독이 자동 등록됨
+        const handleAccessCallback = message => {
+          console.log('[웹소켓] 입장 요청 메시지 수신:', message);
+        };
+
+        counselWebSocketService.connect(counselorCode, handleAccessCallback);
+
+        // 연결 후 1초 정도 기다린 후 구독 상태를 확인하고, 성공하면 pub 주소로 join_con 메시지를 전송
+        setTimeout(() => {
+          const subscriptions = Array.from(
+            counselWebSocketService.subscriptions.keys(),
+          );
+          if (subscriptions.includes(`access-${counselorCode}`)) {
+            console.log(`[웹소켓] /sub/${counselorCode}/access 구독 성공!`);
+            // join_con 메시지 전송 (pub 주소로)
+            const publishSuccess = counselWebSocketService.sendJoinRequest(
+              counselorCode,
+              userInfo,
+            );
+            if (publishSuccess) {
+              console.log(
+                `[웹소켓] /pub/${counselorCode}/access로 join_con 메시지 전송 성공`,
+              );
+            } else {
+              console.warn(
+                `[웹소켓] /pub/${counselorCode}/access로 join_con 메시지 전송 실패`,
+              );
+            }
+          } else {
+            console.warn(`[웹소켓] /sub/${counselorCode}/access 구독 실패`);
+          }
+        }, 1000);
+      } else {
+        console.warn(
+          '상담사 코드가 없습니다. 웹소켓 연결을 시도할 수 없습니다.',
+        );
+      }
 
       // 요청 모달 닫고 대기 모달 표시
       setShowRequestModal(false);
       setShowWaitingModal(true);
-
-      // 웹소켓 연결과 같은 비동기 작업은 CounselorRequestModal 컴포넌트에서 처리
     } catch (err) {
       console.error('상담 요청 오류:', err);
-      // 오류 처리
     }
   };
 
