@@ -251,6 +251,7 @@ const isCreator = currentUser?.username === creatorNickname;
             onClick={() => {
               // 방장 여부에 따라 적절한 함수 호출
               const isHost = sessionStorage.getItem('isChannelHost') === 'true';
+              console.log(sessionStorage.data)
               setConnectionError('');
               if (isHost) {
                 createAndJoinSession(channelId);

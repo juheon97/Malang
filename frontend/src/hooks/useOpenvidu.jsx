@@ -324,57 +324,118 @@ const useOpenVidu = (channelId, userName) => {
     }
   };
 
+
   const leaveSession = () => {
     if (session) {
       try {
-        console.log('===== 세션 종료 시작 =====');
-        console.log('세션 ID:', session.sessionId);
-        console.log('현재 참가자 목록:', participants.map(p => ({id: p.id, name: p.name})));
-        
-        // 구독 해제
-        subscribers.forEach(sub => {
-          try {
-            console.log('구독 해제:', sub.stream.connection.connectionId);
-            session.unsubscribe(sub);
-          } catch (e) {
-            console.error('구독 해제 중 오류:', e);
-          }
+        console.log('===== 세션 종료 프로세스 시작 =====', {
+          sessionId: session.sessionId,
+          participantCount: participants.length
         });
-        
-        // 게시 해제
+  
+        // 디버깅용 참가자 정보 로깅
+        const participantDetails = participants.map(p => ({
+          id: p.id, 
+          name: p.name, 
+          isSelf: p.isSelf
+        }));
+        console.log('현재 참가자 목록:', participantDetails);
+  
+        // 안전한 구독 해제 로직
+        if (Array.isArray(subscribers) && subscribers.length > 0) {
+          subscribers.forEach((sub, index) => {
+            try {
+              if (sub && sub.stream && sub.stream.connection) {
+                console.log(`구독 해제 [${index}]:`, sub.stream.connection.connectionId);
+                session.unsubscribe(sub);
+              }
+            } catch (subError) {
+              console.error(`구독 해제 중 오류 [${index}]:`, subError);
+            }
+          });
+        }
+  
+        // 안전한 게시 해제 로직
         if (publisher) {
           try {
-            console.log('게시 해제:', session.connection.connectionId);
+            console.log('게시 해제:', session.connection?.connectionId);
             session.unpublish(publisher);
-          } catch (e) {
-            console.error('게시 해제 중 오류:', e);
+          } catch (publishError) {
+            console.error('게시 해제 중 오류:', publishError);
           }
         }
-        
-        // 세션 연결 해제
+  
+        // 세션 완전 종료
         try {
-          console.log('세션 연결 해제');
+          // OpenVidu 세션 연결 해제
           session.disconnect();
-        } catch (e) {
-          console.error('세션 연결 해제 중 오류:', e);
+          
+          // 상태 초기화
+          setSession(null);
+          setParticipants([]);
+          setSubscribers([]);
+          setPublisher(null);
+        } catch (disconnectError) {
+          console.error('세션 연결 해제 중 오류:', disconnectError);
         }
-        
-        console.log('===== 세션 종료 완료 =====');
-      } catch (e) {
-        console.error('세션 종료 중 오류:', e);
-      }
-      
-      // 상태 초기화
-      setSession(null);
-      setPublisher(null);
-      setSubscribers([]);
-      setParticipants([]);
-      setIsConnected(false);
-      sessionStorage.removeItem('openviduSessionId');
+  
+        console.log('===== 세션 종료 프로세스 완료 =====');
+      } catch (overallError) {
+        console.error('전체 세션 종료 프로세스 중 오류:', overallError);
+      } 
     }
-    OV.current = null;
-    initialized.current = false;
   };
+  // const leaveSession = () => {
+  //   if (session) {
+  //     try {
+  //       console.log('===== 세션 종료 시작 =====');
+  //       console.log('세션 ID:', session.sessionId);
+  //       console.log('현재 참가자 목록:', participants.map(p => ({id: p.id, name: p.name})));
+        
+  //       // 구독 해제
+  //       subscribers.forEach(sub => {
+  //         try {
+  //           console.log('구독 해제:', sub.stream.connection.connectionId);
+  //           session.unsubscribe(sub);
+  //         } catch (e) {
+  //           console.error('구독 해제 중 오류:', e);
+  //         }
+  //       });
+        
+  //       // 게시 해제
+  //       if (publisher) {
+  //         try {
+  //           console.log('게시 해제:', session.connection.connectionId);
+  //           session.unpublish(publisher);
+  //         } catch (e) {
+  //           console.error('게시 해제 중 오류:', e);
+  //         }
+  //       }
+        
+  //       // 세션 연결 해제
+  //       try {
+  //         console.log('세션 연결 해제');
+  //         session.disconnect();
+  //       } catch (e) {
+  //         console.error('세션 연결 해제 중 오류:', e);
+  //       }
+        
+  //       console.log('===== 세션 종료 완료 =====');
+  //     } catch (e) {
+  //       console.error('세션 종료 중 오류:', e);
+  //     }
+      
+  //     // 상태 초기화
+  //     setSession(null);
+  //     setPublisher(null);
+  //     setSubscribers([]);
+  //     setParticipants([]);
+  //     setIsConnected(false);
+  //     sessionStorage.removeItem('openviduSessionId');
+  //   }
+  //   OV.current = null;
+  //   initialized.current = false;
+  // };
 
   const toggleAudio = (value = null) => {
     if (publisher) {
