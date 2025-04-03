@@ -1,13 +1,12 @@
-// CounselorRequestModal.jsx
 import React, { useState, useEffect } from 'react';
+import counselWebSocketService from '../../services/counselwebsocketService';
+import counselorChannel from '../../api/counselorChannel';
 
 const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
   const [name, setName] = useState('');
   const [birthdate, setBirthdate] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  // counselorCode 상태 추가
-  const [counselorCode, setCounselorCode] = useState(null);
 
   // 모달이 열릴 때마다 상담사 정보를 콘솔에 출력
   useEffect(() => {
@@ -15,22 +14,23 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
       console.log('===== 상담 요청 모달 디버깅 =====');
       console.log('1. 전체 상담사 객체:', counselor);
 
-      // counselor가 객체인 경우와 숫자인 경우를 모두 처리
-      let code = null;
-
+      // counselorCode 추출 - 객체이거나 직접 숫자/문자열 값이거나
+      let counselorCode = null;
       if (typeof counselor === 'object') {
-        // counselor가 객체인 경우 counselorCode 또는 counselor_code 속성 확인
+        counselorCode = counselor.counselorCode || counselor.counselor_code;
+        // 객체인 경우 속성 로깅
         console.log('2. 상담사 코드(counselorCode):', counselor.counselorCode);
         console.log(
           '3. 상담사 코드(counselor_code):',
           counselor.counselor_code,
         );
-        code = counselor.counselorCode || counselor.counselor_code;
-      } else if (typeof counselor === 'number') {
-        // counselor가 숫자인 경우 해당 숫자를 상담사 ID로 간주하고 counselorCode로 변환
-        console.log('2. 상담사 코드(counselorCode): undefined');
-        console.log('3. 상담사 코드(counselor_code): undefined');
-        code = typeof counselor === 'number' ? counselor : null;
+      } else if (
+        typeof counselor === 'string' ||
+        typeof counselor === 'number'
+      ) {
+        // counselor 자체가 코드 값인 경우
+        counselorCode = counselor;
+        console.log('2. 상담사 코드(직접 전달된 값):', counselorCode);
       }
 
       // 세션 스토리지에 저장된 정보 확인
@@ -44,25 +44,16 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
           '5. 세션에 저장된 상담사 코드:',
           currentChannel.counselorCode,
         );
-        // 세션 스토리지에 있는 counselorCode를 우선 사용
-        if (!code) {
-          code = currentChannel.counselorCode;
-        }
       }
-
-      // 최종적으로 사용할 counselorCode 결정 (counselor에서 가져온 코드 우선 사용)
-      const finalCounselorCode = code;
-      setCounselorCode(finalCounselorCode);
 
       console.log(
         '6. 현재 입장하려는 방의 counselorCode:',
-        finalCounselorCode || '상담사 코드를 찾을 수 없음',
+        counselorCode || '상담사 코드를 찾을 수 없음',
       );
 
-      // 상담사 코드가 없는 경우 경고
-      if (!finalCounselorCode) {
+      if (!counselorCode) {
         console.warn(
-          '⚠️ 주의: 상담사 객체에 counselorCode 또는 counselor_code 속성이 없습니다!',
+          '⚠️ 주의: 상담사 객체에서 상담사 코드를 찾을 수 없습니다!',
         );
       }
 
@@ -103,7 +94,7 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // 유효성 검사
     if (!name.trim()) {
       setError('이름을 입력해주세요.');
@@ -120,41 +111,151 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
       return;
     }
 
-    // 상담사 코드 확인 - 여러 출처에서 시도
-    let finalCounselorCode = counselorCode;
+    // 상담사 코드 확인 - counselor 자체가 코드값일 수 있음
+    let counselorCode = null;
 
-    // 코드가 없으면 session storage에서 다시 한번 확인
-    if (!finalCounselorCode) {
-      const currentChannel = JSON.parse(
-        sessionStorage.getItem('currentChannel') || '{}',
-      );
-      finalCounselorCode = currentChannel.counselorCode;
+    if (counselor) {
+      if (typeof counselor === 'object') {
+        // 객체인 경우 속성에서 코드 찾기
+        counselorCode = counselor.counselorCode || counselor.counselor_code;
+      } else if (
+        typeof counselor === 'string' ||
+        typeof counselor === 'number'
+      ) {
+        // 직접 코드 값이 전달된 경우
+        counselorCode = counselor;
+      }
     }
 
-    console.log('입장 요청 처리 - 사용할 상담사 코드:', finalCounselorCode);
+    console.log('입장 요청 처리 - 사용할 상담사 코드:', counselorCode);
 
-    if (!finalCounselorCode) {
+    if (!counselorCode) {
       console.error('상담사 코드를 찾을 수 없음:', counselor);
       setError('상담사 정보가 올바르지 않습니다.');
       return;
     }
 
     setError(null);
+    setLoading(true);
 
-    // 상담사 코드를 사용하여 제출
-    onSubmit({
-      name,
-      birthdate,
-      counselor_code: finalCounselorCode,
-    });
+    try {
+      // 웹소켓 연결 확인
+      if (!counselWebSocketService.isConnected) {
+        console.log('[웹소켓] 연결 시도...');
+        // 웹소켓 콜백 (메시지 수신시 처리)
+        const handleWebSocketMessages = message => {
+          console.log('[웹소켓] 메시지 수신:', message);
+          // 메시지 타입에 따라 처리 (수락/거절 등)
+          if (message.event === 'accept_con') {
+            alert('상담사가 요청을 수락했습니다. 상담방으로 이동합니다.');
+            onSubmit &&
+              onSubmit({
+                name,
+                birthdate,
+                counselor_code: counselorCode,
+              });
+            onClose();
+          } else if (message.event === 'decline_con') {
+            alert('상담사가 요청을 거절했습니다.');
+            setLoading(false);
+            onClose();
+          }
+        };
 
-    setName('');
-    setBirthdate('');
+        // 웹소켓 연결
+        counselWebSocketService.connect(counselorCode, handleWebSocketMessages);
+
+        // 웹소켓 연결 대기
+        let retryCount = 0;
+        const waitForConnection = setInterval(() => {
+          if (counselWebSocketService.isConnected) {
+            clearInterval(waitForConnection);
+            // 연결 성공 시 현재 스코프의 counselorCode를 전달
+            sendJoinRequest(counselorCode);
+          } else {
+            retryCount++;
+            if (retryCount > 10) {
+              // 5초 대기 (500ms * 10)
+              clearInterval(waitForConnection);
+              setError('웹소켓 연결에 실패했습니다. 다시 시도해주세요.');
+              setLoading(false);
+            }
+          }
+        }, 500);
+      } else {
+        // 이미 연결되어 있는 경우 바로 요청 전송 (counselorCode 값 전달)
+        sendJoinRequest(counselorCode);
+      }
+    } catch (error) {
+      console.error('입장 요청 처리 오류:', error);
+      setError('요청을 처리하는 중 오류가 발생했습니다.');
+      setLoading(false);
+    }
   };
 
-  // 상담사 이름 표시 처리
-  const counselorName =
-    typeof counselor === 'object' && counselor.name ? counselor.name : '';
+  // 웹소켓을 통해 입장 요청 메시지 전송
+  const sendJoinRequest = counselorCode => {
+    // 코드가 숫자일 경우 문자열로 변환
+    const counselorCodeStr = String(counselorCode);
+
+    console.log(`웹소켓 요청 전송: /pub/${counselorCodeStr}/access`);
+
+    // 웹소켓을 통해 입장 요청 메시지 전송
+    const requestSent = counselWebSocketService.sendJoinRequest(
+      counselorCodeStr,
+      {
+        name,
+        birthdate,
+      },
+    );
+
+    if (requestSent) {
+      console.log('입장 요청이 전송되었습니다. 상담사의 응답을 기다립니다.');
+      // 상담사의 응답(수락/거절)을 기다리는 상태로 설정
+      // 실제 응답 처리는 웹소켓 콜백 handleWebSocketMessages에서 처리됨
+    } else {
+      // 요청 전송 실패 시 API 방식으로 백업 진행
+      console.log('웹소켓 요청 실패, API 호출로 대체합니다.');
+      fallbackToApiRequest(counselorCode);
+    }
+  };
+
+  // 웹소켓 실패 시 API 호출로 대체
+  const fallbackToApiRequest = async counselorCode => {
+    try {
+      // 코드가 숫자일 경우 문자열로 변환
+      const counselorCodeStr = String(counselorCode);
+
+      // API를 통한 입장 요청
+      const response = await counselorChannel.requestChannelEntry(
+        counselorCodeStr,
+        {
+          name,
+          birthdate,
+        },
+      );
+
+      console.log('API 입장 요청 응답:', response);
+
+      // 성공 시 처리
+      if (response && response.success) {
+        onSubmit &&
+          onSubmit({
+            name,
+            birthdate,
+            counselor_code: counselorCodeStr,
+          });
+        onClose();
+      } else {
+        setError('입장 요청을 처리할 수 없습니다.');
+      }
+    } catch (error) {
+      console.error('API 입장 요청 오류:', error);
+      setError('요청 처리 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -170,7 +271,10 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
 
         <div className="bg-white rounded-b-md shadow-xl p-5 z-10">
           <h2 className="text-md font-bold text-center mb-3">
-            {counselorName ? `${counselorName}에게 ` : ''}상담 요청
+            {typeof counselor === 'object' && counselor?.name
+              ? `${counselor.name}에게 `
+              : ''}
+            상담 요청
           </h2>
           <p className="text-center font-bold text-gray-600 text-xs mb-4">
             입력하신 정보는 상담에만 사용됩니다.
@@ -193,6 +297,7 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#4DC0B5] focus:border-[#4DC0B5]"
                 value={name}
                 onChange={e => setName(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -207,6 +312,7 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
                 value={birthdate}
                 onChange={handleBirthdateChange}
                 maxLength={10}
+                disabled={loading}
               />
               <p className="text-xs text-gray-500 mt-1">예시: 1990.01.01</p>
             </div>
@@ -216,14 +322,42 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
             <button
               className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium px-4 py-1.5 rounded-md shadow-sm transition-colors"
               onClick={onClose}
+              disabled={loading}
             >
               취소
             </button>
             <button
-              className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white text-sm font-medium px-6 py-1.5 rounded-md shadow-sm transition-colors"
+              className={`bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white text-sm font-medium px-6 py-1.5 rounded-md shadow-sm transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
               onClick={handleSubmit}
+              disabled={loading}
             >
-              입장 요청
+              {loading ? (
+                <div className="flex items-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  요청 중...
+                </div>
+              ) : (
+                '입장 요청'
+              )}
             </button>
           </div>
         </div>

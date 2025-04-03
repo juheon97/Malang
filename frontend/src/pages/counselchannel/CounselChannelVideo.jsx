@@ -265,7 +265,7 @@ function CounselChannelVideo() {
 
         // 콜백 함수 정의 - 상담사 모드에서 특별히 처리
         const handleAccessCallback = message => {
-          console.log('[상담사] 입장 요청 메시지 수신:', message);
+          console.log('[웹소켓] 입장 요청 메시지 수신:', message);
 
           // 상담사인 경우에만 입장 요청을 처리
           if (isHost) {
@@ -279,8 +279,7 @@ function CounselChannelVideo() {
               console.log('역할:', message.role);
               console.log('===========================');
 
-              // 여기에서 입장 요청에 대한 UI 처리 (알림 표시 등)를 추가할 수 있음
-              // 예: 알림창 표시
+              // 입장 요청에 대한 알림창 표시
               const confirmJoin = window.confirm(
                 `${message.name}님(${message.생년월일})이 입장을 요청했습니다. 수락하시겠습니까?`,
               );
@@ -288,6 +287,19 @@ function CounselChannelVideo() {
               if (confirmJoin) {
                 // 입장 요청 수락
                 console.log('입장 요청 수락:', message.user);
+
+                // 상담사 응답 메시지 콘솔에 출력
+                const responseMessage = {
+                  event: 'join_con',
+                  name: message.name,
+                  생년월일: message.생년월일,
+                  user: message.user,
+                  channel: message.channel,
+                  role: 'COUNSEL_ROLE',
+                };
+                console.log('상담사 RESPONSE:', responseMessage);
+
+                // 수락 메시지 전송
                 counselWebSocketService.sendAcceptRequest(
                   counselorCode,
                   message.user,
@@ -301,23 +313,31 @@ function CounselChannelVideo() {
                 );
               }
             }
+            // 사용자가 입장 요청을 취소한 경우
+            else if (message.event === 'cancel_con') {
+              console.log(
+                `[웹소켓] ${message.name || '사용자'}가 입장 요청을 취소했습니다.`,
+              );
+            }
+          } else {
+            // 일반 사용자인 경우
+            if (message.event === 'accept_con') {
+              // 상담사가 요청을 수락한 경우
+              console.log('[웹소켓] 상담사가 입장 요청을 수락했습니다.');
+              alert('상담사가 입장 요청을 수락했습니다.');
+              // 이 부분에서 추가 처리가 필요하다면 구현
+            } else if (message.event === 'decline_con') {
+              // 상담사가 요청을 거절한 경우
+              console.log('[웹소켓] 상담사가 입장 요청을 거절했습니다.');
+              alert(
+                '상담사가 입장 요청을 거절했습니다. 상담 목록으로 돌아갑니다.',
+              );
+              navigate('/counsel-channel');
+            }
           }
         };
 
-        const handleChannelCallback = message => {
-          console.log('[상담사] 채널 이벤트 메시지 수신:', message);
-        };
-
-        const handleChatCallback = message => {
-          console.log('[상담사] 채팅 메시지 수신:', message);
-        };
-
-        counselWebSocketService.connect(
-          counselorCode,
-          handleAccessCallback,
-          handleChannelCallback,
-          handleChatCallback,
-        );
+        counselWebSocketService.connect(counselorCode, handleAccessCallback);
       }
 
       hasJoined.current = true;
@@ -328,7 +348,7 @@ function CounselChannelVideo() {
       console.log('세션 종료 시작');
       leaveSession();
     };
-  }, [isLoading, joinSession, leaveSession, counselorCode, isHost]);
+  }, [isLoading, joinSession, leaveSession, counselorCode, isHost, navigate]);
 
   // 참가자 제어 초기화
   useEffect(() => {
