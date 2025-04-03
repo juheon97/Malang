@@ -77,28 +77,41 @@ class CounselWebSocketService {
       return;
     }
 
+    // 기존 구독 제거
     this.removeSubscriptions(counselorCode);
 
     if (accessCallback) {
-      const topic = `/sub/${counselorCode}/access`;
+      // 구독 주소 수정: "/sub/{counselor_code}"로 변경
+      const topic = `/sub/${counselorCode}`;
       console.log(`[웹소켓] 입장 요청 구독 시도: ${topic}`);
       const sub = this.stompClient.subscribe(topic, message => {
         console.log(`[웹소켓] ${topic}에서 메시지 수신:`, message);
         try {
           const parsed = JSON.parse(message.body);
-          console.log(`[웹소켓] 파싱된 메시지:`, parsed);
+          // 최신 명세에 따른 키 "Event", "role" 등 사용
+          if (parsed.Event === 'join_con') {
+            if (parsed.role === 'COUNSEL_ROLE') {
+              console.log('[웹소켓] 상담사 RESPONSE:', parsed);
+            } else if (parsed.role === 'USER_ROLE') {
+              console.log('[웹소켓] 유저 입장 REQUEST:', parsed);
+            } else {
+              console.log(
+                '[웹소켓] join_con 이벤트 - 알 수 없는 role:',
+                parsed,
+              );
+            }
+          }
           accessCallback(parsed);
         } catch (err) {
           console.error('[웹소켓] 메시지 파싱 실패:', err);
         }
       });
+      // 기존 subscription 키도 그대로 사용
       this.subscriptions.set(`access-${counselorCode}`, sub);
       console.log(`[웹소켓] ${topic} 구독 성공!`);
     }
   }
 
-  // 입장 요청 전송 메서드 추가
-  // 입장 요청 전송 메서드 추가
   sendJoinRequest(counselorCode, userData) {
     if (!this.stompClient || !this.isConnected) {
       console.error('[웹소켓] 연결되어 있지 않아 요청을 보낼 수 없습니다.');
@@ -106,32 +119,33 @@ class CounselWebSocketService {
     }
 
     try {
-      // sessionStorage에서 사용자 ID 가져오기
+      // sessionStorage에서 사용자 객체를 가져와 userId를 숫자로 변환
       const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
-      const userId = userObj.id || 'unknown';
+      const userId = Number(userObj.id) || 0;
 
-      // counselorCode가 숫자인 경우 문자열로 변환 (API 호출 시 일관성을 위해)
+      // counselorCode를 문자열 및 숫자로 변환
       const counselorCodeStr = String(counselorCode);
+      const channelId = Number(counselorCode) || counselorCodeStr;
 
-      // 요청 메시지 구성
-      const requestMessage = {
+      const orderedMessage = {
         event: 'join_con',
         name: userData.name,
-        생년월일: userData.birthdate,
+        birth: userData.birthdate,
         user: userId,
-        channel: counselorCodeStr,
+        channel: channelId,
         role: 'USER_ROLE',
       };
 
+      // JSON 문자열로 변환하여 로그 출력 (키 순서가 보장됨)
+      const messageString = JSON.stringify(orderedMessage, null, 2);
       console.log(
-        `[웹소켓] 입장 요청 전송: /pub/${counselorCodeStr}/access`,
-        requestMessage,
+        `[웹소켓] 입장 요청 전송: /pub/${counselorCodeStr}/access\n${messageString}`,
       );
 
       // 메시지 전송
       this.stompClient.publish({
         destination: `/pub/${counselorCodeStr}/access`,
-        body: JSON.stringify(requestMessage),
+        body: JSON.stringify(orderedMessage),
       });
 
       return true;

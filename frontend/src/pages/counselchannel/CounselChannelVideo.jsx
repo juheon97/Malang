@@ -19,7 +19,6 @@ function CounselChannelVideo() {
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [currentUserId] = useState('user1');
-  const [isHost, setIsHost] = useState(false);
   const [isVoiceTranslationOn, setIsVoiceTranslationOn] = useState(false);
   const [isSignLanguageOn, setIsSignLanguageOn] = useState(false);
   const [isSessionStarted, setIsSessionStarted] = useState(false); // 상담 세션 시작 여부
@@ -33,29 +32,6 @@ function CounselChannelVideo() {
 
   // 초기화 여부 추적
   const hasJoined = useRef(false);
-
-  // 상담사 권한 확인 함수
-  const checkIsCounselor = () => {
-    // 세션 스토리지에서 정보 가져오기
-    const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
-    const userRole = sessionStorage.getItem('userRole');
-    const token = sessionStorage.getItem('token');
-
-    // 디버깅 출력
-    console.log('사용자 정보:', userObj);
-    console.log('사용자 역할:', userRole);
-    console.log('토큰 존재 여부:', !!token);
-
-    // 사용자 정보의 role이 ROLE_COUNSELOR이거나 userRole이 COUNSELOR인 경우
-    const isCounselor =
-      (userObj && userObj.role === 'ROLE_COUNSELOR') ||
-      userRole === 'COUNSELOR' ||
-      userRole === 'ROLE_COUNSELOR';
-
-    console.log('상담사 여부:', isCounselor);
-
-    return isCounselor;
-  };
 
   // 웹소켓 상태 확인 함수
   const logWebSocketStatus = () => {
@@ -102,11 +78,6 @@ function CounselChannelVideo() {
       try {
         setIsLoading(true);
         console.log('방 정보 가져오기 시작');
-
-        // 상담사 권한 확인
-        const isCounselor = checkIsCounselor();
-        setIsHost(isCounselor);
-        console.log('isHost 설정됨:', isCounselor);
 
         // 세션 스토리지에서 먼저 확인
         const storedChannelInfo = sessionStorage.getItem('currentChannel');
@@ -240,7 +211,7 @@ function CounselChannelVideo() {
     toggleParticipantSpeaking,
     toggleParticipantControls,
     initParticipantControls,
-  } = useParticipantControls(isHost);
+  } = useParticipantControls();
 
   const {
     messages,
@@ -250,11 +221,6 @@ function CounselChannelVideo() {
     handleKeyDown,
     chatContainerRef,
   } = useChat(currentUserId);
-
-  // CounselChannelVideo.jsx의 웹소켓 연결 및 입장 요청 처리 부분
-
-  // useEffect 내부에서 웹소켓 연결 및 콜백 함수 설정
-  // CounselChannelVideo.jsx의 웹소켓 연결 및 입장 요청 처리 부분
 
   // useEffect 내부에서 웹소켓 연결 및 콜백 함수 설정
   useEffect(() => {
@@ -269,7 +235,7 @@ function CounselChannelVideo() {
       if (!counselWebSocketService.isConnected) {
         console.log('웹소켓 연결이 없어 새로 연결 시도');
 
-        // 콜백 함수 정의 - 상담사 모드에서 특별히 처리
+        // 콜백 함수 정의
         const handleAccessCallback = message => {
           // 모든 웹소켓 메시지 로깅
           console.log('[웹소켓] 메시지 수신:', message);
@@ -282,7 +248,7 @@ function CounselChannelVideo() {
                 {
                   event: message.event,
                   name: message.name,
-                  생년월일: message.생년월일,
+                  birth: message.birth,
                   user: message.user,
                   channel: message.channel,
                   role: message.role,
@@ -292,7 +258,7 @@ function CounselChannelVideo() {
               console.log('상담사 RESPONSE:', {
                 event: message.event,
                 name: message.name,
-                생년월일: message.생년월일,
+                birth: message.birth,
                 user: message.user,
                 channel: message.channel,
                 role: message.role,
@@ -300,69 +266,23 @@ function CounselChannelVideo() {
             }
           }
 
-          // 상담사인 경우에만 입장 요청을 처리
-          if (isHost) {
-            // role이 USER_ROLE인 경우 (일반 사용자의 입장 요청)
-            if (message.role === 'USER_ROLE' && message.event === 'join_con') {
-              console.log('===== 새로운 입장 요청 =====');
-              console.log('요청자 이름:', message.name);
-              console.log('요청자 생년월일:', message.생년월일);
-              console.log('요청자 ID:', message.user);
-              console.log('채널:', message.channel);
-              console.log('역할:', message.role);
-              console.log('===========================');
-
-              // 입장 요청에 대한 알림창 표시
-              const confirmJoin = window.confirm(
-                `${message.name}님(${message.생년월일})이 입장을 요청했습니다. 수락하시겠습니까?`,
-              );
-
-              if (confirmJoin) {
-                // 입장 요청 수락
-                console.log('입장 요청 수락:', message.user);
-
-                // 상담사 응답 메시지 송신
-                counselWebSocketService.sendCounselorResponse(counselorCode, {
-                  name: message.name,
-                  생년월일: message.생년월일,
-                  user: message.user,
-                });
-
-                // 이후 수락 메시지 전송
-                counselWebSocketService.sendAcceptRequest(
-                  counselorCode,
-                  message.user,
-                );
-              } else {
-                // 입장 요청 거절
-                console.log('입장 요청 거절:', message.user);
-                counselWebSocketService.sendDeclineRequest(
-                  counselorCode,
-                  message.user,
-                );
-              }
-            }
-            // 사용자가 입장 요청을 취소한 경우
-            else if (message.event === 'cancel_con') {
-              console.log(
-                `[웹소켓] ${message.name || '사용자'}가 입장 요청을 취소했습니다.`,
-              );
-            }
-          } else {
-            // 일반 사용자인 경우
-            if (message.event === 'accept_con') {
-              // 상담사가 요청을 수락한 경우
-              console.log('[웹소켓] 상담사가 입장 요청을 수락했습니다.');
-              alert('상담사가 입장 요청을 수락했습니다.');
-              // 이 부분에서 추가 처리가 필요하다면 구현
-            } else if (message.event === 'decline_con') {
-              // 상담사가 요청을 거절한 경우
-              console.log('[웹소켓] 상담사가 입장 요청을 거절했습니다.');
-              alert(
-                '상담사가 입장 요청을 거절했습니다. 상담 목록으로 돌아갑니다.',
-              );
-              navigate('/counsel-channel');
-            }
+          // 사용자가 입장 요청을 취소한 경우
+          if (message.event === 'cancel_con') {
+            console.log(
+              `[웹소켓] ${message.name || '사용자'}가 입장 요청을 취소했습니다.`,
+            );
+          } else if (message.event === 'accept_con') {
+            // 상담사가 요청을 수락한 경우
+            console.log('[웹소켓] 상담사가 입장 요청을 수락했습니다.');
+            alert('상담사가 입장 요청을 수락했습니다.');
+            // 이 부분에서 추가 처리가 필요하다면 구현
+          } else if (message.event === 'decline_con') {
+            // 상담사가 요청을 거절한 경우
+            console.log('[웹소켓] 상담사가 입장 요청을 거절했습니다.');
+            alert(
+              '상담사가 입장 요청을 거절했습니다. 상담 목록으로 돌아갑니다.',
+            );
+            navigate('/counsel-channel');
           }
         };
 
@@ -377,7 +297,7 @@ function CounselChannelVideo() {
       console.log('세션 종료 시작');
       leaveSession();
     };
-  }, [isLoading, joinSession, leaveSession, counselorCode, isHost, navigate]);
+  }, [isLoading, joinSession, leaveSession, counselorCode, navigate]);
 
   // 참가자 제어 초기화
   useEffect(() => {
@@ -386,11 +306,6 @@ function CounselChannelVideo() {
       initParticipantControls(participants);
     }
   }, [participants, initParticipantControls]);
-
-  // isHost 값이 변경될 때마다 콘솔에 출력
-  useEffect(() => {
-    console.log('현재 isHost 값:', isHost);
-  }, [isHost]);
 
   // 토글 함수
   const toggleMic = () => {
@@ -464,7 +379,7 @@ function CounselChannelVideo() {
   // 방 나가기 처리 함수
   const handleLeaveChannel = async () => {
     try {
-      console.log('방 나가기 처리 시작, 상담사 여부:', isHost);
+      console.log('방 나가기 처리 시작');
 
       // 웹소켓 상태 로깅
       logWebSocketStatus();
@@ -473,19 +388,10 @@ function CounselChannelVideo() {
       leaveSession();
       console.log('OpenVidu 세션 종료됨');
 
-      // 상담사인 경우 방 종료 API 호출
-      if (isHost) {
-        console.log('상담사 방 종료 API 호출:', counselorCode);
-        // counselor_code 사용
-        const result =
-          await counselorChannel.leaveCounselorChannel(counselorCode);
-        console.log('상담방 종료 완료 (상담사):', result);
-      } else {
-        // 일반 사용자인 경우
-        console.log('내담자 방 나가기 API 호출:', counselorCode);
-        const result = await counselorChannel.leaveChannel(counselorCode);
-        console.log('상담방 나가기 완료 (내담자):', result);
-      }
+      // 방 나가기 API 호출 - 일반 사용자 방식으로 통일
+      console.log('방 나가기 API 호출:', counselorCode);
+      const result = await counselorChannel.leaveChannel(counselorCode);
+      console.log('상담방 나가기 완료:', result);
 
       // 리스트 페이지로 이동
       navigate('/counsel-channel');
@@ -529,26 +435,6 @@ function CounselChannelVideo() {
         </div>
         <div className="text-sm text-gray-500">
           최대 인원: {roomInfo.maxParticipants}명
-        </div>
-      </div>
-
-      {/* 상담사 상태 표시 */}
-      <div className="mx-4 mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between text-sm">
-        <div className="flex items-center text-blue-600">
-          <svg
-            className="h-5 w-5 mr-2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          {isHost ? '상담사 모드' : '내담자 모드'}
         </div>
       </div>
 
@@ -673,7 +559,6 @@ function CounselChannelVideo() {
         onLeaveChannel={handleLeaveChannel}
         onStartSession={handleStartSession}
         onEndSession={handleEndSession}
-        isHost={isHost}
         isSessionStarted={isSessionStarted}
       />
     </div>

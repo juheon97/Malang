@@ -140,7 +140,7 @@ function CounselChannelRoom() {
       console.log('상담사 코드:', counselorCode);
 
       const handleAccessCallback = message => {
-        console.log('웹소켓 입장 요청 메시지 수신:', message);
+        console.log('[웹소켓] 입장 요청 메시지 수신:', message);
       };
       const handleChannelCallback = message => {
         console.log('웹소켓 채널 이벤트 메시지 수신:', message);

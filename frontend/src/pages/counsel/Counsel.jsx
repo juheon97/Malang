@@ -99,7 +99,7 @@ const Counsel = () => {
             counselWebSocketService.subscriptions.keys(),
           );
           if (subscriptions.includes(`access-${counselorCode}`)) {
-            console.log(`[웹소켓] /sub/${counselorCode}/access 구독 성공!`);
+            console.log(`[웹소켓] /sub/${counselorCode} 구독 성공!`);
             // join_con 메시지 전송 (pub 주소로)
             const publishSuccess = counselWebSocketService.sendJoinRequest(
               counselorCode,

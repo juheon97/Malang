@@ -8,56 +8,45 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // 모달이 열릴 때마다 상담사 정보를 콘솔에 출력
   useEffect(() => {
-    if (isOpen && counselor) {
+    if (isOpen) {
       console.log('===== 상담 요청 모달 디버깅 =====');
       console.log('1. 전체 상담사 객체:', counselor);
-
-      // counselorCode 추출 - 객체이거나 직접 숫자/문자열 값이거나
       let counselorCode = null;
       if (typeof counselor === 'object') {
         counselorCode = counselor.counselorCode || counselor.counselor_code;
-        // 객체인 경우 속성 로깅
-        console.log('2. 상담사 코드(counselorCode):', counselor.counselorCode);
-        console.log(
-          '3. 상담사 코드(counselor_code):',
-          counselor.counselor_code,
-        );
+        console.log('2. 상담사 코드(직접 전달된 값):', counselorCode);
       } else if (
         typeof counselor === 'string' ||
         typeof counselor === 'number'
       ) {
-        // counselor 자체가 코드 값인 경우
         counselorCode = counselor;
         console.log('2. 상담사 코드(직접 전달된 값):', counselorCode);
       }
-
-      // 세션 스토리지에 저장된 정보 확인
-      const currentChannel = JSON.parse(
+      const storedChannel = JSON.parse(
         sessionStorage.getItem('currentChannel') || '{}',
       );
-      console.log('4. 세션 스토리지에 저장된 채널 정보:', currentChannel);
-
-      if (currentChannel && currentChannel.counselorCode) {
-        console.log(
-          '5. 세션에 저장된 상담사 코드:',
-          currentChannel.counselorCode,
-        );
-      }
-
-      console.log(
-        '6. 현재 입장하려는 방의 counselorCode:',
-        counselorCode || '상담사 코드를 찾을 수 없음',
-      );
-
-      if (!counselorCode) {
-        console.warn(
-          '⚠️ 주의: 상담사 객체에서 상담사 코드를 찾을 수 없습니다!',
-        );
-      }
-
+      console.log('4. 세션 스토리지에 저장된 채널 정보:', storedChannel);
+      console.log('5. 세션에 저장된 상담사 코드:', storedChannel.counselorCode);
+      console.log('6. 현재 입장하려는 방의 counselorCode:', counselorCode);
       console.log('===============================');
+
+      // 만약 세션 스토리지에 저장된 상담사 코드와 전달된 코드가 다르면 업데이트
+      if (
+        storedChannel &&
+        storedChannel.counselorCode &&
+        storedChannel.counselorCode.toString() !== counselorCode.toString()
+      ) {
+        const updatedChannel = {
+          ...storedChannel,
+          counselorCode: counselorCode,
+        };
+        sessionStorage.setItem(
+          'currentChannel',
+          JSON.stringify(updatedChannel),
+        );
+        console.log('세션 스토리지가 업데이트되었습니다:', updatedChannel);
+      }
     }
   }, [isOpen, counselor]);
 
