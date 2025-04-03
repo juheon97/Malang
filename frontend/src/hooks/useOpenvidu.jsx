@@ -214,8 +214,8 @@ const useOpenVidu = (channelId, userName) => {
       const sessionId = await openviduApi.createSession(channelId);
       const token = await openviduApi.getToken(stringChannelId);
       
-      const userName = sessionStorage.getItem('userName') || '방장';
-      
+      const currentUser = JSON.parse(sessionStorage.getItem('user')) || {};
+      const userName = currentUser.username || currentUser.nickname || '사용자';
       await mySession.connect(token, { 
         clientData: JSON.stringify({ userName, isHost: true })
       });
@@ -258,7 +258,7 @@ const useOpenVidu = (channelId, userName) => {
     initialized.current = true;
     setIsConnecting(true);
     setError(null);
-    // 참가자 목록은 초기화하지 않고 현재 참가자만 추가
+    // 참가자 목록은 초기화하지 않고 현재 참가자만 추가 =>
     // setParticipants([]); - 이 부분 제거
 
     try {
@@ -270,8 +270,10 @@ const useOpenVidu = (channelId, userName) => {
       setSession(mySession);
 
       const token = await openviduApi.getToken(channelId);
-      
-      const userName = sessionStorage.getItem('userName') || '참가자';
+
+      const currentUser = JSON.parse(sessionStorage.getItem('user')) || {};
+      const userName = currentUser.username || currentUser.nickname || '참가자';
+     
       
       await mySession.connect(token, { 
         clientData: JSON.stringify({ userName, isHost: false })
