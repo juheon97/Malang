@@ -112,7 +112,7 @@ const VideoControls = ({
             <span className="mr-2">음성 번역</span>
             <span
               className={
-                isVoiceTranslationOn ? 'text-green-500' : 'text-red-400'
+                isVoiceTranslationOn ? 'text-red-400' : 'text-green-500'
               }
             >
               {isVoiceTranslationOn ? '중단' : '시작'}
@@ -126,7 +126,7 @@ const VideoControls = ({
           >
             <span className="mr-2">수화 번역</span>
             <span
-              className={isSignLanguageOn ? 'text-green-500' : 'text-red-400'}
+              className={isSignLanguageOn ? 'text-red-400' : 'text-green-500'}
             >
               {isSignLanguageOn ? '중단' : '시작'}
             </span>

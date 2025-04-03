@@ -120,37 +120,6 @@ const isCreator = currentUser?.username === creatorNickname;
         joinExistingSession();
       }
 
-      // Initialize video session
-      // const isHost = sessionStorage.getItem('isChannelHost') === 'true';
-      // console.log('세션 시작:', isHost ? '방장' : '참여자', 'mode');
-      
-      // if (isHost) {
-      //   createAndJoinSession(channelId).then(success => {
-      //     if (!success) {
-      //       setConnectionError('비디오 세션 생성에 실패했습니다.');
-      //     }
-      //   });
-      // } else {
-      //   joinExistingSession().then(success => {
-      //     if (!success) {
-      //       setConnectionError('비디오 세션 참여에 실패했습니다.');
-      //     }
-      //   });
-      // }
-    }
-
-    // if (isAuthenticated && channelId && !window.__SESSION_INITIALIZED__) {
-    //   window.__SESSION_INITIALIZED__ = true;
-      
-    //   if (isCreator) {
-    //     console.log('방장 모드로 세션 생성');
-    //     createAndJoinSession(channelId);
-    //   } else {
-    //     console.log('참가자 모드로 세션 참여');
-    //     joinExistingSession();
-    //   }
-    // }
-
     return () => {
       if (hasJoined.current) {
         websocketService.sendLeaveEvent(channelId, currentUser?.id);

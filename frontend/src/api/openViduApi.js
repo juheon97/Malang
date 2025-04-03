@@ -32,15 +32,6 @@ const openviduApi = {
       console.error('❌ sessionId가 undefined입니다!');
       throw new Error('sessionId가 없습니다.');
     }
-    
-    // try {
-    //   const response = await apiClient.delete(`/openvidu/session/${sessionId}`);
-    //   console.log('세션 종료 성공:', response.data);
-    //   return response.data;
-    // } catch (error) {
-    //   console.error('세션 종료 오류:', error.response?.data || error.message);
-    //   throw error;
-    // }
   },
 
   // 세션 생성 (Path variable 사용)

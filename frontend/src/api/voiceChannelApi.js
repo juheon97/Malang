@@ -1,8 +1,4 @@
 import axios from 'axios';
-import openviduApi from './openViduApi';
-// API 기본 URL 설정
-// const BASE_URL = 'https://j12d110.p.ssafy.io/api';
-// const BASE_URL = 'https://10c0-116-36-40-48.ngrok-free.app/api';
 const BASE_URL = import.meta.env.VITE_API_URL;
 // axios 인스턴스 생성
 const apiClient = axios.create({
@@ -28,9 +24,6 @@ apiClient.interceptors.request.use(
   },
   error => Promise.reject(error),
 );
-
-// const APPLICATION_SERVER_URL =
-//   import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const voiceChannelApi = {
   // 채널 생성 API
@@ -68,6 +61,7 @@ const voiceChannelApi = {
       throw error;
     }
   },
+  
   // 채널 비밀번호 확인 함수
   checkChannelPassword: async (channelId, password) => {
     // 요청 데이터 확인
