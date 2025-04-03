@@ -334,7 +334,26 @@ function CounselChannelVideo() {
                 role: message.role,
               });
             }
+          } else if (message.event === 'page_move') {
+            console.log('page_move 분기 진입');
+            const currentRole = sessionStorage.getItem('userRole');
+            console.log('현재 사용자 역할:', currentRole);
+            if (currentRole === 'ROLE_USER') {
+              console.log('ROLE_USER 조건 만족');
+              console.log('현재 URL:', window.location.pathname);
+              const targetPath = `/counsel-channel-video/${message.channel}`;
+              console.log('이동할 경로:', targetPath);
+              setShowRequestAlert(false);
+              navigate(targetPath);
+              console.log('navigate() 호출 완료');
+              setTimeout(() => {
+                console.log('navigate 후 현재 URL:', window.location.pathname);
+              }, 500);
+            } else {
+              console.log('현재 사용자가 ROLE_USER가 아니므로 이동하지 않음');
+            }
           }
+
           // 새로운 이벤트 처리: 수락/거절
           else if (message.event === 'accepted') {
             console.log('[웹소켓] 상담사 수락 메시지 수신:', message);
