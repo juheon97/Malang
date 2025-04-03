@@ -5,6 +5,9 @@ import axios from 'axios';
  * 상담사 프로필 데이터를 관리하는 커스텀 훅
  */
 const useProfileData = currentUser => {
+  // 환경 변수에서 API URL 가져오기
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const [profile, setProfile] = useState({
     speciality: '',
     specialty: '',
@@ -114,8 +117,8 @@ const useProfileData = currentUser => {
             });
           }
         } else {
-          // 실제 API 호출
-          const response = await axios.get(`/api/counselor/profile`, {
+          // 실제 API 호출 - 환경 변수 사용하여 URL 구성
+          const response = await axios.get(`${API_URL}/counselor/profile`, {
             headers: {
               Authorization: `Bearer ${sessionStorage.getItem('token')}`,
             },
@@ -179,7 +182,7 @@ const useProfileData = currentUser => {
     };
 
     fetchProfile();
-  }, [currentUser]);
+  }, [currentUser, API_URL]);
 
   // 입력 필드 변경 처리
   const handleInputChange = e => {
@@ -246,14 +249,14 @@ const useProfileData = currentUser => {
 
         setSuccess('자격증 정보가 업데이트되었습니다.');
       } else {
-        // 실제 API 호출
+        // 실제 API 호출 - 환경 변수 사용하여 URL 구성
         console.log(
-          `자격증 업데이트 API 호출: /api/counselor/profile/certification`,
+          `자격증 업데이트 API 호출: ${API_URL}/counselor/profile/certification`,
         );
         console.log('자격증 업데이트 파라미터:', { hasCertification: value });
 
         const response = await axios.put(
-          `/api/counselor/profile/certification`,
+          `${API_URL}/counselor/profile/certification`,
           null,
           {
             headers: {
@@ -339,11 +342,15 @@ const useProfileData = currentUser => {
           profileUrl: profile.profile_url,
         };
 
-        console.log('프로필 업데이트 요청 URL:', `/api/counselor/profile`);
+        console.log(
+          '프로필 업데이트 요청 URL:',
+          `${API_URL}/counselor/profile`,
+        );
         console.log('프로필 업데이트 요청 데이터:', requestData);
 
+        console.log('프로필 저장 요청 데이터:', requestData);
         const response = await axios.put(
-          `/api/counselor/profile`,
+          `${API_URL}/counselor/profile`,
           requestData,
           {
             headers: {
@@ -352,6 +359,7 @@ const useProfileData = currentUser => {
             },
           },
         );
+        console.log('프로필 저장 응답:', response.data);
 
         console.log('프로필 업데이트 응답:', response.data);
 

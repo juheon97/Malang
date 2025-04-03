@@ -32,6 +32,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/Signup" element={<Signup />} />
                 <Route path="/community/*" element={<Community />} />
+                <Route path="/voice-change" element={<VoiceChange />} />
                 {/* 보호된 라우트 - 인증 필요 */}
                 <Route
                   path="/mypage"
@@ -49,7 +50,14 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route path="/counsel-channel" element={<Counsel />} />
+                <Route
+                  path="/counsel-channel"
+                  element={
+                    <ProtectedRoute>
+                      <Counsel />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/voice-channel"
                   element={
@@ -96,14 +104,6 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <CounselChannelVideo />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/voice-change"
-                  element={
-                    <ProtectedRoute>
-                      <VoiceChange />
                     </ProtectedRoute>
                   }
                 />
