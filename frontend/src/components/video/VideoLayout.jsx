@@ -29,7 +29,11 @@ const VideoLayout = ({ participants = [], renderParticipantInfo }) => {
         </p>
       </div>
     );
-  }
+  }console.log('Participants 구조:', participants.map(p => ({
+    id: p.id,
+    stream: !!p.stream,
+    isSelf: p.isSelf
+  })));
 
   const count = participants.length;
 

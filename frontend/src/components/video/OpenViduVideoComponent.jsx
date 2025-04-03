@@ -1,5 +1,3 @@
-//src>components>video>OpenViduVideoComponent.jsx
-
 import React, { useRef, useEffect } from 'react';
 
 export default function OpenViduVideoComponent({ streamManager, isSelf }) {
@@ -7,41 +5,49 @@ export default function OpenViduVideoComponent({ streamManager, isSelf }) {
 
   useEffect(() => {
     if (streamManager && videoRef.current) {
+      console.log('Setting up video element for stream:', streamManager);
+      
+      // First clean up any existing video elements
       try {
-        // 기존 비디오 요소 제거
         streamManager.removeAllVideos();
-
-        // 새 비디오 요소 추가 (지연 추가)
-        const timeout = setTimeout(() => {
-          if (videoRef.current) {
-            console.log('New video element associated to ', streamManager);
-            streamManager.addVideoElement(videoRef.current);
-          }
-        }, 50);
-
-        return () => {
-          clearTimeout(timeout);
-          if (streamManager) {
-            try {
-              streamManager.removeAllVideos();
-            } catch (error) {
-              console.error('비디오 요소 제거 오류:', error);
-            }
-          }
-        };
-      } catch (error) {
-        console.error('비디오 요소 추가 오류:', error);
+      } catch (err) {
+        console.log('No videos to remove');
       }
+      
+      // Add the video element with a small delay to ensure DOM is ready
+      setTimeout(() => {
+        if (videoRef.current) {
+          try {
+            streamManager.addVideoElement(videoRef.current);
+            console.log('Video element successfully added');
+          } catch (error) {
+            console.error('Error adding video element:', error);
+          }
+        }
+      }, 100);
     }
+
+    return () => {
+      if (streamManager) {
+        try {
+          console.log('Cleaning up video element');
+          streamManager.removeAllVideos();
+        } catch (err) {
+          console.log('Error during cleanup:', err);
+        }
+      }
+    };
   }, [streamManager]);
 
   return (
-    <video
-      autoPlay
-      playsInline
-      ref={videoRef}
-      className="w-full h-full object-cover"
-      muted={isSelf}
-    />
+    <div className="video-container h-full w-full">
+      <video
+        autoPlay={true}
+        playsInline={true}
+        ref={videoRef}
+        className="w-full h-full object-cover"
+        muted={isSelf}
+      />
+    </div>
   );
 }

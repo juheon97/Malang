@@ -38,27 +38,16 @@ const voiceChannelApi = {
     try {
       // 1. 채널 생성 요청
       const response = await apiClient.post('/channels/voice', channelData);
-      const channelId = response.data.channelId;
-      
-      // 2. OpenVidu 세션 생성 요청
-      const sessionId = await openviduApi.createSession(channelId);
-      
-      // 3. 토큰 발급 (선택적)
-      const token = await openviduApi.getToken(sessionId);
-      
-      // 4. 채널 정보와 세션 정보를 함께 반환
-      return {
-        ...response.data,
-        channelId,
-        sessionId,
-        token
-      };
+      console.log('2. response부름. voiceChannelApi 채널 ID :', response.data.channelId)
+      return response; // 전체 response 객체를 반환
     } catch (error) {
       console.error('채널 생성 오류:', error);
-      throw error;
+      throw error; // 에러를 다시 throw하여 호출자에게 전달
     }
-  },
+
+
   // 채널 나가기 API
+  },
   leaveChannel: async channelId => {
     try {
       const response = await apiClient.post(`channels/${channelId}/leave`);

@@ -1,302 +1,280 @@
-// hooks/useOpenVidu.js
 import { useState, useEffect, useRef } from 'react';
 import { OpenVidu } from 'openvidu-browser';
 import openviduApi from '../api/openViduApi';
 
-export default function useOpenVidu(
-  channelId,
-  userName,
-  audioEnabled = true,
-  videoEnabled = true,
-) {
+const useOpenVidu = (channelId, userName) => {
+  const [participants, setParticipants] = useState([]);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [session, setSession] = useState(null);
   const [publisher, setPublisher] = useState(null);
   const [subscribers, setSubscribers] = useState([]);
-  const [error, setError] = useState(null);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(true);
+  const [videoEnabled, setVideoEnabled] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
-  const initialized = useRef(false);
+  const [error, setError] = useState(null);
   const OV = useRef(null);
-  
-  // 참가자 정보를 관리하기 위한 상태 추가
-  const [participants, setParticipants] = useState([]);
+  const initialized = useRef(false);
 
-  // 세션 생성 및 참여 함수 (방장용)
-  const createAndJoinSession = async () => {
-    if (initialized.current || isConnecting) return;
-
-    setIsConnecting(true);
-    setError(null);
-
-    try {
-      initialized.current = true;
-      console.log(`세션 생성 및 참여: ${channelId}`);
-
-      // 미디어 장치 접근 권한 요청
-      try {
-        await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      } catch (mediaError) {
-        console.warn('미디어 장치 접근 오류:', mediaError);
-        // 오디오만이라도 시도
-        if (mediaError.name === 'NotAllowedError' || mediaError.name === 'NotFoundError') {
-          await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-          // 비디오 비활성화 상태로 설정
-          videoEnabled = false;
-        } else {
-          throw mediaError;
-        }
-      }
-
-      // OpenVidu 객체 생성
-      OV.current = new OpenVidu();
-      const mySession = OV.current.initSession();
-      setSession(mySession);
-
-      // 이벤트 리스너 설정
-      setupEventListeners(mySession);
-
-      // 세션 생성 요청 (방장만 수행)
-      const sessionId = await openviduApi.createSession(channelId);
-      
-      // 토큰 요청
-      const token = await openviduApi.getToken(sessionId);
- 
-      // 세션 연결
-      await mySession.connect(token, { clientData: userName });
-
-      // 퍼블리셔 생성 및 게시
-      await setupPublisher(mySession, audioEnabled, videoEnabled);
-      
-      // 방장 정보 저장
-      sessionStorage.setItem('isChannelHost', 'true');
-      
-      setIsConnected(true);
-    } catch (error) {
-      console.error('OpenVidu 세션 생성 오류:', error);
-      setError(error.message || '세션 생성 중 오류가 발생했습니다.');
-      initialized.current = false;
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-
-  // 기존 세션 참여 함수 (참여자용)
-  const joinExistingSession = async () => {
-    if (initialized.current || isConnecting) return;
-
-    setIsConnecting(true);
-    setError(null);
-
-    try {
-      initialized.current = true;
-      console.log(`기존 세션 참여: ${channelId}`);
-
-      // 미디어 장치 접근 권한 요청
-      try {
-        await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      } catch (mediaError) {
-        console.warn('미디어 장치 접근 오류:', mediaError);
-        // 오디오만이라도 시도
-        if (mediaError.name === 'NotAllowedError' || mediaError.name === 'NotFoundError') {
-          await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-          // 비디오 비활성화 상태로 설정
-          videoEnabled = false;
-        } else {
-          throw mediaError;
-        }
-      }
-
-      // OpenVidu 객체 생성
-      OV.current = new OpenVidu();
-      const mySession = OV.current.initSession();
-      setSession(mySession);
-
-      // 이벤트 리스너 설정
-      setupEventListeners(mySession);
-
-      // 세션 생성 없이 바로 토큰 요청
-      const token = await openviduApi.getToken(channelId);
- 
-      // 세션 연결
-      await mySession.connect(token, { clientData: userName });
-
-      // 퍼블리셔 생성 및 게시
-      await setupPublisher(mySession, audioEnabled, videoEnabled);
-      
-      // 참여자 정보 저장
-      sessionStorage.setItem('isChannelHost', 'false');
-      
-      setIsConnected(true);
-    } catch (error) {
-      console.error('OpenVidu 세션 참여 오류:', error);
-      setError(error.message || '세션 참여 중 오류가 발생했습니다.');
-      initialized.current = false;
-    } finally {
-      setIsConnecting(false);
-    }
-  };
-  
-  // 이벤트 리스너 설정 함수 (코드 중복 제거)
-  const setupEventListeners = (mySession) => {
-    mySession.on('streamCreated', event => {
-      const subscriber = mySession.subscribe(event.stream, undefined);
-      setSubscribers(prevSubscribers => [...prevSubscribers, subscriber]);
-      
-      // 참가자 정보 추출
-      const connectionData = JSON.parse(event.stream.connection.data || '{}');
-      const participantName = connectionData.clientData || 'Unknown';
-      
-      // 참가자 목록에 추가
-      setParticipants(prev => [
-        ...prev,
-        {
-          id: event.stream.connection.connectionId,
-          stream: subscriber,
-          name: participantName,
-          isSelf: false
-        }
-      ]);
-    });
-
-    mySession.on('streamDestroyed', event => {
-      setSubscribers(prevSubscribers =>
-        prevSubscribers.filter(sub => sub !== event.stream.streamManager),
-      );
-      
-      // 참가자 목록에서 제거
-      setParticipants(prev => 
-        prev.filter(p => p.id !== event.stream.connection.connectionId)
-      );
-    });
-
-    mySession.on('exception', exception => {
-      console.warn('OpenVidu 예외 발생:', exception);
-      setError(exception.message);
-    });
-  };
-  
-  // 퍼블리셔 설정 함수 (코드 중복 제거)
-  const setupPublisher = async (mySession, audioEnabled, videoEnabled) => {
-    const devices = await OV.current.getDevices();
-    const videoDevices = devices.filter(
-      device => device.kind === 'videoinput',
-    );
-
-    const publisher = OV.current.initPublisher(undefined, {
-      audioSource: audioEnabled ? undefined : false,
-      videoSource: videoEnabled ? undefined : false,
-      publishAudio: audioEnabled,
-      publishVideo: videoEnabled,
-      resolution: '640x480',
-      frameRate: 30,
-      insertMode: 'APPEND',
-      mirror: false,
-    });
-
-    await mySession.publish(publisher);
-    setPublisher(publisher);
-    
-    // 자신을 참가자 목록에 추가
-    setParticipants(prev => [
-      ...prev,
-      {
-        id: mySession.connection.connectionId,
-        stream: publisher,
-        name: userName,
-        isSelf: true
-      }
-    ]);
-    
-    return publisher;
-  };
-
-  // 기존 joinSession 함수 (하위 호환성 유지)
-  const joinSession = async () => {
-    // 방장 여부 확인
-    const isHost = sessionStorage.getItem('isChannelHost') === 'true';
-    
-    if (isHost) {
-      await createAndJoinSession();
-    } else {
-      await joinExistingSession();
-    }
-  };
-
-  // 오디오 토글
-  const toggleAudio = () => {
-    if (publisher) {
-      const newStatus = !publisher.stream.audioActive;
-      publisher.publishAudio(newStatus);
-      return newStatus;
-    }
-    return false;
-  };
-
-  // 비디오 토글
-  const toggleVideo = () => {
-    if (publisher) {
-      const newStatus = !publisher.stream.videoActive;
-      publisher.publishVideo(newStatus);
-      return newStatus;
-    }
-    return false;
-  };
-
-  // 세션 종료
-  const leaveSession = async () => {
+  useEffect(() => {
     if (session) {
-      try {
-        if (publisher) {
-          session.unpublish(publisher);
-        }
-        session.disconnect();
-      } catch (error) {
-        console.error('세션 종료 오류:', error);
-      }
+      // Clean up any existing listeners to prevent duplicates
+      session.off('connectionCreated');
+      session.off('streamCreated');
+      session.off('connectionDestroyed');
+      
+      // Set up event listeners
+      session.on('connectionCreated', (event) => {
+        console.log('Connection created:', event.connection.connectionId);
+        const connectionData = JSON.parse(event.connection.data || '{}');
+        const userData = connectionData.clientData ? JSON.parse(connectionData.clientData) : {};
+        
+        const newParticipant = {
+          id: event.connection.connectionId,
+          stream: null,
+          isSelf: event.connection.connectionId === session.connection?.connectionId,
+          name: userData.userName || 'Unknown'
+        };
+        
+        setParticipants(prev => {
+          // Check if participant already exists to avoid duplicates
+          const exists = prev.some(p => p.id === newParticipant.id);
+          if (!exists) {
+            return [...prev, newParticipant];
+          }
+          return prev;
+        });
+      });
 
+      session.on('streamCreated', (event) => {
+        console.log('Stream created:', event.stream.connection.connectionId);
+        const newStream = event.stream;
+        const subscriber = session.subscribe(newStream, undefined);
+        
+        setSubscribers(prev => [...prev, subscriber]);
+        
+        setParticipants(prev => {
+          const participantExists = prev.some(p => p.id === newStream.connection.connectionId);
+          
+          if (participantExists) {
+            // Update existing participant with stream
+            return prev.map(participant =>
+              participant.id === newStream.connection.connectionId
+                ? { ...participant, stream: subscriber }
+                : participant
+            );
+          } else {
+            // Create new participant with stream if not found
+            const connectionData = JSON.parse(newStream.connection.data || '{}');
+            const userData = connectionData.clientData ? JSON.parse(connectionData.clientData) : {};
+            
+            return [...prev, {
+              id: newStream.connection.connectionId,
+              stream: subscriber,
+              isSelf: false,
+              name: userData.userName || 'Unknown'
+            }];
+          }
+        });
+      });
+
+      session.on('connectionDestroyed', (event) => {
+        console.log('Connection destroyed:', event.connection.connectionId);
+        setParticipants(prev => prev.filter(p => p.id !== event.connection.connectionId));
+        setSubscribers(prev => prev.filter(sub => 
+          sub.stream.connection.connectionId !== event.connection.connectionId
+        ));
+      });
+
+      session.on('streamDestroyed', (event) => {
+        console.log('Stream destroyed:', event.stream.connection.connectionId);
+        setParticipants(prev => 
+          prev.map(participant => 
+            participant.id === event.stream.connection.connectionId 
+              ? { ...participant, stream: null }
+              : participant
+          )
+        );
+      });
+    }
+
+    return () => {
+      if (session) {
+        session.off('connectionCreated');
+        session.off('streamCreated');
+        session.off('connectionDestroyed');
+        session.off('streamDestroyed');
+      }
+    };
+  }, [session]);
+
+  const createAndJoinSession = async (channelId) => {
+    if (!channelId) throw new Error('channelId가 필요합니다');
+    if (initialized.current || isConnecting) return;
+    const stringChannelId = String(channelId);
+
+    initialized.current = true;
+    setIsConnecting(true);
+    setError(null);
+
+    try {
+      OV.current = new OpenVidu();
+      const mySession = OV.current.initSession();
+      setSession(mySession);
+
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      const sessionId = await openviduApi.createSession(channelId);
+      const token = await openviduApi.getToken(stringChannelId);
+      
+      await mySession.connect(token, { 
+        clientData: JSON.stringify({ userName, isHost: true })
+      });
+
+      const publisher = OV.current.initPublisher(undefined, {
+        audioSource: undefined,
+        videoSource: undefined,
+        publishAudio: audioEnabled,
+        publishVideo: videoEnabled,
+        resolution: '640x480'
+      });
+
+      await mySession.publish(publisher);
+      setPublisher(publisher);
+
+      // Add self as a participant
+      setParticipants(prev => {
+        const selfParticipant = {
+          id: mySession.connection.connectionId,
+          stream: publisher,
+          isSelf: true,
+          name: userName
+        };
+        return [selfParticipant];
+      });
+
+      sessionStorage.setItem('openviduSessionId', sessionId);
+      setIsConnected(true);
+      return true;
+    } catch (error) {
+      console.error('세션 연결 실패:', error);
+      setError(error.message);
+      return false;
+    } finally {
+      setIsConnecting(false);
+      initialized.current = false;
+    }
+  };
+
+  const joinExistingSession = async () => {
+    if (isConnected || initialized.current) return;
+    initialized.current = true;
+    setIsConnecting(true);
+    setError(null);
+
+    try {
+      OV.current = new OpenVidu();
+      const mySession = OV.current.initSession();
+      setSession(mySession);
+
+      const token = await openviduApi.getToken(channelId);
+      await mySession.connect(token, { 
+        clientData: JSON.stringify({ userName, isHost: false })
+      });
+
+      const publisher = OV.current.initPublisher(undefined, {
+        audioSource: undefined,
+        videoSource: undefined,
+        publishAudio: audioEnabled,
+        publishVideo: videoEnabled,
+        resolution: '640x480'
+      });
+
+      await mySession.publish(publisher);
+      setPublisher(publisher);
+
+      // Add self as a participant
+      setParticipants(prev => {
+        const selfParticipant = {
+          id: mySession.connection.connectionId,
+          stream: publisher,
+          isSelf: true,
+          name: userName
+        };
+        return [...prev, selfParticipant];
+      });
+
+      setIsConnected(true);
+      sessionStorage.setItem('openviduSessionId', channelId);
+      return true;
+    } catch (error) {
+      console.error('세션 참여 실패:', error);
+      setError(error.message || '세션 참여 중 오류 발생');
+      return false;
+    } finally {
+      setIsConnecting(false);
+      initialized.current = false;
+    }
+  };
+
+  const leaveSession = () => {
+    if (session) {
+      subscribers.forEach(sub => session.unsubscribe(sub));
+      if (publisher) session.unpublish(publisher);
+      session.disconnect();
       setSession(null);
       setPublisher(null);
       setSubscribers([]);
       setParticipants([]);
       setIsConnected(false);
-      initialized.current = false;
-      OV.current = null;
-
-      // 세션 정보 삭제
-      sessionStorage.removeItem('openviduToken');
       sessionStorage.removeItem('openviduSessionId');
-      sessionStorage.removeItem('isChannelHost');
+    }
+    OV.current = null;
+    initialized.current = false;
+  };
+
+  const toggleAudio = (value = null) => {
+    if (publisher) {
+      const newValue = value !== null ? value : !audioEnabled;
+      publisher.publishAudio(newValue);
+      setAudioEnabled(newValue);
     }
   };
 
-  // 참가자 정보 렌더링 함수
-  const renderParticipantInfo = (participant) => (
-    <div className="absolute bottom-2 right-2 bg-gray-700 bg-opacity-70 text-white px-2 py-1 rounded text-xs">
-      {participant.name}
-    </div>
-  );
+  const toggleVideo = (value = null) => {
+    if (publisher) {
+      const newValue = value !== null ? value : !videoEnabled;
+      publisher.publishVideo(newValue);
+      setVideoEnabled(newValue);
+    }
+  };
 
-  // 컴포넌트 언마운트 시 세션 정리
-  useEffect(() => {
-    return () => {
-      leaveSession();
-    };
-  }, []);
+  // Adding the missing renderParticipantInfo function
+  const renderParticipantInfo = (participant) => {
+    return (
+      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 z-10 flex justify-between items-center">
+        <span className="text-sm">{participant.name || 'Unknown'}</span>
+        {participant.isSelf && <span className="text-xs bg-blue-500 px-2 py-1 rounded">Me</span>}
+      </div>
+    );
+  };
 
   return {
+    participants,
+    setParticipants,
     session,
     publisher,
     subscribers,
-    joinSession,
+    audioEnabled,
+    videoEnabled,
+    isConnected,
+    isConnecting,
+    error,
     createAndJoinSession,
     joinExistingSession,
     leaveSession,
     toggleAudio,
     toggleVideo,
-    error,
-    isConnecting,
-    isConnected,
-    participants,
-    renderParticipantInfo
+    renderParticipantInfo  // Added this missing function
   };
-}
+};
+
+export default useOpenVidu;

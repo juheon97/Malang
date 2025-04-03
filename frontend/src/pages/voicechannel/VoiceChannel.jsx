@@ -124,6 +124,7 @@ const handleJoinChannel = async (channel) => {
       // OpenVidu 세션 참여
       await joinExistingSession(channel.channelId);
       // 화상 채팅 페이지로 이동
+      console.log(channel.channelId)
       console.log(`비밀번호 없는 채널 ${channel.channelId} 입장`);
       navigate(`/voice-channel-video/${channel.channelId}`);
     } catch (error) {

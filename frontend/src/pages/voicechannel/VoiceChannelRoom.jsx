@@ -1,9 +1,17 @@
+//src>pages>voicechannel>VoiceChannelRoom.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import voiceChannelApi from '../../api/voiceChannelApi';
+import openviduApi from '../../api/openViduApi';
+
+import mockApi from '../../api/mockApi';
+import useOpenVidu from '../../hooks/useOpenvidu';
 
 function VoiceChannelRoom() {
+  const { createAndJoinSession } = useOpenVidu(); // ✅ 컴포넌트 최상위에서 호출
+
+  const [createdChannelId, setCreatedChannelId] = useState(null);
   const navigate = useNavigate();
   const { currentUser, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
@@ -61,54 +69,57 @@ function VoiceChannelRoom() {
       password: formData.password || null,
       maxPlayer: parseInt(formData.maxUsers),
     };
-    console.log('음성채널 생성 데이터:', apiRequestData);
+    console.log('1. 방생성 버튼 누르고 : 음성채널 생성 데이터:', apiRequestData);
    
     try {
       // 1. 채널 생성
       const channelResponse =
         await voiceChannelApi.createChannel(apiRequestData);
-      console.log('채널 생성 성공:', channelResponse.data);
-      const channelId = channelResponse.data.channelId;
-      console.log('채널 ID:', channelId);
-      // navigate(`/voice-channel-video/${channelId}`);
-      // 2. OpenVidu 세션 생성 (openviduApi.createSession 사용)
-      const sessionId = await openviduApi.createSession(channelId);
-      // 3. 토큰 발급
-      const token = await openviduApi.getToken(sessionId);
- 
-      // 4. 방장 정보 저장
-      sessionStorage.setItem('isChannelHost', 'true');
-      sessionStorage.setItem('openviduSessionId', sessionId);
-      sessionStorage.setItem('openviduToken', token);
-      
-      // 5. 화상 채팅 페이지로 이동
-      navigate(`/voice-channel-video/${channelId}`);
-      } catch (error) {
-            console.error('채널 생성 실패:', error);
+        const channelId = channelResponse.data.channelId;
+        // voicechannelapi가 먼저 호출되고 
+      console.log('3. voiceChannelRoom 채널 생성 성공:', channelResponse.data);
+   
+   // 2. OpenVidu 세션 생성 및 연결 (단일 호출)
+   const connectionSuccess = await createAndJoinSession(channelId);
 
-            // 에러 처리
-            if (error.response) {
-              // 서버 응답이 있는 경우
-              setError(error.response.data.message || '채널 생성에 실패했습니다.');
-
-              // 토큰 만료 에러인 경우 (401 Unauthorized)
-              if (error.response.status === 401) {
-                // 로그인 페이지로 리다이렉트하거나 토큰 갱신 로직 실행
-                navigate('/login', { state: { from: '/voice-channel-form' } });
-              }
-            } else if (error.request) {
-              // 요청은 보냈지만 응답이 없는 경우
-              setError('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.');
-            } else {
-              // 요청 설정 중 오류 발생
-              setError('요청 중 오류가 발생했습니다: ' + error.message);
-            }
-          } finally {
-            setIsLoading(false);
-          }
+   if(connectionSuccess) {
+     navigate(`/voice-channel-video/${channelId}`, {
+       state: { 
+         sessionConfig: {
+          channelId,
+           isHost: true,
+           channelName: formData.roomName // ✅ 채널명 추가 전달
+         }
+       }
+     });
+     console.log('방장, 방 이동 완료: voicechannelroom 완료');
+   }
 
 
-        };
+    } catch (error) {
+      console.error('채널 생성 실패:', error);
+
+      // 에러 처리
+      if (error.response) {
+        // 서버 응답이 있는 경우
+        setError(error.response.data.message || '채널 생성에 실패했습니다.');
+
+        // 토큰 만료 에러인 경우 (401 Unauthorized)
+        if (error.response.status === 401) {
+          // 로그인 페이지로 리다이렉트하거나 토큰 갱신 로직 실행
+          navigate('/login', { state: { from: '/voice-channel-form' } });
+        }
+      } else if (error.request) {
+        // 요청은 보냈지만 응답이 없는 경우
+        setError('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.');
+      } else {
+        // 요청 설정 중 오류 발생
+        setError('요청 중 오류가 발생했습니다: ' + error.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // 인증 로딩 중이거나 인증되지 않은 경우 로딩 표시
   if (!isAuthenticated) {
@@ -147,7 +158,7 @@ function VoiceChannelRoom() {
                   음성 채널
                 </span>
               </div>
-              
+        
             </div>
             {/* 시각적 요소 추가 */}
             <div className="mt-6 bg-[#f5fbf7] rounded-lg p-3 border border-dashed border-[#b0daaf]">
