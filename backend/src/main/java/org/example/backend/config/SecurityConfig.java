@@ -104,7 +104,8 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList
                 ("Authorization", "Content-Type", "X-Requested-With", "Upgrade", "Connection","Cache-Control",
                         "Pragma",
-                        "Expires"));
+                        "Expires",
+                        "Sec-WebSocket-Key", "Sec-WebSocket-Version", "Sec-WebSocket-Extensions"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
@@ -165,6 +166,8 @@ public class SecurityConfig {
                         .requestMatchers("/counselor/profile/**").hasAuthority("ROLE_COUNSELOR")
                         // WebScoket 관련 엔드포인트 접근 허용
                         .requestMatchers("/ws/**", "/sub/**", "/pub/**", "/ws/info/**").permitAll()
+                        // openvidu 세션 관리
+                        .requestMatchers("/openvidu/session/**").authenticated()
                         // 기타 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
