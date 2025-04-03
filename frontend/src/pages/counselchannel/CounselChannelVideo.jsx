@@ -29,6 +29,10 @@ function CounselChannelVideo() {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  // 상담 요청 알림 관련 상태 추가
+  const [showRequestAlert, setShowRequestAlert] = useState(false);
+  const [requestUserInfo, setRequestUserInfo] = useState(null);
+
   // 초기화 여부 추적
   const hasJoined = useRef(false);
 
@@ -214,6 +218,34 @@ function CounselChannelVideo() {
     chatContainerRef,
   } = useChat(currentUserId);
 
+  // 요청 수락 처리
+  const handleAcceptRequest = () => {
+    if (requestUserInfo) {
+      console.log(
+        `[웹소켓] 입장 요청 수락: 사용자 ${requestUserInfo.userId}, 채널 ${counselorCode}`,
+      );
+      counselWebSocketService.sendAcceptRequest(
+        counselorCode,
+        requestUserInfo.userId,
+      );
+      setShowRequestAlert(false);
+    }
+  };
+
+  // 요청 거절 처리
+  const handleDeclineRequest = () => {
+    if (requestUserInfo) {
+      console.log(
+        `[웹소켓] 입장 요청 거절: 사용자 ${requestUserInfo.userId}, 채널 ${counselorCode}`,
+      );
+      counselWebSocketService.sendDeclineRequest(
+        counselorCode,
+        requestUserInfo.userId,
+      );
+      setShowRequestAlert(false);
+    }
+  };
+
   // useEffect 내부에서 웹소켓 연결 및 콜백 함수 설정
   useEffect(() => {
     if (!hasJoined.current && !isLoading) {
@@ -234,7 +266,7 @@ function CounselChannelVideo() {
 
           // 입장 요청/응답 메시지 출력
           if (message.event === 'join_con') {
-            if (message.role === 'USER_ROLE') {
+            if (message.role === 'ROLE_USER') {
               console.log(
                 '유저 입장 REQUEST (/pub/' + counselorCode + '/access):',
                 {
@@ -246,7 +278,33 @@ function CounselChannelVideo() {
                   role: message.role,
                 },
               );
-            } else if (message.role === 'COUNSEL_ROLE') {
+
+              // 상담사인 경우에만 수락/거절 모달 표시
+              const userRole = sessionStorage.getItem('userRole');
+              const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+              const isCounselor =
+                userRole === 'ROLE_COUNSELOR' ||
+                userRole === 'counselor' ||
+                user.role === 'ROLE_COUNSELOR' ||
+                user.role === 'counselor';
+
+              console.log(
+                '현재 사용자 역할:',
+                userRole,
+                '상담사 여부:',
+                isCounselor,
+              );
+
+              if (isCounselor) {
+                setRequestUserInfo({
+                  name: message.name,
+                  birth: message.birth,
+                  userId: message.user,
+                  channelId: message.channel,
+                });
+                setShowRequestAlert(true);
+              }
+            } else if (message.role === 'ROLE_COUNSELOR') {
               console.log('상담사 RESPONSE:', {
                 event: message.event,
                 name: message.name,
@@ -263,6 +321,10 @@ function CounselChannelVideo() {
             console.log(
               `[웹소켓] ${message.name || '사용자'}가 입장 요청을 취소했습니다.`,
             );
+            // 요청 취소 시 모달 닫기
+            if (showRequestAlert && requestUserInfo?.userId === message.user) {
+              setShowRequestAlert(false);
+            }
           } else if (message.event === 'accept_con') {
             // 상담사가 요청을 수락한 경우
             console.log('[웹소켓] 상담사가 입장 요청을 수락했습니다.');
@@ -545,6 +607,58 @@ function CounselChannelVideo() {
         onEndSession={handleEndSession}
         isSessionStarted={isSessionStarted}
       />
+
+      {/* 상담 요청 알림 모달 */}
+      {showRequestAlert && requestUserInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-lg font-bold mb-2 text-gray-800">상담 요청</h3>
+            <div className="bg-blue-50 p-4 rounded-lg mb-4">
+              <div className="flex items-start">
+                <svg
+                  className="h-6 w-6 text-blue-500 mr-2 mt-0.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div>
+                  <p className="text-sm text-blue-800 font-medium">
+                    <span className="font-bold">{requestUserInfo.name}</span>
+                    님이 상담을 요청했습니다.
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    생년월일: {requestUserInfo.birth}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <p className="mb-4 text-sm text-gray-600">
+              상담 요청을 수락하시겠습니까?
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleDeclineRequest}
+                className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors text-gray-700"
+              >
+                거절
+              </button>
+              <button
+                onClick={handleAcceptRequest}
+                className="px-4 py-2 bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] text-white rounded-md hover:from-[#6AD3A6] hover:to-[#078263] transition-colors"
+              >
+                수락
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
