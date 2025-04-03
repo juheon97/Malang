@@ -65,11 +65,13 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
 
   // 생년월일 유효성 검사
   const validateBirthdate = value => {
+    // YYYY.MM.DD 형식 검사 정규식
     const regex = /^(19|20)\d\d\.(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])$/;
     if (!regex.test(value)) {
       return false;
     }
 
+    // 날짜 유효성 검사
     const [year, month, day] = value.split('.').map(Number);
     const date = new Date(year, month - 1, day);
     return (
@@ -82,19 +84,25 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
   // 생년월일 입력 형식 자동 변환 (YYYY.MM.DD)
   const handleBirthdateChange = e => {
     let value = e.target.value;
+
+    // 숫자와 마침표만 허용
     value = value.replace(/[^\d.]/g, '');
+
+    // 마침표 자동 추가
     if (value.length > 4 && value.charAt(4) !== '.') {
       value = value.slice(0, 4) + '.' + value.slice(4);
     }
     if (value.length > 7 && value.charAt(7) !== '.') {
       value = value.slice(0, 7) + '.' + value.slice(7);
     }
+
+    // 최대 10자리로 제한 (YYYY.MM.DD)
     if (value.length <= 10) {
       setBirthdate(value);
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     // 유효성 검사
     if (!name.trim()) {
       setError('이름을 입력해주세요.');
@@ -136,87 +144,15 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
     }
 
     setError(null);
-    setLoading(true);
 
-    try {
-      // 웹소켓 연결 확인
-      if (!counselWebSocketService.isConnected) {
-        console.log('[웹소켓] 연결 시도...');
-        // 웹소켓 콜백 (메시지 수신시 처리)
-        const handleWebSocketMessages = message => {
-          // 콘솔에 입장 요청/응답 메시지 출력
-          if (message.event === 'join_con') {
-            if (message.role === 'USER_ROLE') {
-              console.log(
-                '유저 입장 REQUEST (/pub/' + counselorCode + '/access):',
-                {
-                  event: message.event,
-                  name: message.name,
-                  생년월일: message.생년월일,
-                  user: message.user,
-                  channel: message.channel,
-                  role: message.role,
-                },
-              );
-            } else if (message.role === 'COUNSEL_ROLE') {
-              console.log('상담사 RESPONSE:', {
-                event: message.event,
-                name: message.name,
-                생년월일: message.생년월일,
-                user: message.user,
-                channel: message.channel,
-                role: message.role,
-              });
-            }
-          }
-
-          console.log('[웹소켓] 메시지 수신:', message);
-
-          // 메시지 타입에 따라 처리 (수락/거절 등)
-          if (message.event === 'accept_con') {
-            alert('상담사가 요청을 수락했습니다. 상담방으로 이동합니다.');
-            onSubmit &&
-              onSubmit({
-                name,
-                birthdate,
-                counselor_code: counselorCode,
-              });
-            onClose();
-          } else if (message.event === 'decline_con') {
-            alert('상담사가 요청을 거절했습니다.');
-            setLoading(false);
-            onClose();
-          }
-        };
-
-        // 웹소켓 연결
-        counselWebSocketService.connect(counselorCode, handleWebSocketMessages);
-
-        // 웹소켓 연결 대기
-        let retryCount = 0;
-        const waitForConnection = setInterval(() => {
-          if (counselWebSocketService.isConnected) {
-            clearInterval(waitForConnection);
-            // 연결 성공 시 현재 스코프의 counselorCode를 전달
-            sendJoinRequest(counselorCode);
-          } else {
-            retryCount++;
-            if (retryCount > 10) {
-              // 5초 대기 (500ms * 10)
-              clearInterval(waitForConnection);
-              setError('웹소켓 연결에 실패했습니다. 다시 시도해주세요.');
-              setLoading(false);
-            }
-          }
-        }, 500);
-      } else {
-        // 이미 연결되어 있는 경우 바로 요청 전송 (counselorCode 값 전달)
-        sendJoinRequest(counselorCode);
-      }
-    } catch (error) {
-      console.error('입장 요청 처리 오류:', error);
-      setError('요청을 처리하는 중 오류가 발생했습니다.');
-      setLoading(false);
+    // 단순히 부모 컴포넌트에 정보 전달 - 부모 컴포넌트에서 WaitingModal로 전환하도록 함
+    if (onSubmit) {
+      onSubmit({
+        name,
+        birthdate,
+        counselor_id: counselor?.id || '',
+        counselor_code: counselorCode,
+      });
     }
   };
 
@@ -299,7 +235,7 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
         <div className="bg-white rounded-b-md shadow-xl p-5 z-10">
           <h2 className="text-md font-bold text-center mb-3">
             {typeof counselor === 'object' && counselor?.name
-              ? `${counselor.name}에게 `
+              ? `${counselor.name} 상담사에게 `
               : ''}
             상담 요청
           </h2>
@@ -354,37 +290,13 @@ const CounselorRequestModal = ({ isOpen, onClose, onSubmit, counselor }) => {
               취소
             </button>
             <button
-              className={`bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white text-sm font-medium px-6 py-1.5 rounded-md shadow-sm transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              className={`bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white text-sm font-medium px-6 py-1.5 rounded-md shadow-sm transition-colors ${
+                loading ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
               onClick={handleSubmit}
               disabled={loading}
             >
-              {loading ? (
-                <div className="flex items-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  요청 중...
-                </div>
-              ) : (
-                '입장 요청'
-              )}
+              입장 요청
             </button>
           </div>
         </div>

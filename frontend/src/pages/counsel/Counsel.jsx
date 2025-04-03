@@ -33,6 +33,7 @@ const Counsel = () => {
   const [showWaitingModal, setShowWaitingModal] = useState(false);
   const [expandedCard, setExpandedCard] = useState(null);
   const [contentType, setContentType] = useState('review'); // 'review' 또는 'bio'
+  const [userRequestInfo, setUserRequestInfo] = useState(null); // 상담 요청 정보 저장
 
   // 모달 열릴 때 포커스 관리 위함
   const previousFocusRef = useRef(null);
@@ -76,12 +77,16 @@ const Counsel = () => {
   // 상담 요청 제출 처리
   const handleRequestSubmit = async userInfo => {
     try {
-      // 채널 입장 요청 API 호출
-      // API 엔드포인트가 명확하지 않음
-      // const response = await channelEntry.requestChannelEntry(selectedCounselor.id, userInfo);
       console.log('상담 요청:', userInfo, '상담사:', selectedCounselor?.name);
+
+      // 사용자 요청 정보 저장
+      setUserRequestInfo(userInfo);
+
+      // 요청 모달 닫고 대기 모달 표시
       setShowRequestModal(false);
-      setShowWaitingModal(true); // 대기 모달 표시
+      setShowWaitingModal(true);
+
+      // 웹소켓 연결과 같은 비동기 작업은 CounselorRequestModal 컴포넌트에서 처리
     } catch (err) {
       console.error('상담 요청 오류:', err);
       // 오류 처리
@@ -273,6 +278,8 @@ const Counsel = () => {
             waitingFor="상담사"
             title="수락을 기다려주세요..."
             message="상담사가 요청을 확인하고 있습니다. 잠시만 기다려주세요."
+            userInfo={userRequestInfo} // 사용자 정보 전달
+            counselor={selectedCounselor} // 상담사 정보 전달
           />
         </div>
       )}
