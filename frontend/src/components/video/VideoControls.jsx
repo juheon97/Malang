@@ -24,10 +24,6 @@ const VideoControls = ({
     setLocalSessionStarted(isSessionStarted);
   }, [isSessionStarted]);
 
-  // console.log('VideoControls에서 받은 isHost:', isHost);
-  // console.log('VideoControls에서 받은 isSessionStarted:', isSessionStarted);
-  // console.log('로컬 상태 localSessionStarted:', localSessionStarted);
-
   // 버튼 클릭 핸들러 - 로컬 상태 즉시 업데이트 + 부모 함수 호출
   const handleStartSession = () => {
     console.log('상담 시작 버튼 클릭됨');
@@ -171,12 +167,11 @@ const VideoControls = ({
             </span>
           </button>
 
-          {/* 상담사 전용 상담 시작/종료 버튼 - 로컬 상태 사용 */}
+          {/* 상담사 전용 상담 시작/종료 버튼 - UI만 유지, 기능 제거 */}
           {isHost && (
             <>
-              {!localSessionStarted ? (
+              {!isSessionStarted ? (
                 <button
-                  onClick={handleStartSession}
                   type="button"
                   className="px-4 py-2 bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer z-10"
                 >
@@ -206,7 +201,6 @@ const VideoControls = ({
                 </button>
               ) : (
                 <button
-                  onClick={handleEndSession}
                   type="button"
                   className="px-4 py-2 bg-gradient-to-r from-[#ff6b6b] to-[#e23e3e] text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer z-10"
                 >

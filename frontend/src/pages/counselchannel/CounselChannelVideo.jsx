@@ -4,7 +4,6 @@ import VideoLayout from '../../components/video/VideoLayout';
 import ChatBox from '../../components/video/ChatBox';
 import VideoControls from '../../components/video/VideoControls';
 import useOpenVidu from '../../hooks/useOpenvidu';
-import useParticipantControls from '../../hooks/useParticipantControls';
 import useChat from '../../hooks/useChat';
 import axios from 'axios';
 import counselorChannel from '../../api/counselorChannel';
@@ -207,13 +206,6 @@ function CounselChannelVideo() {
   } = useOpenVidu(counselorCode, 'randomNickname', isMicOn, isCameraOn);
 
   const {
-    participantControls,
-    toggleParticipantSpeaking,
-    toggleParticipantControls,
-    initParticipantControls,
-  } = useParticipantControls();
-
-  const {
     messages,
     newMessage,
     setNewMessage,
@@ -298,14 +290,6 @@ function CounselChannelVideo() {
       leaveSession();
     };
   }, [isLoading, joinSession, leaveSession, counselorCode, navigate]);
-
-  // 참가자 제어 초기화
-  useEffect(() => {
-    if (participants && participants.length > 0) {
-      console.log('참가자 목록:', participants);
-      initParticipantControls(participants);
-    }
-  }, [participants, initParticipantControls]);
 
   // 토글 함수
   const toggleMic = () => {
