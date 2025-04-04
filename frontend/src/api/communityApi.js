@@ -16,7 +16,7 @@ const apiClient = axios.create({
 // 요청 인터셉터에 토큰 추가
 apiClient.interceptors.request.use(
   config => {
-    const token = sessionStorage.getItem('token');
+    const token = sessionStorage.getItem('token'); // localStorage에서 sessionStorage로 변경
     console.log('Current token:', token);
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
@@ -32,8 +32,11 @@ export const postAPI = {
   // 모든 게시글 조회 (API 명세서에 맞게 수정)
   getAllPosts: (page = 1, size = 10, category = null, sort = 'latest') => {
     const params = { page, size };
-    const endpoint =
+    let endpoint =
       sort === 'latest' ? '/community/get/latest' : '/community/get/oldest';
+    if (category) {
+      endpoint = `/community/get/${category}`;
+    }
     return apiClient.get(endpoint, { params });
   },
 
@@ -46,32 +49,28 @@ export const postAPI = {
 
   // 특정 게시글 조회
   getPostById: articleId => {
-    return apiClient.get(`/detail/${articleId}`);
+    return apiClient.get(`/community/article/${articleId}`);
   },
 
-  // 게시글 작성 (API 명세서에 맞게 수정)
+  // 게시글 작성 API 엔드포인트 수정
   createPost: postData => {
-    // API 명세서 형식에 맞게 데이터 변환
     const apiPostData = {
       community_category: postData.category,
       title: postData.title,
       content: postData.content,
       user_id: postData.authorId,
     };
-
-    return apiClient.post('/community/write', apiPostData);
+    return apiClient.post('/community/create', apiPostData);
   },
 
   // 게시글 수정 (PUT 메서드)
   updatePost: (articleId, postData) => {
     const apiPostData = {
-      category: postData.category,
+      community_category: postData.category,
       title: postData.title,
       content: postData.content,
       user_id: postData.authorId,
-      images: postData.images || [],
     };
-
     return apiClient.put(`/community/article/${articleId}`, apiPostData);
   },
 
@@ -101,17 +100,17 @@ export const postAPI = {
 };
 
 export const commentAPI = {
-  // 게시글의 모든 댓글 조회
-  getCommentsByPostId: postId => apiClient.get(`/posts/${postId}/comments`),
-
-  // 댓글 작성
+  // 댓글 작성 API 엔드포인트 수정
   createComment: (postId, commentData) =>
-    apiClient.post(`/posts/${postId}/comments`, commentData),
+    apiClient.post(`/community/article/${postId}/comments`, commentData), // Swagger 명세에 맞게 엔드포인트 변경
 
-  // 댓글 수정
+  // 다른 API 메서드들도 동일하게 수정
+  getCommentsByPostId: postId =>
+    apiClient.get(`/community/article/${postId}/comments`),
+
   updateComment: (commentId, commentData) =>
-    apiClient.put(`/comments/${commentId}`, commentData),
+    apiClient.put(`/community/comments/${commentId}`, commentData),
 
-  // 댓글 삭제
-  deleteComment: commentId => apiClient.delete(`/comments/${commentId}`),
+  deleteComment: commentId =>
+    apiClient.delete(`/community/comments/${commentId}`),
 };

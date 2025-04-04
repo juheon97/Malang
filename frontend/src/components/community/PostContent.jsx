@@ -151,7 +151,7 @@ const PostContent = ({ post, currentUser, navigate }) => {
     }
   };
 
-  const isAuthor = currentUser.id === post.authorId;
+  const isAuthor = currentUser.id === post.user_id;
 
   return (
     <>

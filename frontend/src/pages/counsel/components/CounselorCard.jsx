@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+
+import { useAuth } from '../../../contexts/AuthContext';
 
 /**
  * 일반 모드에서 사용되는 상담사 카드 컴포넌트
@@ -9,8 +11,35 @@ const CounselorCard = ({
   onBioClick,
   onRequestClick,
 }) => {
-  // status 값이 1이면 상담 가능, 아니면 불가능
-  const isAvailable = counselor.status === 1;
+  // counselor.id는 이미 정수형으로 처리되어 있음 (API 호출 시 변환)
+
+  const { currentUser } = useAuth();
+
+  const isCounselor = currentUser && currentUser.role == 'ROLE_COUNSELOR';
+
+  // status 값이 1이면 상담 가능, 0이면 불가능
+  const [isAvailable, setIsAvailable] = useState(
+    counselor.status === 1 || counselor.status === '가능',
+  );
+
+  // 초기 상태 설정 (props 값 변경 시 상태 업데이트)
+  useEffect(() => {
+    // props 값만 사용하여 상태 설정
+    const available = counselor.status === 1 || counselor.status === '가능';
+    setIsAvailable(available);
+    console.log(
+      `상담사 ID: ${counselor.id}, status: ${counselor.status}, 가능 여부: ${available}`,
+    );
+  }, [counselor.status]);
+
+  // 상담 요청 버튼 클릭 핸들러
+  const handleRequestClick = () => {
+    if (!counselor.counselorCode) {
+      console.error('상담사 코드가 없습니다.');
+      return;
+    }
+    onRequestClick(counselor.counselorCode, counselor);
+  };
 
   return (
     <div
@@ -192,25 +221,26 @@ const CounselorCard = ({
           </p>
         </div>
 
-        {/* 상담 요청 버튼 */}
-        <button
-          className="w-1/2 mx-auto block text-white py-2 rounded-full font-medium transition duration-200 transform hover:scale-105 mt-auto"
-          style={{
-            background: isAvailable
-              ? 'linear-gradient(to right,rgb(125, 233, 188),rgb(64, 193, 126))'
-              : 'linear-gradient(to right, #9CA3AF, #6B7280)',
-            boxShadow: isAvailable
-              ? '0 4px 6px -1px rgba(8, 151, 110, 0.3), 0 2px 4px -1px rgba(8, 151, 110, 0.1)'
-              : '0 4px 6px -1px rgba(107, 114, 128, 0.3), 0 2px 4px -1px rgba(107, 114, 128, 0.1)',
-          }}
-          onClick={() => onRequestClick(counselor)}
-          disabled={!isAvailable}
-        >
-          상담 요청
-        </button>
+        {/* 상담 요청 버튼 - 상담사 역할이 아닐 때만 표시 */}
+        {!isCounselor && (
+          <button
+            className="w-1/2 mx-auto block text-white py-2 rounded-full font-medium transition duration-200 transform hover:scale-105 mt-auto"
+            style={{
+              background: isAvailable
+                ? 'linear-gradient(to right,rgb(99, 223, 172),rgb(64, 188, 124))'
+                : 'linear-gradient(to right, #9CA3AF, #6B7280)',
+              boxShadow: isAvailable
+                ? '0 4px 6px -1px rgba(8, 151, 110, 0.3), 0 2px 4px -1px rgba(8, 151, 110, 0.1)'
+                : '0 4px 6px -1px rgba(107, 114, 128, 0.3), 0 2px 4px -1px rgba(107, 114, 128, 0.1)',
+            }}
+            onClick={handleRequestClick}
+            disabled={!isAvailable}
+          >
+            {isAvailable ? '상담 요청' : '상담 불가'}
+          </button>
+        )}
       </div>
     </div>
   );
 };
-
 export default CounselorCard;

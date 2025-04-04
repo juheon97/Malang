@@ -136,7 +136,7 @@ export const CounselorProfileProvider = ({ children }) => {
         }
       } else {
         // 실제 API 호출
-        const response = await axios.get(`/api/counselor/profile`, {
+        const response = await axios.get(`/counselor/profile`, {
           headers: {
             Authorization: `Bearer ${sessionStorage.getItem('token')}`,
           },

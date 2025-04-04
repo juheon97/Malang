@@ -30,20 +30,25 @@ const usePostStore = create((set, get) => ({
         response = await PostService.getAllPosts(page, size, category, sort);
       }
 
-      // API 응답 구조에 맞게 상태 업데이트
-      const { data } = response.data;
-
+      // API 응답 구조에 맞게 상태 업데이트 (안전하게 처리)
+      const { data } = response.data || {};
+      
+      // 데이터 유효성 검사 추가
+      const articles = data?.article || data?.articles || [];
+      
       set({
-        posts: data.article.map(article => ({
-          id: article.article_id,
-          category: article.category,
-          title: article.title,
-          date: article.created_at,
-          likes: article.likes,
-        })),
-        totalCount: data.total_count,
-        currentPage: data.current_page,
-        totalPages: data.total_pages,
+        posts: Array.isArray(articles) 
+          ? articles.map(article => ({
+              id: article.article_id,
+              category: article.category,
+              title: article.title,
+              date: article.created_at,
+              likes: article.likes,
+            }))
+          : [],
+        totalCount: data?.total_count || 0,
+        currentPage: data?.current_page || 1,
+        totalPages: data?.total_pages || 1,
         category,
         sort,
         loading: false,
@@ -52,6 +57,7 @@ const usePostStore = create((set, get) => ({
     } catch (error) {
       console.error('게시글 목록 로딩 오류:', error);
       set({
+        posts: [], // 오류 발생 시 빈 배열로 초기화
         error: '게시글을 불러오는 중 오류가 발생했습니다.',
         loading: false,
       });
@@ -77,13 +83,13 @@ const usePostStore = create((set, get) => ({
       const response = await PostService.getPostById(articleId);
 
       // API 응답 구조에 맞게 처리
-      const { status, data } = response.data;
+      const { status, data } = response.data || {};
 
       if (status === 'success') {
-        const { article, comments } = data;
+        const { article, comments } = data || {};
 
-        // 게시글 데이터 매핑
-        const postData = {
+        // 게시글 데이터 매핑 (안전하게 처리)
+        const postData = article ? {
           id: article.article_id,
           title: article.title,
           content: article.content,
@@ -92,23 +98,25 @@ const usePostStore = create((set, get) => ({
           likes: article.like_count,
           isLiked: article.is_liked,
           // 다른 필요한 필드들...
-        };
+        } : null;
 
-        // 댓글 데이터 매핑
-        const commentsData = comments.map(comment => ({
-          id: comment.comment_id,
-          content: comment.content,
-          authorName: comment.user_nickname,
-          date: new Date(comment.created_at)
-            .toLocaleDateString('ko-KR', {
-              year: '2-digit',
-              month: '2-digit',
-              day: '2-digit',
-            })
-            .replace(/\. /g, '.')
-            .replace(/\.$/, ''),
-          // 다른 필요한 필드들...
-        }));
+        // 댓글 데이터 매핑 (안전하게 처리)
+        const commentsData = Array.isArray(comments) 
+          ? comments.map(comment => ({
+              id: comment.comment_id,
+              content: comment.content,
+              authorName: comment.user_nickname,
+              date: new Date(comment.created_at)
+                .toLocaleDateString('ko-KR', {
+                  year: '2-digit',
+                  month: '2-digit',
+                  day: '2-digit',
+                })
+                .replace(/\. /g, '.')
+                .replace(/\.$/, ''),
+              // 다른 필요한 필드들...
+            }))
+          : [];
 
         set({
           currentPost: postData,
@@ -148,12 +156,12 @@ const usePostStore = create((set, get) => ({
       const response = await PostService.createPost(postData);
 
       // API 응답 구조에 맞게 처리
-      const { status, data } = response.data;
+      const { status, data } = response.data || {};
 
       if (status === 'success') {
         // 게시글 목록에 새 게시글 추가 (임시 데이터로, 실제로는 목록을 다시 불러오는 것이 좋음)
         const newPost = {
-          id: data.article_id,
+          id: data?.article_id,
           title: postData.title,
           content: postData.content,
           category: postData.category,
@@ -169,7 +177,7 @@ const usePostStore = create((set, get) => ({
           authorName: postData.authorName,
           likes: 0,
         };
-
+        
         set(state => ({
           posts: [newPost, ...state.posts],
           loading: false,
@@ -215,7 +223,7 @@ const usePostStore = create((set, get) => ({
       const response = await PostService.updatePost(articleId, postData);
 
       // API 응답 구조에 맞게 처리
-      const { status, data } = response.data;
+      const { status, data } = response.data || {};
 
       if (status === 'success') {
         // 현재 게시글 업데이트
@@ -286,7 +294,7 @@ const usePostStore = create((set, get) => ({
       const response = await PostService.deletePost(articleId);
 
       // API 응답 구조에 맞게 처리
-      const { status, message } = response.data;
+      const { status, message } = response.data || {};
 
       if (status === 'success') {
         // 게시글 목록에서 삭제

@@ -107,6 +107,11 @@ export const AuthProvider = ({ children }) => {
         role: role, // JWT에서 추출한 역할 정보
         disabilityStatus: disabilityStatus, // 시각장애 여부 추가
       };
+      // 사용자 정보 세션 스토리지에 저장 (authorId 포함 확인)
+      sessionStorage.setItem('user', JSON.stringify(userInfo));
+
+      // 토큰 저장 (키 이름 일치 확인)
+      sessionStorage.setItem('token', authToken);
 
       // 사용자 정보 세션 스토리지에 저장
       sessionStorage.setItem('user', JSON.stringify(userInfo));
