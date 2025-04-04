@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import VideoLayout from '../../components/video/VideoLayout';
 import ChatBox from '../../components/video/ChatBox';
 import VideoControls from '../../pages/counsel/components/VideoControls';
-import useOpenVidu from '../../hooks/useOpenvidu';
+import useCounselOpenVidu from '../../pages/counsel/hooks/useCounselOpenVidu';
 import useChat from '../../hooks/useChat';
 import axios from 'axios';
 import counselorChannel from '../../api/counselorChannel';
@@ -203,12 +203,14 @@ function CounselChannelVideo() {
   // 커스텀 훅 사용
   const {
     participants,
-    connectionError,
-    joinSession,
+    error: connectionError,
+    createAndJoinSession,
+    joinExistingSession,
     leaveSession,
     toggleAudio,
     toggleVideo,
-  } = useOpenVidu(counselorCode, 'randomNickname', isMicOn, isCameraOn);
+    renderParticipantInfo
+  } = useCounselOpenVidu(counselorCode);
 
   const {
     messages,
@@ -271,7 +273,16 @@ function CounselChannelVideo() {
   useEffect(() => {
     if (!hasJoined.current && !isLoading) {
       console.log('OpenVidu 세션 참여, counselor_code:', counselorCode);
-
+      const userRole = sessionStorage.getItem('userRole');
+        const isCounselor =
+          userRole === 'ROLE_COUNSELOR' || userRole === 'counselor';
+      if(isCounselor) {
+        console.log('video.jsx에서 상담사 모드로 고고');
+        createAndJoinSession(counselorCode);
+        }else{
+          console.log('video.jsx에서 참여자 모드로 고고');
+          joinExistingSession();
+        }
       // 웹소켓 연결 확인
       console.log('세션 참여 전 웹소켓 상태:');
       logWebSocketStatus();
@@ -422,14 +433,14 @@ function CounselChannelVideo() {
       }
 
       hasJoined.current = true;
-      joinSession();
+      createAndJoinSession(counselorCode);
     }
 
     return () => {
       console.log('세션 종료 시작');
-      leaveSession();
+      // leaveSession();
     };
-  }, [isLoading, joinSession, leaveSession, counselorCode, navigate]);
+  }, [isLoading, createAndJoinSession, leaveSession, counselorCode, navigate]);
 
   // 토글 함수
   const toggleMic = () => {
@@ -687,7 +698,7 @@ function CounselChannelVideo() {
             화상 연결 중 오류가 발생했습니다.
           </div>
           <button
-            onClick={joinSession}
+            onClick={joinExistingSession}
             className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
           >
             재연결
