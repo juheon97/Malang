@@ -1,3 +1,4 @@
+// counselWebSocketService.js
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client/dist/sockjs.min.js';
 
@@ -14,7 +15,6 @@ class CounselWebSocketService {
   connect(counselorCode, accessCallback, channelCallback, chatCallback) {
     if (this.isConnecting) {
       console.log('[웹소켓] 연결 진행 중. 대기합니다.');
-      // 연결이 완료되면 추가할 구독을 대기열에 추가
       if (counselorCode && accessCallback) {
         this.pendingSubscriptions.push({
           counselorCode,
@@ -46,21 +46,17 @@ class CounselWebSocketService {
     const checkAndSetRole = () => {
       const userRole = sessionStorage.getItem('userRole');
       if (!userRole || userRole === '') {
-        // 사용자 정보에서 역할 확인
         const user = JSON.parse(sessionStorage.getItem('user') || '{}');
         if (user.role) {
           sessionStorage.setItem('userRole', user.role);
           console.log('[웹소켓] 사용자 정보에서 역할 설정:', user.role);
         } else {
-          // 상담사 여부 확인 (채널 방에 있으면 상담사로 간주)
           const channelInfo = JSON.parse(
             sessionStorage.getItem('currentChannel') || '{}',
           );
           if (channelInfo.counselorCode) {
             sessionStorage.setItem('userRole', 'ROLE_COUNSELOR');
             console.log('[웹소켓] 채널 정보에서 상담사 역할 설정');
-
-            // 사용자 정보에도 역할 추가
             if (Object.keys(user).length > 0) {
               user.role = 'ROLE_COUNSELOR';
               sessionStorage.setItem('user', JSON.stringify(user));
@@ -70,17 +66,11 @@ class CounselWebSocketService {
       }
     };
 
-    // 역할 확인 및 설정
     checkAndSetRole();
 
     this.stompClient = new Client({
-      webSocketFactory: () => {
-        const socket = new SockJS(this.socketURL);
-        return socket;
-      },
-      connectHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
+      webSocketFactory: () => new SockJS(this.socketURL),
+      connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
@@ -88,8 +78,6 @@ class CounselWebSocketService {
         console.log('[웹소켓] 연결 성공!');
         this.isConnected = true;
         this.isConnecting = false;
-
-        // 대기 중인 구독 처리
         if (this.pendingSubscriptions.length > 0) {
           this.pendingSubscriptions.forEach(sub => {
             this.addSubscriptions(
@@ -101,7 +89,6 @@ class CounselWebSocketService {
           });
           this.pendingSubscriptions = [];
         } else {
-          // 직접 전달된 콜백으로 구독 추가
           this.addSubscriptions(
             counselorCode,
             accessCallback,
@@ -151,45 +138,29 @@ class CounselWebSocketService {
     this.removeSubscriptions(counselorCode);
 
     if (accessCallback) {
-      // 구독 주소 수정: "/sub/{counselor_code}"로 변경
       const topic = `/sub/${counselorCode}`;
       console.log(`[웹소켓] 입장 요청 구독 시도: ${topic}`);
       const sub = this.stompClient.subscribe(topic, message => {
         console.log(`[웹소켓] ${topic}에서 메시지 수신:`, message);
         try {
           const parsed = JSON.parse(message.body);
-
-          // 메시지 처리 전에 로그 출력
-          console.log(`[웹소켓] 파싱된 메시지:`, parsed);
-
-          // 사용자 역할 정보 확인
+          console.log('[웹소켓] 파싱된 메시지:', parsed);
           const userRole = sessionStorage.getItem('userRole');
           const user = JSON.parse(sessionStorage.getItem('user') || '{}');
           const isCounselor =
-            userRole === 'ROLE_COUNSELOR' ||
-            userRole === 'counselor' ||
-            user.role === 'ROLE_COUNSELOR' ||
-            user.role === 'counselor';
-
+            userRole === 'ROLE_COUNSELOR' || user.role === 'ROLE_COUNSELOR';
           console.log(
             `[웹소켓] 현재 사용자 역할: ${userRole}, 상담사 여부: ${isCounselor}`,
           );
 
-          // 최신 명세에 따른 키 "Event", "role" 등 사용
           if (parsed.event === 'join_con' || parsed.Event === 'join_con') {
-            // event 또는 Event 필드 표준화
-            const event = parsed.event || parsed.Event;
             const role = parsed.role || parsed.Role;
-
             if (role === 'ROLE_COUNSELOR') {
               console.log('[웹소켓] 상담사 RESPONSE:', parsed);
             } else if (role === 'ROLE_USER') {
               console.log('[웹소켓] 유저 입장 REQUEST:', parsed);
-
-              // 상담사이고 사용자 입장 요청인 경우 특별 처리
               if (isCounselor) {
                 console.log('[웹소켓] 상담사가 사용자 입장 요청 받음');
-                // 추가 처리 가능
               }
             } else {
               console.log(
@@ -202,19 +173,16 @@ class CounselWebSocketService {
           } else if (parsed.event === 'declined') {
             console.log('[웹소켓] 상담사 거절 메시지 수신:', parsed);
           }
-
           accessCallback(parsed);
         } catch (err) {
           console.error('[웹소켓] 메시지 파싱 실패:', err);
           console.error('원본 메시지:', message.body);
         }
       });
-      // 기존 subscription 키도 그대로 사용
       this.subscriptions.set(`access-${counselorCode}`, sub);
       console.log(`[웹소켓] ${topic} 구독 성공!`);
     }
 
-    // 채널 및 채팅 콜백 추가
     if (channelCallback) {
       const channelTopic = `/sub/${counselorCode}/channel`;
       const channelSub = this.stompClient.subscribe(channelTopic, message => {
@@ -244,78 +212,52 @@ class CounselWebSocketService {
     }
   }
 
-  sendStartRequest(counselorCode, userId) {
+  // 공통 메시지 발행 함수
+  _publishMessage(destination, messageObject, description) {
     if (!this.stompClient || !this.isConnected) {
       console.error(
-        '[웹소켓] 연결되어 있지 않아 상담 시작 요청을 보낼 수 없습니다.',
+        `[웹소켓] 연결되어 있지 않아 ${description} 요청을 보낼 수 없습니다.`,
       );
       return false;
     }
     try {
-      const requestMessage = {
-        event: 'start',
-        user: userId,
-        channel: counselorCode,
-        role: 'COUNSELOR_ROLE',
-      };
-      this.stompClient.publish({
-        destination: `/pub/${counselorCode}`,
-        body: JSON.stringify(requestMessage),
-      });
-      console.log('[웹소켓] 상담 시작 요청 전송:', requestMessage);
+      const body = JSON.stringify(messageObject);
+      this.stompClient.publish({ destination, body });
+      console.log(`[웹소켓] ${description} 요청 전송:`, messageObject);
       return true;
     } catch (error) {
-      console.error('[웹소켓] 상담 시작 요청 전송 실패:', error);
+      console.error(`[웹소켓] ${description} 요청 전송 실패:`, error);
       return false;
     }
   }
 
-  // 상담 종료 요청 메서드 추가
+  sendStartRequest(counselorCode, userId) {
+    const message = {
+      event: 'start',
+      user: userId,
+      channel: counselorCode,
+      role: 'COUNSELOR_ROLE',
+    };
+    return this._publishMessage(`/pub/${counselorCode}`, message, '상담 시작');
+  }
+
   sendEndRequest(counselorCode, userId) {
-    if (!this.stompClient || !this.isConnected) {
-      console.error(
-        '[웹소켓] 연결되어 있지 않아 상담 종료 요청을 보낼 수 없습니다.',
-      );
-      return false;
-    }
-    try {
-      const requestMessage = {
-        event: 'end',
-        user: userId,
-        channel: counselorCode,
-        role: 'COUNSELOR_ROLE',
-      };
-
-      // 백엔드 명세서에 따라 메시지 전송
-      this.stompClient.publish({
-        destination: `/pub/${counselorCode}`,
-        body: JSON.stringify(requestMessage),
-      });
-
-      console.log('[웹소켓] 상담 종료 요청 전송:', requestMessage);
-      return true;
-    } catch (error) {
-      console.error('[웹소켓] 상담 종료 요청 전송 실패:', error);
-      return false;
-    }
+    const message = {
+      event: 'end',
+      user: userId,
+      channel: counselorCode,
+      role: 'COUNSELOR_ROLE',
+    };
+    return this._publishMessage(`/pub/${counselorCode}`, message, '상담 종료');
   }
 
   sendJoinRequest(counselorCode, userData) {
-    if (!this.stompClient || !this.isConnected) {
-      console.error('[웹소켓] 연결되어 있지 않아 요청을 보낼 수 없습니다.');
-      return false;
-    }
-
     try {
-      // sessionStorage에서 사용자 객체를 가져와 userId를 숫자로 변환
       const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
       const userId = Number(userObj.id) || 0;
-
-      // counselorCode를 문자열 및 숫자로 변환
       const counselorCodeStr = String(counselorCode);
       const channelId = Number(counselorCode) || counselorCodeStr;
-
-      const orderedMessage = {
+      const message = {
         event: 'join_con',
         name: userData.name,
         birth: userData.birthdate,
@@ -323,213 +265,67 @@ class CounselWebSocketService {
         channel: channelId,
         role: 'ROLE_USER',
       };
-
-      // JSON 문자열로 변환하여 로그 출력 (키 순서가 보장됨)
-      const messageString = JSON.stringify(orderedMessage, null, 2);
       console.log(
-        `[웹소켓] 입장 요청 전송: /pub/${counselorCodeStr}/access\n${messageString}`,
+        `[웹소켓] 입장 요청 전송: /pub/${counselorCodeStr}/access`,
+        message,
       );
-
-      // 메시지 전송
-      this.stompClient.publish({
-        destination: `/pub/${counselorCodeStr}/access`,
-        body: JSON.stringify(orderedMessage),
-      });
-
-      return true;
+      return this._publishMessage(
+        `/pub/${counselorCodeStr}/access`,
+        message,
+        '입장 요청',
+      );
     } catch (error) {
       console.error('[웹소켓] 입장 요청 전송 실패:', error);
       return false;
     }
   }
 
-  // 상담사가 입장 요청을 수락하는 메서드 (최종 수정)
   sendAcceptRequest(counselorCode, userId) {
-    if (!this.stompClient || !this.isConnected) {
-      console.error('[웹소켓] 연결되어 있지 않아 요청을 보낼 수 없습니다.');
-      return false;
-    }
-
-    try {
-      // 명세에 정확히 맞게 메시지 구조 수정
-      const responseMessage = {
-        event: 'accepted',
-        user: userId,
-        channel: counselorCode,
-        role: 'ROLE_COUNSELOR',
-      };
-
-      // JSON 문자열로 변환하여 로그 출력
-      const messageString = JSON.stringify(responseMessage, null, 2);
-      console.log(
-        `[웹소켓] 상담사 수락 메시지 전송: /pub/${counselorCode}\n${messageString}`,
-      );
-
-      // /pub/{channel_id} 형식 - 백엔드 명세에 맞게 정확히 설정
-      this.stompClient.publish({
-        destination: `/pub/${counselorCode}`,
-        body: JSON.stringify(responseMessage),
-      });
-
-      return true;
-    } catch (error) {
-      console.error('[웹소켓] 입장 요청 수락 실패:', error);
-      return false;
-    }
+    const message = {
+      event: 'accepted',
+      user: userId,
+      channel: counselorCode,
+      role: 'ROLE_COUNSELOR',
+    };
+    return this._publishMessage(`/pub/${counselorCode}`, message, '수락');
   }
 
-  // 상담사가 입장 요청을 거절하는 메서드 (최종 수정)
   sendDeclineRequest(counselorCode, userId) {
-    if (!this.stompClient || !this.isConnected) {
-      console.error('[웹소켓] 연결되어 있지 않아 요청을 보낼 수 없습니다.');
-      return false;
-    }
-
-    try {
-      // 명세에 정확히 맞게 메시지 구조 수정
-      const responseMessage = {
-        event: 'declined',
-        user: userId,
-        channel: counselorCode,
-        role: 'ROLE_COUNSELOR',
-      };
-
-      // JSON 문자열로 변환하여 로그 출력
-      const messageString = JSON.stringify(responseMessage, null, 2);
-      console.log(
-        `[웹소켓] 상담사 거절 메시지 전송: /pub/${counselorCode}\n${messageString}`,
-      );
-
-      // /pub/{channel_id} 형식 - 백엔드 명세에 맞게 정확히 설정
-      this.stompClient.publish({
-        destination: `/pub/${counselorCode}`,
-        body: JSON.stringify(responseMessage),
-      });
-
-      return true;
-    } catch (error) {
-      console.error('[웹소켓] 입장 요청 거절 실패:', error);
-      return false;
-    }
+    const message = {
+      event: 'declined',
+      user: userId,
+      channel: counselorCode,
+      role: 'ROLE_COUNSELOR',
+    };
+    return this._publishMessage(`/pub/${counselorCode}`, message, '거절');
   }
-  // 상담사 나가기 요청 메서드 추가
+
   sendCounselorLeaveRequest(counselorCode, userId) {
-    if (!this.stompClient || !this.isConnected) {
-      console.error(
-        '[웹소켓] 연결되어 있지 않아 상담사 나가기 요청을 보낼 수 없습니다.',
-      );
-      return false;
-    }
-    try {
-      const requestMessage = {
-        event: 'con_leave',
-        user: userId,
-        channel: counselorCode,
-        role: 'ROLE_COUNSELOR',
-      };
-
-      // 백엔드 명세서에 따라 메시지 전송
-      this.stompClient.publish({
-        destination: `/pub/${counselorCode}`,
-        body: JSON.stringify(requestMessage),
-      });
-
-      console.log('[웹소켓] 상담사 나가기 요청 전송:', requestMessage);
-      return true;
-    } catch (error) {
-      console.error('[웹소켓] 상담사 나가기 요청 전송 실패:', error);
-      return false;
-    }
+    const message = {
+      event: 'con_leave',
+      user: userId,
+      channel: counselorCode,
+      role: 'ROLE_COUNSELOR',
+    };
+    return this._publishMessage(
+      `/pub/${counselorCode}`,
+      message,
+      '상담사 나가기',
+    );
   }
 
-  // 일반 사용자 나가기 요청 메서드 추가
   sendUserLeaveRequest(counselorCode, userId) {
-    if (!this.stompClient || !this.isConnected) {
-      console.error(
-        '[웹소켓] 연결되어 있지 않아 사용자 나가기 요청을 보낼 수 없습니다.',
-      );
-      return false;
-    }
-    try {
-      const requestMessage = {
-        event: 'user_leave',
-        user: userId,
-        channel: counselorCode,
-        role: 'ROLE_USER',
-      };
-
-      // 백엔드 명세서에 따라 메시지 전송
-      this.stompClient.publish({
-        destination: `/pub/${counselorCode}`,
-        body: JSON.stringify(requestMessage),
-      });
-
-      console.log('[웹소켓] 사용자 나가기 요청 전송:', requestMessage);
-      return true;
-    } catch (error) {
-      console.error('[웹소켓] 사용자 나가기 요청 전송 실패:', error);
-      return false;
-    }
-  }
-
-  // 일반 사용자 나가기 요청 메서드 추가
-  sendUserLeaveRequest(counselorCode, userId) {
-    if (!this.stompClient || !this.isConnected) {
-      console.error(
-        '[웹소켓] 연결되어 있지 않아 사용자 나가기 요청을 보낼 수 없습니다.',
-      );
-      return false;
-    }
-    try {
-      const requestMessage = {
-        event: 'user_leave',
-        user: userId,
-        channel: counselorCode,
-        role: 'ROLE_USER',
-      };
-
-      // 백엔드 명세서에 따라 메시지 전송
-      this.stompClient.publish({
-        destination: `/pub/${counselorCode}`,
-        body: JSON.stringify(requestMessage),
-      });
-
-      console.log('[웹소켓] 사용자 나가기 요청 전송:', requestMessage);
-      return true;
-    } catch (error) {
-      console.error('[웹소켓] 사용자 나가기 요청 전송 실패:', error);
-      return false;
-    }
-  }
-
-  // 일반 사용자 나가기 요청 메서드 추가
-  sendUserLeaveRequest(counselorCode, userId) {
-    if (!this.stompClient || !this.isConnected) {
-      console.error(
-        '[웹소켓] 연결되어 있지 않아 사용자 나가기 요청을 보낼 수 없습니다.',
-      );
-      return false;
-    }
-    try {
-      const requestMessage = {
-        event: 'user_leave',
-        user: userId,
-        channel: counselorCode,
-        role: 'ROLE_USER',
-      };
-
-      // 백엔드 명세서에 따라 메시지 전송
-      this.stompClient.publish({
-        destination: `/pub/${counselorCode}`,
-        body: JSON.stringify(requestMessage),
-      });
-
-      console.log('[웹소켓] 사용자 나가기 요청 전송:', requestMessage);
-      return true;
-    } catch (error) {
-      console.error('[웹소켓] 사용자 나가기 요청 전송 실패:', error);
-      return false;
-    }
+    const message = {
+      event: 'user_leave',
+      user: userId,
+      channel: counselorCode,
+      role: 'ROLE_USER',
+    };
+    return this._publishMessage(
+      `/pub/${counselorCode}`,
+      message,
+      '사용자 나가기',
+    );
   }
 }
 

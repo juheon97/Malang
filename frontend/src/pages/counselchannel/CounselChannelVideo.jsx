@@ -217,6 +217,7 @@ function CounselChannelVideo() {
     handleSendMessage,
     handleKeyDown,
     chatContainerRef,
+    addMessage,
   } = useChat(currentUserId);
 
   // 요청 수락 처리 (업데이트됨)
@@ -283,6 +284,11 @@ function CounselChannelVideo() {
         const handleAccessCallback = message => {
           console.log('[웹소켓] 메시지 수신:', message);
           console.log('[웹소켓] 이벤트 타입:', message.event);
+
+          if (message.event === 'started') {
+            console.log('[웹소켓] 상담 시작 메시지 수신:', message);
+            addMessage('상담이 시작되었습니다.', '시스템', 'system');
+          }
 
           // user_leaved 이벤트 처리
           if (message.event === 'user_leaved') {
@@ -429,7 +435,14 @@ function CounselChannelVideo() {
       console.log('세션 종료 시작');
       leaveSession();
     };
-  }, [isLoading, joinSession, leaveSession, counselorCode, navigate]);
+  }, [
+    isLoading,
+    joinSession,
+    leaveSession,
+    counselorCode,
+    navigate,
+    addMessage,
+  ]);
 
   // 토글 함수
   const toggleMic = () => {
