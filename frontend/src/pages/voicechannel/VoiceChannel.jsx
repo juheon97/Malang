@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAccessibility } from '../../contexts/AccessibilityContext';
 import PasswordModal from '../../components/modal/PasswordModal';
 import WaitingModal from '../../components/modal/WaitingModal';
-import useOpenVidu from '../../hooks/useOpenvidu';
+import useVoiceOpenVidu from '../../hooks/useVoiceOpenVidu';
 
 const VoiceChannel = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const VoiceChannel = () => {
   const [expandedChannel, setExpandedChannel] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { joinExistingSession } = useOpenVidu();
+  const { joinExistingSession } = useVoiceOpenVidu();
 
   // 모달 관련 상태
   const [showPasswordModal, setShowPasswordModal] = useState(false);

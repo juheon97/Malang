@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+// video/VoiceVideoControls.jsx
+import React from 'react';
 
-const VideoControls = ({
+const VoiceVideoControls = ({
   isMicOn,
   isCameraOn,
   toggleMic,
@@ -10,45 +11,11 @@ const VideoControls = ({
   isSignLanguageOn = false,
   toggleVoiceTranslation,
   toggleSignLanguage,
-  onStartSession,
-  onEndSession,
-  isHost = false,
-  isSessionStarted = false,
+  onLeaveChannel, // 새로운 prop 추가
 }) => {
-  // 로컬 상태로 세션 시작 여부 관리
-  const [localSessionStarted, setLocalSessionStarted] =
-    useState(isSessionStarted);
-
-  // 부모 컴포넌트에서 isSessionStarted 값이 변경되면 로컬 상태도 업데이트
-  useEffect(() => {
-    setLocalSessionStarted(isSessionStarted);
-  }, [isSessionStarted]);
-
-  // 버튼 클릭 핸들러 - 로컬 상태 즉시 업데이트 + 부모 함수 호출
-  const handleStartSession = () => {
-    console.log('상담 시작 버튼 클릭됨');
-    setLocalSessionStarted(true); // 로컬 상태 즉시 변경
-    if (typeof onStartSession === 'function') {
-      onStartSession();
-    } else {
-      console.error('onStartSession is not a function');
-    }
-  };
-
-  const handleEndSession = () => {
-    console.log('상담 종료 버튼 클릭됨');
-    setLocalSessionStarted(false); // 로컬 상태 즉시 변경
-    if (typeof onEndSession === 'function') {
-      onEndSession();
-    } else {
-      console.error('onEndSession is not a function');
-    }
-  };
-
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
       <div className="p-2 flex items-center justify-between">
-        {/* 왼쪽 기본 컨트롤 */}
         <div className="flex space-x-4">
           {/* 마이크 버튼 */}
           <button
@@ -92,7 +59,6 @@ const VideoControls = ({
               </div>
             )}
           </button>
-
           {/* 카메라 버튼 */}
           <button
             onClick={toggleCamera}
@@ -137,7 +103,6 @@ const VideoControls = ({
           </button>
         </div>
 
-        {/* 오른쪽 컨트롤: 기본 + 상담사 전용 버튼 */}
         <div className="flex space-x-4 items-center">
           {/* 음성번역 토글 버튼 */}
           <button
@@ -147,7 +112,7 @@ const VideoControls = ({
             <span className="mr-2">음성 번역</span>
             <span
               className={
-                isVoiceTranslationOn ? 'text-green-500' : 'text-red-400'
+                isVoiceTranslationOn ? 'text-red-400' : 'text-green-500'
               }
             >
               {isVoiceTranslationOn ? '중단' : '시작'}
@@ -161,81 +126,42 @@ const VideoControls = ({
           >
             <span className="mr-2">수화 번역</span>
             <span
-              className={isSignLanguageOn ? 'text-green-500' : 'text-red-400'}
+              className={isSignLanguageOn ? 'text-red-400' : 'text-green-500'}
             >
               {isSignLanguageOn ? '중단' : '시작'}
             </span>
           </button>
 
-          {/* 상담사 전용 상담 시작/종료 버튼 - UI만 유지, 기능 제거 */}
-          {isHost && (
-            <>
-              {!isSessionStarted ? (
-                <button
-                  type="button"
-                  className="px-4 py-2 bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer z-10"
-                >
-                  <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span>상담 시작</span>
-                  </div>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="px-4 py-2 bg-gradient-to-r from-[#ff6b6b] to-[#e23e3e] text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer z-10"
-                >
-                  <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"
-                      />
-                    </svg>
-                    <span>상담 종료</span>
-                  </div>
-                </button>
-              )}
-            </>
-          )}
+          {/* 나가기 버튼 */}
+          <button
+            onClick={
+              onLeaveChannel ||
+              (() => {
+                leaveSession();
+                window.location.href = '/counsel-channel';
+              })
+            }
+            className="w-12 h-12 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-red-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-export default VideoControls;
-
+export default VoiceVideoControls;

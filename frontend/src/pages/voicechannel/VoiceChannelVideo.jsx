@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import ChatBox from '../../components/video/ChatBox';
-import VideoControls from '../../components/video/VideoControls';
-import useOpenVidu from '../../hooks/useOpenvidu';
+import VoiceVideoControls from '../../components/video/VoiceVideoControls';
+import useVoiceOpenVidu from '../../hooks/useVoiceOpenVidu';
 import useChat from '../../hooks/useChat';
 import { useAuth } from '../../contexts/AuthContext';
 import websocketService from '../../services/websocketService';
-import VideoLayout from '../../components/video/VideoLayout';
+import VoiceVideoLayout from '../../components/video/VoiceVideoLayout';
 
 function VoiceChannelVideo() {
   const { channelId } = useParams();
@@ -35,7 +35,7 @@ const isCreator = currentUser?.username === creatorNickname;
     isConnected: isOpenViduConnected,  
     participants, 
     renderParticipantInfo
-  } = useOpenVidu(
+  } = useVoiceOpenVidu(
     channelId,
     currentUser?.username || 'Guest'
   );
@@ -91,13 +91,13 @@ const isCreator = currentUser?.username === creatorNickname;
     const connectWebSocket = () => {
       const token = sessionStorage.getItem('token');
       if (!token || !isAuthenticated || !channelId) return;
-
+  
       websocketService.connect(
         channelId,
         handleChatMessage,
         handleChannelEvent,
       );
-
+  
       const checkConnection = setInterval(() => {
         if (websocketService.isConnected) {
           setIsWebSocketConnected(true);
@@ -107,19 +107,19 @@ const isCreator = currentUser?.username === creatorNickname;
         }
       }, 500);
     };
-
+  
     if (!hasJoined.current && isAuthenticated && channelId) {
       hasJoined.current = true;
       connectWebSocket();
-      if (isCreator){
-        console.log('video.jsx에서 방장모드로 고고')
-        createAndJoinSession(channelId)
-        
-      }else{
-        console.log('video.jsx에서 참여자모드로')
+      if (isCreator) {
+        console.log('video.jsx에서 방장모드로 고고');
+        createAndJoinSession(channelId);
+      } else {
+        console.log('video.jsx에서 참여자모드로');
         joinExistingSession();
       }
-
+    }
+  
     return () => {
       if (hasJoined.current) {
         websocketService.sendLeaveEvent(channelId, currentUser?.id);
@@ -239,7 +239,7 @@ const isCreator = currentUser?.username === creatorNickname;
         {/* 메인 컨텐츠 - 영상과 채팅 */}
         {/* 영상 영역 */}
         <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
-          <VideoLayout
+          <VoiceVideoLayout
             participants={participants}
             renderParticipantInfo={renderParticipantInfo}
           />
@@ -258,7 +258,7 @@ const isCreator = currentUser?.username === creatorNickname;
         />
       </div>
 
-      <VideoControls
+      <VoiceVideoControls
         isMicOn={isMicOn}
         isCameraOn={isCameraOn}
         toggleMic={toggleMic}

@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import voiceChannelApi from '../../api/voiceChannelApi';
-import useOpenVidu from '../../hooks/useOpenvidu';
+import useVoiceOpenVidu from '../../hooks/useVoiceOpenVidu';
 
 function VoiceChannelRoom() {
-  const { createAndJoinSession } = useOpenVidu(); // ✅ 컴포넌트 최상위에서 호출
+  const { createAndJoinSession } = useVoiceOpenVidu(); // ✅ 컴포넌트 최상위에서 호출
 
   const [createdChannelId, setCreatedChannelId] = useState(null);
   const navigate = useNavigate();
