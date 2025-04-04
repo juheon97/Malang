@@ -268,165 +268,142 @@ function CounselChannelVideo() {
     }
   };
 
-  // useEffect 내부에서 웹소켓 연결 및 콜백 함수 설정
+  // CounselChannelVideo.jsx (핵심 부분)
   useEffect(() => {
     if (!hasJoined.current && !isLoading) {
       console.log('OpenVidu 세션 참여, counselor_code:', counselorCode);
 
-      // 웹소켓 연결 확인
-      console.log('세션 참여 전 웹소켓 상태:');
-      logWebSocketStatus();
+      const handleAccessCallback = message => {
+        console.log('[웹소켓] 메시지 수신:', message);
+        const event = message.event ? message.event.trim().toLowerCase() : '';
 
-      // 웹소켓이 연결되어 있지 않으면 연결 시도
-      if (!counselWebSocketService.isConnected) {
-        console.log('웹소켓 연결이 없어 새로 연결 시도');
+        if (event === 'started') {
+          console.log('[웹소켓] 상담 시작 메시지 수신:', message);
+          addMessage('상담이 시작되었습니다.', '시스템', 'system');
+          return;
+        }
 
-        const handleAccessCallback = message => {
-          console.log('[웹소켓] 메시지 수신:', message);
-          console.log('[웹소켓] 이벤트 타입:', message.event);
+        if (event === 'end' || event === 'ended') {
+          console.log('[웹소켓] 상담 종료 메시지 수신:', message);
+          addMessage('상담이 종료되었습니다.', '시스템', 'system');
+          setIsSessionStarted(false);
+          return;
+        }
 
-          if (message.event === 'started') {
-            console.log('[웹소켓] 상담 시작 메시지 수신:', message);
-            addMessage('상담이 시작되었습니다.', '시스템', 'system');
-          }
+        // page_move 이벤트가 들어오면 상담 시작 버튼을 활성화시킵니다.
+        if (event === 'page_move') {
+          console.log('[웹소켓] page_move 이벤트 감지, 상담 시작 버튼 활성화');
+          setIsPageMoveActive(true);
+          return;
+        }
 
-          // user_leaved 이벤트 처리
-          if (message.event === 'user_leaved') {
-            console.log('[웹소켓] user_leaved 이벤트 발견!');
-
-            // 현재 사용자 역할 확인
-            const userRole = sessionStorage.getItem('userRole');
-            const isCounselor =
-              userRole === 'ROLE_COUNSELOR' || userRole === 'counselor';
-
-            console.log(
-              '[웹소켓] 현재 사용자 역할:',
-              userRole,
-              ', 상담사 여부:',
-              isCounselor,
-            );
-
-            // 상담사인 경우 알림 표시 및 버튼 비활성화
-            if (isCounselor) {
-              console.log('[웹소켓] 상담사의 user_leaved 처리 시작');
-
-              // 상담 시작 버튼 비활성화
-              setIsPageMoveActive(false);
-              console.log('[웹소켓] 상담 시작 버튼 비활성화 완료');
-
-              // 상담 세션이 시작된 상태라면 종료 처리
-              if (isSessionStarted) {
-                console.log('[웹소켓] 상담 세션 종료 처리 시작');
-                setIsSessionStarted(false);
-
-                // 채널 정보 업데이트 (세션 스토리지)
-                const channelInfo = JSON.parse(
-                  sessionStorage.getItem('currentChannel') || '{}',
-                );
-                channelInfo.status = 'INACTIVE';
-                channelInfo.isActive = false;
-                sessionStorage.setItem(
-                  'currentChannel',
-                  JSON.stringify(channelInfo),
-                );
-                console.log('[웹소켓] 채널 정보 업데이트 완료:', channelInfo);
-              }
-
-              // 알림 표시
-              console.log('[웹소켓] 알림 표시 전');
-              alert('상담자가 상담방을 떠났습니다.');
-              console.log('[웹소켓] 알림 표시 후');
+        // user_leaved 이벤트 처리
+        if (event === 'user_leaved') {
+          console.log('[웹소켓] user_leaved 이벤트 발견!');
+          const userRole = sessionStorage.getItem('userRole');
+          const isCounselor =
+            userRole === 'ROLE_COUNSELOR' || userRole === 'counselor';
+          console.log(
+            '[웹소켓] 현재 사용자 역할:',
+            userRole,
+            ', 상담사 여부:',
+            isCounselor,
+          );
+          if (isCounselor) {
+            console.log('[웹소켓] 상담사의 user_leaved 처리 시작');
+            setIsPageMoveActive(false);
+            if (isSessionStarted) {
+              console.log('[웹소켓] 상담 세션 종료 처리 시작');
+              setIsSessionStarted(false);
+              const channelInfo = JSON.parse(
+                sessionStorage.getItem('currentChannel') || '{}',
+              );
+              channelInfo.status = 'INACTIVE';
+              channelInfo.isActive = false;
+              sessionStorage.setItem(
+                'currentChannel',
+                JSON.stringify(channelInfo),
+              );
+              console.log('[웹소켓] 채널 정보 업데이트 완료:', channelInfo);
             }
+            alert('상담자가 상담방을 떠났습니다.');
             return;
           }
 
-          // page_move 이벤트 발생 시 버튼 활성화 상태 업데이트
-          if (message.event === 'page_move') {
-            console.log('page_move 분기 진입');
-            setIsPageMoveActive(true);
-          }
-
           // 입장 요청/응답 이벤트 처리
-          if (message.event === 'join_con') {
-            if (message.role === 'ROLE_USER') {
-              console.log(
-                '유저 입장 REQUEST (/pub/' + counselorCode + '/access):',
-                {
-                  event: message.event,
-                  name: message.name,
-                  birth: message.birth,
-                  user: message.user,
-                  channel: message.channel,
-                  role: message.role,
-                },
-              );
-
-              const userRole = sessionStorage.getItem('userRole');
-              const user = JSON.parse(sessionStorage.getItem('user') || '{}');
-              const isCounselor =
-                userRole === 'ROLE_COUNSELOR' ||
-                userRole === 'counselor' ||
-                user.role === 'ROLE_COUNSELOR' ||
-                user.role === 'counselor';
-
-              console.log(
-                '현재 사용자 역할:',
-                userRole,
-                '상담사 여부:',
-                isCounselor,
-              );
-
-              if (isCounselor) {
-                setRequestUserInfo({
-                  name: message.name,
-                  birth: message.birth,
-                  userId: message.user,
-                  channelId: message.channel,
-                });
-                setShowRequestAlert(true);
-              }
-            } else if (message.role === 'ROLE_COUNSELOR') {
-              console.log('상담사 RESPONSE:', {
+        } else if (event === 'join_con') {
+          if (message.role === 'ROLE_USER') {
+            console.log(
+              '유저 입장 REQUEST (/pub/' + counselorCode + '/access):',
+              {
                 event: message.event,
                 name: message.name,
                 birth: message.birth,
                 user: message.user,
                 channel: message.channel,
                 role: message.role,
-              });
-            }
-          } else if (message.event === 'accepted') {
-            console.log('[웹소켓] 상담사 수락 메시지 수신:', message);
-            alert('입장 요청이 수락되었습니다.');
-          } else if (message.event === 'declined') {
-            console.log('[웹소켓] 상담사 거절 메시지 수신:', message);
-            alert('입장 요청이 거절되었습니다. 상담 목록으로 돌아갑니다.');
-            navigate('/counsel-channel');
-          }
-
-          // 취소, accept_con, decline_con 이벤트 처리
-          if (message.event === 'cancel_con') {
+              },
+            );
+            const userRole = sessionStorage.getItem('userRole');
+            const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+            const isCounselor =
+              userRole === 'ROLE_COUNSELOR' ||
+              userRole === 'counselor' ||
+              user.role === 'ROLE_COUNSELOR' ||
+              user.role === 'counselor';
             console.log(
-              `[웹소켓] ${message.name || '사용자'}가 입장 요청을 취소했습니다.`,
+              '현재 사용자 역할:',
+              userRole,
+              '상담사 여부:',
+              isCounselor,
             );
-            if (showRequestAlert && requestUserInfo?.userId === message.user) {
-              setShowRequestAlert(false);
+            if (isCounselor) {
+              setRequestUserInfo({
+                name: message.name,
+                birth: message.birth,
+                userId: message.user,
+                channelId: message.channel,
+              });
+              setShowRequestAlert(true);
             }
-          } else if (message.event === 'accept_con') {
-            console.log('[웹소켓] 상담사가 입장 요청을 수락했습니다.');
-            alert('상담사가 입장 요청을 수락했습니다.');
-          } else if (message.event === 'decline_con') {
-            console.log('[웹소켓] 상담사가 입장 요청을 거절했습니다.');
-            alert(
-              '상담사가 입장 요청을 거절했습니다. 상담 목록으로 돌아갑니다.',
-            );
-            navigate('/counsel-channel');
+          } else if (message.role === 'ROLE_COUNSELOR') {
+            console.log('상담사 RESPONSE:', {
+              event: message.event,
+              name: message.name,
+              birth: message.birth,
+              user: message.user,
+              channel: message.channel,
+              role: message.role,
+            });
           }
-        };
+        } else if (event === 'accepted') {
+          console.log('[웹소켓] 상담사 수락 메시지 수신:', message);
+          alert('입장 요청이 수락되었습니다.');
+        } else if (event === 'declined') {
+          console.log('[웹소켓] 상담사 거절 메시지 수신:', message);
+          alert('입장 요청이 거절되었습니다. 상담 목록으로 돌아갑니다.');
+          navigate('/counsel-channel');
+        }
 
-        counselWebSocketService.connect(counselorCode, handleAccessCallback);
-      }
+        if (event === 'cancel_con') {
+          console.log(
+            `[웹소켓] ${message.name || '사용자'}가 입장 요청을 취소했습니다.`,
+          );
+          if (showRequestAlert && requestUserInfo?.userId === message.user) {
+            setShowRequestAlert(false);
+          }
+        } else if (event === 'accept_con') {
+          console.log('[웹소켓] 상담사가 입장 요청을 수락했습니다.');
+          alert('상담사가 입장 요청을 수락했습니다.');
+        } else if (event === 'decline_con') {
+          console.log('[웹소켓] 상담사가 입장 요청을 거절했습니다.');
+          alert('상담사가 입장 요청을 거절했습니다. 상담 목록으로 돌아갑니다.');
+          navigate('/counsel-channel');
+        }
+      };
 
+      // 웹소켓 연결
+      counselWebSocketService.connect(counselorCode, handleAccessCallback);
       hasJoined.current = true;
       joinSession();
     }
