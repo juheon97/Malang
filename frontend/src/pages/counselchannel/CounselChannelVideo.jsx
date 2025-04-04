@@ -429,20 +429,39 @@ function CounselChannelVideo() {
     try {
       console.log('상담 세션 종료 요청:', counselorCode);
 
-      // 채널 상태 업데이트 API 호출 (counselor_code 사용)
-      const result = await counselorChannel.updateChannelStatus(
+      // 사용자 정보에서 userId 추출
+      const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
+      const userId = userObj.id;
+
+      // 웹소켓을 통해 상담 종료 요청 메시지 전송 (백엔드 명세에 따라 전송)
+      const success = counselWebSocketService.sendEndRequest(
         counselorCode,
-        false,
+        userId,
       );
-      console.log('상담 세션 종료 응답:', result);
 
-      // 상태 업데이트
-      setIsSessionStarted(false);
+      if (success) {
+        console.log('상담 종료 요청이 성공적으로 전송되었습니다.');
 
-      // 알림 표시
-      alert('상담이 종료되었습니다.');
+        // HTTP API 호출 대신 웹소켓만 사용하여 처리
+        // 웹소켓 응답에 따라 상태 업데이트
+        setIsSessionStarted(false);
+
+        // 현재 채널 정보 업데이트 (세션 스토리지)
+        const channelInfo = JSON.parse(
+          sessionStorage.getItem('currentChannel') || '{}',
+        );
+        channelInfo.status = 'INACTIVE';
+        channelInfo.isActive = false;
+        sessionStorage.setItem('currentChannel', JSON.stringify(channelInfo));
+
+        // 알림 표시
+        alert('상담이 종료되었습니다.');
+      } else {
+        console.error('상담 종료 요청 전송 실패');
+        alert('상담 세션을 종료하는데 실패했습니다.');
+      }
     } catch (error) {
-      console.error('상담 세션 종료 실패:', error);
+      console.error('상담 세션 종료 처리 중 오류:', error);
       alert('상담 세션을 종료하는데 실패했습니다.');
     }
   };
@@ -452,20 +471,55 @@ function CounselChannelVideo() {
     try {
       console.log('방 나가기 처리 시작');
 
-      // 웹소켓 상태 로깅
-      logWebSocketStatus();
+      // 현재 사용자 역할 확인
+      const userRole = sessionStorage.getItem('userRole');
+      const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
+      const userId = userObj.id;
 
-      // OpenVidu 세션 종료
-      leaveSession();
-      console.log('OpenVidu 세션 종료됨');
+      // 상담사인 경우
+      if (userRole === 'ROLE_COUNSELOR' || userRole === 'counselor') {
+        console.log('상담사로서 방 나가기 처리');
 
-      // 방 나가기 API 호출 - 일반 사용자 방식으로 통일
-      console.log('방 나가기 API 호출:', counselorCode);
-      const result = await counselorChannel.leaveChannel(counselorCode);
-      console.log('상담방 나가기 완료:', result);
+        // 웹소켓을 통해 상담사 나가기 요청 전송
+        const success = counselWebSocketService.sendCounselorLeaveRequest(
+          counselorCode,
+          userId,
+        );
 
-      // 리스트 페이지로 이동
-      navigate('/counsel-channel');
+        if (success) {
+          console.log('상담사 나가기 요청이 성공적으로 전송되었습니다.');
+
+          // OpenVidu 세션 종료
+          leaveSession();
+          console.log('OpenVidu 세션 종료됨');
+
+          // 웹소켓 연결 종료
+          if (counselWebSocketService.isConnected) {
+            counselWebSocketService.stompClient.deactivate();
+          }
+
+          // 리스트 페이지로 이동
+          navigate('/counsel-channel');
+        } else {
+          console.error('상담사 나가기 요청 전송 실패');
+          alert('상담방 나가기에 실패했습니다.');
+        }
+      } else {
+        // 일반 사용자인 경우 기존 방식으로 처리
+        console.log('사용자로서 방 나가기 처리');
+
+        // OpenVidu 세션 종료
+        leaveSession();
+        console.log('OpenVidu 세션 종료됨');
+
+        // 방 나가기 API 호출 - 일반 사용자 방식으로 통일
+        console.log('방 나가기 API 호출:', counselorCode);
+        const result = await counselorChannel.leaveChannel(counselorCode);
+        console.log('상담방 나가기 완료:', result);
+
+        // 리스트 페이지로 이동
+        navigate('/counsel-channel');
+      }
     } catch (error) {
       console.error('방 나가기 오류:', error);
       // 오류가 발생해도 리스트 페이지로 이동

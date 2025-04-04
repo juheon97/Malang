@@ -14,6 +14,7 @@ const VideoControls = ({
   onEndSession,
   isSessionStarted = false,
   isPageMoveActive = false, // 외부 이벤트에 따른 활성화 여부
+  onLeaveChannel, // 방 나가기 함수 추가
 }) => {
   // 로컬 상태로 세션 시작 여부 관리
   const [localSessionStarted, setLocalSessionStarted] =
@@ -137,7 +138,7 @@ const VideoControls = ({
           </button>
         </div>
 
-        {/* 오른쪽 컨트롤: 음성 번역, 수화 번역, 상담 시작 버튼 */}
+        {/* 오른쪽 컨트롤: 음성 번역, 수화 번역, 상담 시작/종료 버튼 */}
         <div className="flex space-x-4 items-center">
           {/* 음성번역 토글 버튼 */}
           <button
@@ -167,16 +168,78 @@ const VideoControls = ({
             </span>
           </button>
 
-          {/* 상담 시작 버튼 (기능 없음) */}
+          {/* 상담 시작/종료 버튼 (상태에 따라 변경) */}
+          {!localSessionStarted ? (
+            <button
+              type="button"
+              onClick={handleStartSession}
+              disabled={!isPageMoveActive} // isPageMoveActive가 false이면 비활성화
+              className={`px-4 py-2 font-medium rounded-lg shadow-md transition-all cursor-pointer z-10 ${
+                isPageMoveActive
+                  ? 'bg-blue-500 text-white hover:bg-blue-600'
+                  : 'bg-gray-300 text-gray-600 cursor-not-allowed opacity-60'
+              }`}
+            >
+              <div className="flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>상담 시작</span>
+              </div>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleEndSession}
+              className="px-4 py-2 bg-red-500 text-white font-medium rounded-lg shadow-md hover:bg-red-600 transition-all cursor-pointer z-10"
+            >
+              <div className="flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"
+                  />
+                </svg>
+                <span>상담 종료</span>
+              </div>
+            </button>
+          )}
+
+          {/* 방 나가기 버튼 */}
           <button
-            type="button"
-            onClick={handleStartSession}
-            disabled={!isPageMoveActive} // isPageMoveActive가 false이면 비활성화
-            className={`px-4 py-2 font-medium rounded-lg shadow-md transition-all cursor-pointer z-10 ${
-              isPageMoveActive
-                ? 'bg-blue-500 text-white hover:bg-blue-600'
-                : 'bg-gray-300 text-gray-600 cursor-not-allowed opacity-60'
-            }`}
+            onClick={onLeaveChannel}
+            className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg shadow-md hover:bg-gray-200 transition-all"
           >
             <div className="flex items-center">
               <svg
@@ -190,16 +253,10 @@ const VideoControls = ({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                 />
               </svg>
-              <span>상담 시작</span>
+              <span>나가기</span>
             </div>
           </button>
         </div>

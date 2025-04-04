@@ -84,10 +84,63 @@ const Counsel = () => {
       if (counselorCode) {
         console.log(`웹소켓 연결 시도: 상담사 코드 ${counselorCode}`);
 
+        // Counsel.jsx의 콜백 함수 업데이트
         const handleAccessCallback = message => {
           console.log('[웹소켓] 입장 요청 메시지 수신:', message);
 
-          // join_con 이벤트 처리 (기존 로직)
+          // 상담사 나가기 응답 처리
+          if (message.event === 'con_leaved') {
+            console.log('[웹소켓] 상담사 나가기 응답 수신:', message);
+
+            // 현재 사용자 역할 확인
+            const userRole = sessionStorage.getItem('userRole');
+            const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+            const isCounselor =
+              userRole === 'ROLE_COUNSELOR' ||
+              userRole === 'counselor' ||
+              user.role === 'ROLE_COUNSELOR' ||
+              user.role === 'counselor';
+
+            console.log(
+              '[웹소켓] 현재 사용자 역할:',
+              userRole,
+              '상담사 여부:',
+              isCounselor,
+            );
+            console.log('[웹소켓] 상담사 나가기 후 처리 시작');
+
+            // 일반 사용자인 경우 (상담사가 아닌 모든 사용자) 상담 목록 페이지로 리다이렉트
+            if (!isCounselor) {
+              console.log(
+                '[웹소켓] 일반 사용자로 확인됨, 리다이렉트 처리 시작',
+              );
+              alert('상담사가 퇴장하여 상담이 종료되었습니다.');
+
+              // 웹소켓 연결 종료
+              if (counselWebSocketService.isConnected) {
+                console.log('[웹소켓] 웹소켓 연결 종료');
+                counselWebSocketService.stompClient.deactivate();
+              }
+
+              // 대기 모달 닫기
+              if (showWaitingModal) {
+                setShowWaitingModal(false);
+              }
+
+              // 모든 모달 닫기
+              closeModal();
+
+              // 상담 목록 페이지로 이동
+              console.log('[웹소켓] /counsel-channel로 페이지 이동 시도');
+              window.location.href = '/counsel-channel'; // 강제로 페이지 이동
+              console.log('[웹소켓] 페이지 이동 후');
+            } else {
+              console.log('[웹소켓] 상담사로 확인됨, 리다이렉트하지 않음');
+            }
+            return;
+          }
+
+          // join_con 이벤트 처리 (기존 로직 유지)
           if (message.event === 'join_con') {
             console.log('join_con 이벤트 처리:', message);
             // 필요시 추가 로직

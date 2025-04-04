@@ -270,6 +270,36 @@ class CounselWebSocketService {
     }
   }
 
+  // 상담 종료 요청 메서드 추가
+  sendEndRequest(counselorCode, userId) {
+    if (!this.stompClient || !this.isConnected) {
+      console.error(
+        '[웹소켓] 연결되어 있지 않아 상담 종료 요청을 보낼 수 없습니다.',
+      );
+      return false;
+    }
+    try {
+      const requestMessage = {
+        event: 'end',
+        user: userId,
+        channel: counselorCode,
+        role: 'COUNSELOR_ROLE',
+      };
+
+      // 백엔드 명세서에 따라 메시지 전송
+      this.stompClient.publish({
+        destination: `/pub/${counselorCode}`,
+        body: JSON.stringify(requestMessage),
+      });
+
+      console.log('[웹소켓] 상담 종료 요청 전송:', requestMessage);
+      return true;
+    } catch (error) {
+      console.error('[웹소켓] 상담 종료 요청 전송 실패:', error);
+      return false;
+    }
+  }
+
   sendJoinRequest(counselorCode, userData) {
     if (!this.stompClient || !this.isConnected) {
       console.error('[웹소켓] 연결되어 있지 않아 요청을 보낼 수 없습니다.');
@@ -379,6 +409,35 @@ class CounselWebSocketService {
       return true;
     } catch (error) {
       console.error('[웹소켓] 입장 요청 거절 실패:', error);
+      return false;
+    }
+  }
+  // 상담사 나가기 요청 메서드 추가
+  sendCounselorLeaveRequest(counselorCode, userId) {
+    if (!this.stompClient || !this.isConnected) {
+      console.error(
+        '[웹소켓] 연결되어 있지 않아 상담사 나가기 요청을 보낼 수 없습니다.',
+      );
+      return false;
+    }
+    try {
+      const requestMessage = {
+        event: 'con_leave',
+        user: userId,
+        channel: counselorCode,
+        role: 'ROLE_COUNSELOR',
+      };
+
+      // 백엔드 명세서에 따라 메시지 전송
+      this.stompClient.publish({
+        destination: `/pub/${counselorCode}`,
+        body: JSON.stringify(requestMessage),
+      });
+
+      console.log('[웹소켓] 상담사 나가기 요청 전송:', requestMessage);
+      return true;
+    } catch (error) {
+      console.error('[웹소켓] 상담사 나가기 요청 전송 실패:', error);
       return false;
     }
   }
