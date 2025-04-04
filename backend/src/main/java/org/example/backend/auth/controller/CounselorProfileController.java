@@ -6,9 +6,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.auth.dto.request.CounselorProfileUpdateRequest;
 import org.example.backend.auth.dto.response.CounselorProfileResponse;
+import org.example.backend.auth.model.Counselor;
 import org.example.backend.auth.model.CounselorProfile;
 import org.example.backend.auth.model.User;
 import org.example.backend.auth.repository.CounselorProfileRepository;
+import org.example.backend.auth.repository.CounselorRepository;
 import org.example.backend.auth.repository.UserRepository;
 import org.example.backend.auth.service.CounselorProfileService;
 import org.example.backend.security.jwt.JwtTokenProvider;
@@ -35,6 +37,7 @@ public class CounselorProfileController {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final CounselorProfileRepository counselorProfileRepository;
+    private final CounselorRepository counselorRepository;
 
     /**
      * 상담사 프로필 조회 API
@@ -188,5 +191,11 @@ public class CounselorProfileController {
             log.error("상태 변경 실패: {}", e.getMessage());
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    public Long getCounselorId(Long userId) {
+        return counselorRepository.findByUserId(userId)
+                .map(Counselor::getId)
+                .orElse(null);
     }
 }
