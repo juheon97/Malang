@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import ChatBox from '../../components/video/ChatBox';
-import VideoControls from '../../components/video/VideoControls';
-import useOpenVidu from '../../hooks/useOpenvidu';
+import VoiceVideoControls from '../../components/video/VoiceVideoControls';
+import useVoiceOpenVidu from '../../hooks/useVoiceOpenVidu';
 import useChat from '../../hooks/useChat';
 import { useAuth } from '../../contexts/AuthContext';
 import websocketService from '../../services/websocketService';
+import VoiceVideoLayout from '../../components/video/VoiceVideoLayout';
 
 function VoiceChannelVideo() {
   const { channelId } = useParams();
@@ -19,17 +20,37 @@ function VoiceChannelVideo() {
   const [connectionError, setConnectionError] = useState('');
   const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
   const hasJoined = useRef(false);
-
-  const { joinSession, leaveSession, toggleAudio, toggleVideo } = useOpenVidu(
+  const {state} = useLocation();
+  const creatorNickname = state?.sessionConfig?.creatorNickname;
+const isCreator = currentUser?.username === creatorNickname;
+  // Destructure with all the available properties returned by useOpenVidu
+  const {  
+    createAndJoinSession, 
+    joinExistingSession,  
+    leaveSession, 
+    toggleAudio, 
+    toggleVideo, 
+    error, 
+    isConnecting, 
+    isConnected: isOpenViduConnected,  
+    participants, 
+    renderParticipantInfo
+  } = useVoiceOpenVidu(
     channelId,
-    currentUser?.username || 'Guest',
-    isMicOn,
-    isCameraOn,
+    currentUser?.username || 'Guest'
   );
 
   const { messages, newMessage, setNewMessage, handleKeyDown, addMessage } =
     useChat(currentUser?.id || 'guest');
 
+  // Update connectionError from OpenVidu's error
+  useEffect(() => {
+    if (error) {
+      setConnectionError(error);
+    }
+  }, [error]);
+
+  // WebSocket handlers
   const handleChatMessage = message => {
     try {
       const data = JSON.parse(message.body);
@@ -70,13 +91,13 @@ function VoiceChannelVideo() {
     const connectWebSocket = () => {
       const token = sessionStorage.getItem('token');
       if (!token || !isAuthenticated || !channelId) return;
-
+  
       websocketService.connect(
         channelId,
         handleChatMessage,
         handleChannelEvent,
       );
-
+  
       const checkConnection = setInterval(() => {
         if (websocketService.isConnected) {
           setIsWebSocketConnected(true);
@@ -86,13 +107,19 @@ function VoiceChannelVideo() {
         }
       }, 500);
     };
-
+  
     if (!hasJoined.current && isAuthenticated && channelId) {
       hasJoined.current = true;
       connectWebSocket();
-      joinSession();
+      if (isCreator) {
+        console.log('video.jsx에서 방장모드로 고고');
+        createAndJoinSession(channelId);
+      } else {
+        console.log('video.jsx에서 참여자모드로');
+        joinExistingSession();
+      }
     }
-
+  
     return () => {
       if (hasJoined.current) {
         websocketService.sendLeaveEvent(channelId, currentUser?.id);
@@ -102,7 +129,7 @@ function VoiceChannelVideo() {
         hasJoined.current = false;
       }
     };
-  }, [isAuthenticated, channelId]);
+  }, [isAuthenticated, channelId, isCreator]);
 
   const handleSendMessage = e => {
     e.preventDefault();
@@ -112,7 +139,7 @@ function VoiceChannelVideo() {
       event: 'send',
       content: newMessage,
       userId: currentUser?.id,
-      nickname: currentUser?.username,
+      nickname: currentUser?.username
     };
 
     console.log('📤 백엔드로 전송될 메시지:', messagePayload);
@@ -129,12 +156,12 @@ function VoiceChannelVideo() {
 
   const toggleMic = () => {
     setIsMicOn(!isMicOn);
-    toggleAudio(!isMicOn);
+    toggleAudio();
   };
 
   const toggleCamera = () => {
     setIsCameraOn(!isCameraOn);
-    toggleVideo(!isCameraOn);
+    toggleVideo();
   };
 
   const toggleVoiceTranslation = () => {
@@ -144,6 +171,29 @@ function VoiceChannelVideo() {
   const toggleSignLanguage = () => {
     setIsSignLanguageOn(!isSignLanguageOn);
   };
+
+  // For debugging
+  useEffect(() => {
+    console.log('Current participants:', participants);
+  }, [participants]);
+
+  // 채널 정보 로딩
+  useEffect(() => {
+    // 채널 정보 조회 로직
+    const fetchChannelInfo = async () => {
+      try {
+        setChannelInfo({
+          channelName: state?.sessionConfig?.channelName || `음성 채널 ${channelId}`
+        });
+      } catch (error) {
+        console.error('채널 정보 조회 실패:', error);
+      }
+    };
+    
+    if (channelId) {
+      fetchChannelInfo();
+    }
+  }, [channelId, state]);
 
   return (
     <div
@@ -167,15 +217,34 @@ function VoiceChannelVideo() {
             {connectionError}
           </div>
           <button
-            onClick={joinSession}
+            onClick={() => {
+              // 방장 여부에 따라 적절한 함수 호출
+              const isHost = sessionStorage.getItem('isChannelHost') === 'true';
+              console.log(sessionStorage.data)
+              setConnectionError('');
+              if (isHost) {
+                createAndJoinSession(channelId);
+              } else {
+                joinExistingSession();
+              }
+            }}
             className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
           >
-            재연결
+            {isConnecting ? '연결 중...' : '재연결'}
           </button>
         </div>
       )}
 
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
+        {/* 메인 컨텐츠 - 영상과 채팅 */}
+        {/* 영상 영역 */}
+        <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
+          <VoiceVideoLayout
+            participants={participants}
+            renderParticipantInfo={renderParticipantInfo}
+          />
+        </div>
+
         <ChatBox
           currentUserId={currentUser?.id}
           channelId={channelId}
@@ -189,7 +258,7 @@ function VoiceChannelVideo() {
         />
       </div>
 
-      <VideoControls
+      <VoiceVideoControls
         isMicOn={isMicOn}
         isCameraOn={isCameraOn}
         toggleMic={toggleMic}
@@ -205,6 +274,8 @@ function VoiceChannelVideo() {
           leaveSession();
           navigate('/voice-channel');
         }}
+        isConnecting={isConnecting}
+        isConnected={isOpenViduConnected}
       />
     </div>
   );

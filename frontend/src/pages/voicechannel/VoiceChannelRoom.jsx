@@ -1,12 +1,14 @@
+//src>pages>voicechannel>VoiceChannelRoom.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import voiceChannelApi from '../../api/voiceChannelApi';
-import openviduApi from '../../api/openViduApi';
-
-import mockApi from '../../api/mockApi';
+import useVoiceOpenVidu from '../../hooks/useVoiceOpenVidu';
 
 function VoiceChannelRoom() {
+  const { createAndJoinSession } = useVoiceOpenVidu(); // ✅ 컴포넌트 최상위에서 호출
+
+  const [createdChannelId, setCreatedChannelId] = useState(null);
   const navigate = useNavigate();
   const { currentUser, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
@@ -64,51 +66,26 @@ function VoiceChannelRoom() {
       password: formData.password || null,
       maxPlayer: parseInt(formData.maxUsers),
     };
-    console.log('음성채널 생성 데이터:', apiRequestData);
-    // // mockApi를 사용하여 채널 생성 요청
-    // const response = await mockApi.post(
-    //   '/api/create/talkChannel',
-    //   apiRequestData,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //       'Content-Type': 'application/json',
-    //     },
-    //   },
-    // );
-
-    // console.log('채널 생성 성공:', response.data);
-    // // 백엔드로 전송되는 데이터 확인을 위한 콘솔 로그
-    // console.log('=== 백엔드로 전송되는 데이터 ===');
-    // console.log('요청 URL:', '/api/create/talkChannel');
-    // console.log('요청 메서드:', 'POST');
-    // console.log('요청 본문:', apiRequestData);
+    console.log('1. 방생성 버튼 누르고 : 음성채널 생성 데이터:', apiRequestData);
+   
 
     try {
-      // 1. 채널 생성
-      const channelResponse =
-        await voiceChannelApi.createChannel(apiRequestData);
-      console.log('채널 생성 성공:', channelResponse.data);
+      // 채널 생성만 시킴
+      const channelResponse = await voiceChannelApi.createChannel(apiRequestData);
+      const { channelId, creatorNickname, channelName } = channelResponse.data;
+      // 화면 이동만 수행 (세션 초기화는 다음 페이지에서)
+    navigate(`/voice-channel-video/${channelId}`, {
+      state: { 
+        sessionConfig: {
+          channelId,
+          creatorNickname, // 방장 닉네임 전달
+          channelName
+        }
+      }
+    });
 
-      // // 2. OpenVidu 세션 생성
-      // const sessionId = await openviduApi.createSession();
-      // console.log('OpenVidu 세션 생성 성공:', sessionId);
 
-      // // 3. OpenVidu 토큰 발급
-      // const token = await openviduApi.getToken(sessionId);
-      // console.log('OpenVidu 토큰 발급 성공:', token);
-
-      // // 세션 정보와 토큰 저장
-      // sessionStorage.setItem('openviduSessionId', sessionId);
-      // sessionStorage.setItem('openviduToken', token);
-
-      // 생성 성공 시 채널 ID를 가지고 다음 페이지로 이동
-      const channelId = channelResponse.data.channelId;
-      console.log('채널 ID:', channelId);
-      navigate(`/voice-channel-video/${channelId}`);
-
-      // navigate(`/voice-channel-video/${channelResponse.data.data.channelName}`);
-    } catch (error) {
+    }catch (error) {
       console.error('채널 생성 실패:', error);
 
       // 에러 처리
@@ -170,16 +147,7 @@ function VoiceChannelRoom() {
                   음성 채널
                 </span>
               </div>
-              {/* 
-              <div className="flex items-center bg-white border border-gray-200 rounded-lg p-3 cursor-pointer transition-all hover:bg-[#f0f9f4] hover:shadow-md">
-                <div className="text-gray-400 mr-2">○</div>
-                <span className="text-sm text-gray-600">그룹 상담</span>
-              </div>
-
-              <div className="flex items-center bg-white border border-gray-200 rounded-lg p-3 cursor-pointer transition-all hover:bg-[#f0f9f4] hover:shadow-md">
-                <div className="text-gray-400 mr-2">○</div>
-                <span className="text-sm text-gray-600">특화 상담</span>
-              </div> */}
+        
             </div>
             {/* 시각적 요소 추가 */}
             <div className="mt-6 bg-[#f5fbf7] rounded-lg p-3 border border-dashed border-[#b0daaf]">
