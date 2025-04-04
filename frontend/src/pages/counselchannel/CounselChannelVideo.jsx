@@ -282,6 +282,57 @@ function CounselChannelVideo() {
 
         const handleAccessCallback = message => {
           console.log('[웹소켓] 메시지 수신:', message);
+          console.log('[웹소켓] 이벤트 타입:', message.event);
+
+          // user_leaved 이벤트 처리
+          if (message.event === 'user_leaved') {
+            console.log('[웹소켓] user_leaved 이벤트 발견!');
+
+            // 현재 사용자 역할 확인
+            const userRole = sessionStorage.getItem('userRole');
+            const isCounselor =
+              userRole === 'ROLE_COUNSELOR' || userRole === 'counselor';
+
+            console.log(
+              '[웹소켓] 현재 사용자 역할:',
+              userRole,
+              ', 상담사 여부:',
+              isCounselor,
+            );
+
+            // 상담사인 경우 알림 표시 및 버튼 비활성화
+            if (isCounselor) {
+              console.log('[웹소켓] 상담사의 user_leaved 처리 시작');
+
+              // 상담 시작 버튼 비활성화
+              setIsPageMoveActive(false);
+              console.log('[웹소켓] 상담 시작 버튼 비활성화 완료');
+
+              // 상담 세션이 시작된 상태라면 종료 처리
+              if (isSessionStarted) {
+                console.log('[웹소켓] 상담 세션 종료 처리 시작');
+                setIsSessionStarted(false);
+
+                // 채널 정보 업데이트 (세션 스토리지)
+                const channelInfo = JSON.parse(
+                  sessionStorage.getItem('currentChannel') || '{}',
+                );
+                channelInfo.status = 'INACTIVE';
+                channelInfo.isActive = false;
+                sessionStorage.setItem(
+                  'currentChannel',
+                  JSON.stringify(channelInfo),
+                );
+                console.log('[웹소켓] 채널 정보 업데이트 완료:', channelInfo);
+              }
+
+              // 알림 표시
+              console.log('[웹소켓] 알림 표시 전');
+              alert('상담자가 상담방을 떠났습니다.');
+              console.log('[웹소켓] 알림 표시 후');
+            }
+            return;
+          }
 
           // page_move 이벤트 발생 시 버튼 활성화 상태 업데이트
           if (message.event === 'page_move') {
@@ -476,6 +527,10 @@ function CounselChannelVideo() {
       const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
       const userId = userObj.id;
 
+      // OpenVidu 세션 종료 - 모든 경우에 공통으로 처리
+      leaveSession();
+      console.log('OpenVidu 세션 종료됨');
+
       // 상담사인 경우
       if (userRole === 'ROLE_COUNSELOR' || userRole === 'counselor') {
         console.log('상담사로서 방 나가기 처리');
@@ -489,10 +544,6 @@ function CounselChannelVideo() {
         if (success) {
           console.log('상담사 나가기 요청이 성공적으로 전송되었습니다.');
 
-          // OpenVidu 세션 종료
-          leaveSession();
-          console.log('OpenVidu 세션 종료됨');
-
           // 웹소켓 연결 종료
           if (counselWebSocketService.isConnected) {
             counselWebSocketService.stompClient.deactivate();
@@ -505,20 +556,31 @@ function CounselChannelVideo() {
           alert('상담방 나가기에 실패했습니다.');
         }
       } else {
-        // 일반 사용자인 경우 기존 방식으로 처리
-        console.log('사용자로서 방 나가기 처리');
+        // 일반 사용자인 경우 웹소켓으로 처리
+        console.log('일반 사용자로서 방 나가기 처리');
 
-        // OpenVidu 세션 종료
-        leaveSession();
-        console.log('OpenVidu 세션 종료됨');
+        // 웹소켓을 통해 사용자 나가기 요청 전송 - 명세서에 맞게 처리
+        console.log(
+          `웹소켓 요청 전송: /pub/${counselorCode} - event: user_leave`,
+        );
+        const success = counselWebSocketService.sendUserLeaveRequest(
+          counselorCode,
+          userId,
+        );
 
-        // 방 나가기 API 호출 - 일반 사용자 방식으로 통일
-        console.log('방 나가기 API 호출:', counselorCode);
-        const result = await counselorChannel.leaveChannel(counselorCode);
-        console.log('상담방 나가기 완료:', result);
+        console.log('웹소켓 요청 전송 결과:', success ? '성공' : '실패');
 
-        // 리스트 페이지로 이동
-        navigate('/counsel-channel');
+        // 웹소켓 연결 종료
+        if (counselWebSocketService.isConnected) {
+          console.log('웹소켓 연결 종료');
+          counselWebSocketService.stompClient.deactivate();
+        }
+
+        // API 호출 오류를 방지하기 위해 잠시 대기 후 페이지 이동
+        setTimeout(() => {
+          console.log('상담 목록 페이지로 이동');
+          navigate('/counsel-channel');
+        }, 300);
       }
     } catch (error) {
       console.error('방 나가기 오류:', error);

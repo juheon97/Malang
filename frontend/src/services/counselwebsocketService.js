@@ -441,6 +441,96 @@ class CounselWebSocketService {
       return false;
     }
   }
+
+  // 일반 사용자 나가기 요청 메서드 추가
+  sendUserLeaveRequest(counselorCode, userId) {
+    if (!this.stompClient || !this.isConnected) {
+      console.error(
+        '[웹소켓] 연결되어 있지 않아 사용자 나가기 요청을 보낼 수 없습니다.',
+      );
+      return false;
+    }
+    try {
+      const requestMessage = {
+        event: 'user_leave',
+        user: userId,
+        channel: counselorCode,
+        role: 'ROLE_USER',
+      };
+
+      // 백엔드 명세서에 따라 메시지 전송
+      this.stompClient.publish({
+        destination: `/pub/${counselorCode}`,
+        body: JSON.stringify(requestMessage),
+      });
+
+      console.log('[웹소켓] 사용자 나가기 요청 전송:', requestMessage);
+      return true;
+    } catch (error) {
+      console.error('[웹소켓] 사용자 나가기 요청 전송 실패:', error);
+      return false;
+    }
+  }
+
+  // 일반 사용자 나가기 요청 메서드 추가
+  sendUserLeaveRequest(counselorCode, userId) {
+    if (!this.stompClient || !this.isConnected) {
+      console.error(
+        '[웹소켓] 연결되어 있지 않아 사용자 나가기 요청을 보낼 수 없습니다.',
+      );
+      return false;
+    }
+    try {
+      const requestMessage = {
+        event: 'user_leave',
+        user: userId,
+        channel: counselorCode,
+        role: 'ROLE_USER',
+      };
+
+      // 백엔드 명세서에 따라 메시지 전송
+      this.stompClient.publish({
+        destination: `/pub/${counselorCode}`,
+        body: JSON.stringify(requestMessage),
+      });
+
+      console.log('[웹소켓] 사용자 나가기 요청 전송:', requestMessage);
+      return true;
+    } catch (error) {
+      console.error('[웹소켓] 사용자 나가기 요청 전송 실패:', error);
+      return false;
+    }
+  }
+
+  // 일반 사용자 나가기 요청 메서드 추가
+  sendUserLeaveRequest(counselorCode, userId) {
+    if (!this.stompClient || !this.isConnected) {
+      console.error(
+        '[웹소켓] 연결되어 있지 않아 사용자 나가기 요청을 보낼 수 없습니다.',
+      );
+      return false;
+    }
+    try {
+      const requestMessage = {
+        event: 'user_leave',
+        user: userId,
+        channel: counselorCode,
+        role: 'ROLE_USER',
+      };
+
+      // 백엔드 명세서에 따라 메시지 전송
+      this.stompClient.publish({
+        destination: `/pub/${counselorCode}`,
+        body: JSON.stringify(requestMessage),
+      });
+
+      console.log('[웹소켓] 사용자 나가기 요청 전송:', requestMessage);
+      return true;
+    } catch (error) {
+      console.error('[웹소켓] 사용자 나가기 요청 전송 실패:', error);
+      return false;
+    }
+  }
 }
 
 const counselWebSocketService = new CounselWebSocketService();
