@@ -176,7 +176,7 @@ const Navbar = () => {
                   to="/voice-change"
                   className="text-gray-800 hover:text-[#00a173]"
                 >
-                  음성변환
+                  자가진단
                 </Link>
                 <Link
                   to="/voice-channel"
