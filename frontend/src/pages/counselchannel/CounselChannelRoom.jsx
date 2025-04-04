@@ -174,7 +174,7 @@ function CounselChannelRoom() {
         ) {
           // 사용자 정보 가져오기
           const user = JSON.parse(sessionStorage.getItem('user') || '{}');
-          const userId = user.id || 0;
+          const userId = parseInt(user.id, 10) || 0; // 문자열을 정수로 명시적 변환
 
           // con_join 메시지 구성 및 전송
           const joinMessage = {
