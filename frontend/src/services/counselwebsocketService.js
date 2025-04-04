@@ -244,6 +244,32 @@ class CounselWebSocketService {
     }
   }
 
+  sendStartRequest(counselorCode, userId) {
+    if (!this.stompClient || !this.isConnected) {
+      console.error(
+        '[웹소켓] 연결되어 있지 않아 상담 시작 요청을 보낼 수 없습니다.',
+      );
+      return false;
+    }
+    try {
+      const requestMessage = {
+        event: 'start',
+        user: userId,
+        channel: counselorCode,
+        role: 'COUNSELOR_ROLE',
+      };
+      this.stompClient.publish({
+        destination: `/pub/${counselorCode}`,
+        body: JSON.stringify(requestMessage),
+      });
+      console.log('[웹소켓] 상담 시작 요청 전송:', requestMessage);
+      return true;
+    } catch (error) {
+      console.error('[웹소켓] 상담 시작 요청 전송 실패:', error);
+      return false;
+    }
+  }
+
   sendJoinRequest(counselorCode, userData) {
     if (!this.stompClient || !this.isConnected) {
       console.error('[웹소켓] 연결되어 있지 않아 요청을 보낼 수 없습니다.');

@@ -12,8 +12,8 @@ const VideoControls = ({
   toggleSignLanguage,
   onStartSession,
   onEndSession,
-  isHost = false,
   isSessionStarted = false,
+  isPageMoveActive = false, // 외부 이벤트에 따른 활성화 여부
 }) => {
   // 로컬 상태로 세션 시작 여부 관리
   const [localSessionStarted, setLocalSessionStarted] =
@@ -137,7 +137,7 @@ const VideoControls = ({
           </button>
         </div>
 
-        {/* 오른쪽 컨트롤: 기본 + 상담사 전용 버튼 */}
+        {/* 오른쪽 컨트롤: 음성 번역, 수화 번역, 상담 시작 버튼 */}
         <div className="flex space-x-4 items-center">
           {/* 음성번역 토글 버튼 */}
           <button
@@ -167,72 +167,41 @@ const VideoControls = ({
             </span>
           </button>
 
-          {/* 상담사 전용 상담 시작/종료 버튼 - 로컬 상태 사용 */}
-          {isHost && (
-            <>
-              {!localSessionStarted ? (
-                <button
-                  onClick={handleStartSession}
-                  type="button"
-                  className="px-4 py-2 bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer z-10"
-                >
-                  <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span>상담 시작</span>
-                  </div>
-                </button>
-              ) : (
-                <button
-                  onClick={handleEndSession}
-                  type="button"
-                  className="px-4 py-2 bg-gradient-to-r from-[#ff6b6b] to-[#e23e3e] text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer z-10"
-                >
-                  <div className="flex items-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"
-                      />
-                    </svg>
-                    <span>상담 종료</span>
-                  </div>
-                </button>
-              )}
-            </>
-          )}
+          {/* 상담 시작 버튼 (기능 없음) */}
+          <button
+            type="button"
+            onClick={handleStartSession}
+            disabled={!isPageMoveActive} // isPageMoveActive가 false이면 비활성화
+            className={`px-4 py-2 font-medium rounded-lg shadow-md transition-all cursor-pointer z-10 ${
+              isPageMoveActive
+                ? 'bg-blue-500 text-white hover:bg-blue-600'
+                : 'bg-gray-300 text-gray-600 cursor-not-allowed opacity-60'
+            }`}
+          >
+            <div className="flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>상담 시작</span>
+            </div>
+          </button>
         </div>
       </div>
     </div>

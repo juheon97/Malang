@@ -69,7 +69,7 @@ const Counsel = () => {
     previousFocusRef.current = document.activeElement;
     setSelectedCounselor(counselor);
     setShowRequestModal(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = '';
     setTimeout(() => {
       if (modalRef.current) modalRef.current.focus();
     }, 100);
