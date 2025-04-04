@@ -53,6 +53,6 @@ export default defineConfig({
         secure: false,
       },
     },
-    allowedHosts: ['j12d110.p.ssafy.io', '3c49-59-151-219-8.ngrok-free.app'],
+    allowedHosts: ['j12d110.p.ssafy.io', 'lsw.takustory.site'],
   },
 });

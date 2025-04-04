@@ -3,12 +3,15 @@ import AccessibleVoiceChannelItem from './AccessibleVoiceChannelItem';
 import RegularChannelItem from './RegularChannelItem';
 
 const VoiceChannelList = ({
-  channels,
+  channels = [], // 기본값으로 빈 배열 설정
   expandedChannel,
   onToggleExpand,
   onJoinChannel,
   isAccessibleMode,
 }) => {
+  // channels가 배열인지 확인
+  const channelArray = Array.isArray(channels) ? channels : [];
+  
   return (
     <section
       aria-label={isAccessibleMode ? '음성 채널 목록' : undefined}
@@ -16,14 +19,14 @@ const VoiceChannelList = ({
     >
       {isAccessibleMode && (
         <h2 className="sr-only">
-          음성 채널 목록 - {channels.length}개의 채널이 있습니다.
+          음성 채널 목록 - {channelArray.length}개의 채널이 있습니다.
         </h2>
       )}
 
       {isAccessibleMode ? (
         // 시각장애인 모드용 채널 목록 - 아코디언 스타일
         <div className="space-y-3">
-          {channels.map(channel => (
+          {channelArray.map(channel => (
             <AccessibleVoiceChannelItem
               key={channel.channelId}
               channel={channel}
@@ -36,7 +39,7 @@ const VoiceChannelList = ({
       ) : (
         // 일반 모드용 채널 목록
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {channels.map(channel => (
+          {channelArray.map(channel => (
             <RegularChannelItem
               key={channel.channelId}
               channel={channel}
@@ -44,7 +47,7 @@ const VoiceChannelList = ({
             />
           ))}
 
-          {channels.length === 0 && (
+          {channelArray.length === 0 && (
             <div className="col-span-2 text-center py-10 bg-white rounded-xl shadow-md">
               <p className="text-gray-500">검색 결과가 없습니다.</p>
             </div>
