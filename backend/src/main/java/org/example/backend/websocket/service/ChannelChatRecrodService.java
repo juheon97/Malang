@@ -26,9 +26,9 @@ public class ChannelChatRecrodService {
         // 채널에 참여한 사용자와 상담사 ID 가져오기
         Map<String, Long> participants = getChannelParticipants(channelId);
         Long userId = participants.get("userId");
-        Long counselorUserId = participants.get("counselorUserId");
+        Long counselorId = participants.get("counselorId");
 
-        if (userId == null || counselorUserId == null) {
+        if (userId == null || counselorId == null) {
             logger.warn("상담 요약 초기화 실패: 사용자 ID 또는 상담사 ID를 찾을 수 없습니다. channelId={}", channelId);
             return;
         }
@@ -36,7 +36,7 @@ public class ChannelChatRecrodService {
         // 요약 데이터 생성
         Map<String, Object> summaryData = new HashMap<>();
         summaryData.put("userId", userId);
-        summaryData.put("counselorUserId", counselorUserId);
+        summaryData.put("counselorId", counselorId);
         summaryData.put("channelId", channelId);
         summaryData.put("messages", new ArrayList<Map<String, String>>());
 
@@ -106,7 +106,7 @@ public class ChannelChatRecrodService {
         for (String memberId : members) {
             Long id = Long.parseLong(memberId);
             if (id >= 1000) {
-                participants.put("counselorUserId", id);
+                participants.put("counselorId", id);
             } else {
                 participants.put("userId", id);
             }

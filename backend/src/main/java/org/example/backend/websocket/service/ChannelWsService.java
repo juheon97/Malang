@@ -180,8 +180,8 @@ public class ChannelWsService {
             // Long 타입 변환
             Number userId = (Number) summaryData.get("userId");
             summaryRequest.setUserId(userId != null ? userId.longValue() : null);
-            Number counselorUserId = (Number) summaryData.get("counselorUserId");
-            summaryRequest.setCounselorUserId(counselorUserId != null ? counselorUserId.longValue() : null);
+            Number counselorId = (Number) summaryData.get("counselorId");
+            summaryRequest.setCounselorId(counselorId != null ? counselorId.longValue() : null);
 
             summaryRequest.setChannelId(channelId);
             summaryRequest.setMessages((java.util.List<Map<String, String>>) summaryData.get("messages"));
@@ -197,7 +197,7 @@ public class ChannelWsService {
                 // 요청 전송
 //          restTemplate.postForEntity("/summary", request, Void.class);
 
-                SummaryResponse response = summaryService.summarizeAndSave(summaryRequest, summaryRequest.getCounselorUserId());
+                SummaryResponse response = summaryService.summarizeAndSave(summaryRequest, summaryRequest.getCounselorId());
                 // 요청 성공 시 Redis에서 요약 데이터 삭제
                 String summaryKey = "counsel:" + channelId + ":summary";
                 redisTemplate.delete(summaryKey);
