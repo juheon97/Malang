@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.example.backend.auth.model.Counselor;
 import org.example.backend.auth.model.User;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "summary")
 public class Summary {
 
@@ -28,7 +30,6 @@ public class Summary {
     private User user; // 일반 사용자 중 role 필드로 일반 유조 추가 구분함
 
     @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "counselor_user_id", nullable = false)
     @JoinColumn(name = "counselor_id", nullable = false)
     private Counselor counselor; // 1001 시작하는 counselor_id
 
