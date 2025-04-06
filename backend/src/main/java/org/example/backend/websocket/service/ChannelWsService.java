@@ -7,6 +7,8 @@ import io.openvidu.java.client.OpenVidu;
 import io.openvidu.java.client.Session;
 import org.example.backend.auth.controller.CounselorProfileController;
 import org.example.backend.localllm.dto.request.SummaryRequest;
+import org.example.backend.localllm.dto.response.SummaryResponse;
+import org.example.backend.localllm.service.SummaryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,7 @@ public class ChannelWsService {
     private final ChannelChatRecrodService channelChatRecrodService;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
+    private final SummaryService summaryService;
 
 
     private static final Logger logger = LoggerFactory.getLogger(ChannelWsService.class);
@@ -179,26 +182,28 @@ public class ChannelWsService {
             summaryRequest.setUserId(userId != null ? userId.longValue() : null);
             Number counselorUserId = (Number) summaryData.get("counselorUserId");
             summaryRequest.setCounselorUserId(counselorUserId != null ? counselorUserId.longValue() : null);
-            
+
             summaryRequest.setChannelId(channelId);
             summaryRequest.setMessages((java.util.List<Map<String, String>>) summaryData.get("messages"));
 
             // HTTP 요청 헤더 설정
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            // HTTP 요청 생성
-            HttpEntity<SummaryRequest> request = new HttpEntity<>(summaryRequest, headers);
+//      HttpHeaders headers = new HttpHeaders();
+//      headers.setContentType(MediaType.APPLICATION_JSON);
+//
+//      // HTTP 요청 생성
+//      HttpEntity<SummaryRequest> request = new HttpEntity<>(summaryRequest, headers);
 
             try {
                 // 요청 전송
-                restTemplate.postForEntity("/summary", request, Void.class);
+//          restTemplate.postForEntity("/summary", request, Void.class);
 
+                SummaryResponse response = summaryService.summarizeAndSave(summaryRequest, summaryRequest.getCounselorUserId());
                 // 요청 성공 시 Redis에서 요약 데이터 삭제
                 String summaryKey = "counsel:" + channelId + ":summary";
                 redisTemplate.delete(summaryKey);
 
                 logger.info("요약 요청이 성공적으로 전송되었고, Redis에서 요약 데이터가 삭제되었습니다: channelId={}", channelId);
+
             } catch (Exception e) {
                 logger.error("요약 요청 전송 중 오류 발생: {}", e.getMessage());
             }
