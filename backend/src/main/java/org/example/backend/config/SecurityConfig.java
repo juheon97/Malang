@@ -168,6 +168,8 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**", "/sub/**", "/pub/**", "/ws/info/**").permitAll()
                         // openvidu 세션 관리
                         .requestMatchers("/openvidu/session/**").authenticated()
+                        // 뇌 질환 분류 가이드라인 비회원 접근 허용
+                        .requestMatchers("/speech/**").permitAll()
                         // 기타 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
