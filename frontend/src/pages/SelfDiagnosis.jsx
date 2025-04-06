@@ -3,8 +3,8 @@ import voiceChangeApi from '../api/voiceChangeApi';
 import '../styles/fonts.css';
 import toWav from 'audiobuffer-to-wav';
 
-const VoiceChange = () => {
-  const [transcribedText, setTranscribedText] = useState('안녕하세요, 만나서 반갑습니다.');
+const SelfDiagnosis = () => {
+  const [transcribedText, setTranscribedText] = useState('여기에 자가 진단 결과가 표시됩니다.');
   const [isRecording, setIsRecording] = useState(false);
   const [isAccessibleMode, setIsAccessibleMode] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
@@ -27,8 +27,8 @@ const VoiceChange = () => {
         setServiceStatus({
           isAvailable: healthData.status === "ok",
           message: healthData.status === "ok" 
-            ? "AI 음성 인식 서비스 이용 가능" 
-            : healthData.message || "AI 음성 인식 서비스 이용 불가",
+            ? "AI 자가 진단 서비스 이용 가능" 
+            : healthData.message || "AI 자가 진단 서비스 이용 불가",
           checking: false
         });
       } catch (error) {
@@ -50,7 +50,7 @@ const VoiceChange = () => {
   const startRecording = async () => {
     // 서비스가 이용 불가능한 경우 녹음 시작 불가
     if (!serviceStatus.isAvailable) {
-      alert("현재 AI 음성 인식 서비스를 이용할 수 없습니다. 잠시 후 다시 시도해주세요.");
+      alert("현재 AI 자가 진단 서비스를 이용할 수 없습니다. 잠시 후 다시 시도해주세요.");
       return;
     }
     
@@ -176,7 +176,7 @@ const VoiceChange = () => {
           <div className="flex items-center">
             <div className="w-1 h-8 bg-gradient-to-b from-green-400 to-green-600 mr-3 rounded-full"></div>
             <h1 className="text-2xl font-bold text-green-600" style={{ fontFamily: "'HancomMalangMalang-Regular', sans-serif" }}>
-              음성 정확도 높이기
+            뇌신경구음장애(뇌졸중) 자가진단
             </h1>
           </div>
           
@@ -201,7 +201,7 @@ const VoiceChange = () => {
           {/* 왼쪽 사이드바 - 녹음 기능 */}
           <div className="md:col-span-1">
             <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">음성 녹음</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">자가진단하기</h2>
               <div className="flex flex-col items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -221,7 +221,7 @@ const VoiceChange = () => {
                   <path d="M12 17l0 4" />
                 </svg>
                 <p className="text-gray-600 mb-6 text-center">
-                  마이크를 누른 후 말해주세요.
+                 녹음 시작 버튼을 누른 후 말해주세요.
                 </p>
                 {!serviceStatus.isAvailable && !serviceStatus.checking && (
                   <div className="text-red-500 text-center mb-4 p-2 bg-red-50 rounded-lg w-full">
@@ -251,7 +251,7 @@ const VoiceChange = () => {
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="border-b border-gray-200">
                 <div className="px-6 py-4">
-                  <h2 className="text-xl font-semibold text-gray-800">변환된 텍스트</h2>
+                  <h2 className="text-xl font-semibold text-gray-800">분석 결과</h2>
                 </div>
               </div>
               <div className="p-6">
@@ -307,7 +307,7 @@ const VoiceChange = () => {
             
             {/* 추가 정보 섹션 */}
             <div className="mt-6 bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">음성 인식 도움말</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">자가 진단 도움말</h2>
               <ul className="list-disc pl-5 text-gray-700 space-y-2">
                 <li>조용한 환경에서 녹음하면 더 정확한 결과를 얻을 수 있습니다.</li>
                 <li>마이크와 적당한 거리를 유지하고 명확하게 발음해 주세요.</li>
@@ -321,4 +321,4 @@ const VoiceChange = () => {
   );
 }  
 
-export default VoiceChange;
+export default SelfDiagnosis;

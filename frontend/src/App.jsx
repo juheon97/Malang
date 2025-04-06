@@ -18,6 +18,7 @@ import CounselChannelRoom from './pages/counselchannel/CounselChannelRoom';
 import CounselChannelVideo from './pages/counselchannel/CounselChannelVideo';
 import VoiceChange from './pages/VoiceChange';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import SelfDiagnosis from './pages/SelfDiagnosis';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/Signup" element={<Signup />} />
                 <Route path="/community/*" element={<Community />} />
                 <Route path="/voice-change" element={<VoiceChange />} />
+                <Route path="/self-diagnosis" element={<SelfDiagnosis />} />
                 {/* 보호된 라우트 - 인증 필요 */}
                 <Route
                   path="/mypage"
