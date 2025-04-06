@@ -65,6 +65,9 @@ dependencies {
 
     // openVidu
     implementation 'io.openvidu:openvidu-java-client:2.31.0'
+
+    //음성 변환 ffmpeg
+    implementation "net.bramp.ffmpeg:ffmpeg:0.7.0"
 }
 
 tasks.named('test') {
