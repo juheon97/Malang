@@ -176,7 +176,7 @@ public class ChannelWsService {
             SummaryRequest summaryRequest = new SummaryRequest();
             summaryRequest.setUserId((Long) summaryData.get("userId"));
             summaryRequest.setCounselorUserId(counselorUserId);
-            summaryRequest.setChannelId(channelId.toString());
+            summaryRequest.setChannelId(channelId);
             summaryRequest.setMessages((java.util.List<Map<String, String>>) summaryData.get("messages"));
 
             // HTTP 요청 헤더 설정

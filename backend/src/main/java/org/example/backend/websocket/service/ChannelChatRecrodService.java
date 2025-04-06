@@ -37,7 +37,7 @@ public class ChannelChatRecrodService {
         Map<String, Object> summaryData = new HashMap<>();
         summaryData.put("userId", userId);
         summaryData.put("counselorUserId", counselorUserId);
-        summaryData.put("channelId", channelId.toString());
+        summaryData.put("channelId", channelId);
         summaryData.put("messages", new ArrayList<Map<String, String>>());
 
         try {
