@@ -21,7 +21,7 @@ function CounselChannelVideo() {
   const [isVoiceTranslationOn, setIsVoiceTranslationOn] = useState(false);
   const [isSignLanguageOn, setIsSignLanguageOn] = useState(false);
   const [isSessionStarted, setIsSessionStarted] = useState(false); // 상담 세션 시작 여부
-  const [isChatEnabled, setIsChatEnabled] = useState(true); // 채팅 활성화 상태
+  const [isChatEnabled, setIsChatEnabled] = useState(false); // 채팅 활성화 상태
   const [roomInfo, setRoomInfo] = useState({
     name: '상담방',
     maxParticipants: 4,
@@ -366,7 +366,7 @@ function CounselChannelVideo() {
           console.log('[웹소켓] 상담 시작 메시지 수신:', message);
           addMessage('상담이 시작되었습니다.', '시스템', 'system');
 
-          // 채팅 활성화 상태로 변경
+          // 채팅 활성화 상태 전환
           setIsChatEnabled(true);
           counselWebSocketService.setChatEnabled(true);
           console.log('[웹소켓] 채팅 활성화 상태 설정:', true);
@@ -859,7 +859,7 @@ function CounselChannelVideo() {
           handleKeyDown={handleKeyDown}
           chatContainerRef={chatContainerRef}
           currentUserId={currentUserId}
-          isChatEnabled={isChatEnabled}
+          isConnected={isChatEnabled}
         />
       </div>
 
