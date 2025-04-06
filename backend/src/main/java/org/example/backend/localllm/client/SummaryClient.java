@@ -26,8 +26,8 @@ public class SummaryClient {
                 .map(message -> {
                     String role = message.get("role");
                     String newRole = switch (role) {
-                        case "counselor" -> "assistant";
-                        case "client" -> "user";
+                        case "ROLE_COUNSELOR" -> "assistant";
+                        case "ROLE_USER" -> "user";
                         default -> role;
                     };
                     return Map.of(
