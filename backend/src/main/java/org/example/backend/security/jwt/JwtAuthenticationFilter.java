@@ -36,7 +36,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 웹소켓 통신시 jwt가 가져가는 경로 차단하여 웹소켓에서만 access token처리하게 추가
             "/ws/**",
             "/ws/info",
-            
+            "/speech/classification",
+            "/speech/health",
             "/swagger-ui.html",      // Swagger UI 메인 페이지
             "/swagger-ui/**",      // Swagger UI 리소스 (css, js 등)
             "/v3/api-docs",        // OpenAPI 명세 기본 경로 (단일 파일)
