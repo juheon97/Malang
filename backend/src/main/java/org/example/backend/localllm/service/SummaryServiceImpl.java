@@ -25,7 +25,7 @@ public class SummaryServiceImpl implements SummaryService {
     }
 
     @Override
-    public SummaryResponse summarizeAndSave(SummaryRequest dto, Long counselorUserId) {
+    public void summarizeAndSave(SummaryRequest dto, Long counselorUserId) {
         SummaryResponse summary = llmClient.requestSummary(dto.getMessages());
 
         if (summary.getSummary_topic() == null) {
@@ -43,8 +43,6 @@ public class SummaryServiceImpl implements SummaryService {
                 .build();
 
         summaryRepository.save(entity);
-
-        return summary;
     }
 
     private LocalDateTime parseDate(String input) {
