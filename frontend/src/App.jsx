@@ -6,10 +6,11 @@ import { CounselorProfileProvider } from './contexts/CounselorProfileContext';
 import Layout from './components/layout/Layout';
 import Home from './pages/home/Home';
 import Login from './pages/login/Login';
+import LoginCounsel from './pages/login/CounselLogin';  
 import Community from './pages/community/community';
 import CommunityWrite from './components/community/CommunityWrite';
 import Counsel from './pages/counsel/Counsel';
-import VoiceChannel from './pages/voicechannel/VoiceChannel';
+import VoiceChannel from './pages/voicechannel/VoiceChannel'; 
 import Signup from './pages/signup/Signup';
 import Mypage from './pages/mypage/MyPage';
 import VoiceChannelRoom from './pages/voicechannel/VoiceChannelRoom';
@@ -29,6 +30,7 @@ function App() {
             <Layout>
               <Routes>
                 {/* 공개 라우트 - 인증 필요 없음 */}
+                <Route path="/login-counsel" element={<LoginCounsel />} />
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/Signup" element={<Signup />} />

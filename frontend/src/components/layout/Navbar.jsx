@@ -303,6 +303,12 @@ const Navbar = () => {
             ) : (
               /* 상담사가 아닌 경우에만 음성변환, 음성채널, 커뮤니티 메뉴 표시 */
               <>
+              <Link
+                  to="/self-diagnosis"
+                  className="block px-3 py-2 text-gray-800 hover:bg-gray-100 rounded-md"
+                >
+                  자가진단
+                </Link>
                 <Link
                   to="/voice-change"
                   className="block px-3 py-2 text-gray-800 hover:bg-gray-100 rounded-md"
