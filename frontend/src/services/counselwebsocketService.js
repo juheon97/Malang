@@ -10,6 +10,7 @@ class CounselWebSocketService {
     this.subscriptions = new Map();
     this.isConnecting = false;
     this.pendingSubscriptions = [];
+    this.isChatEnabled = true;
   }
 
   connect(counselorCode, accessCallback, channelCallback, chatCallback) {
@@ -326,6 +327,32 @@ class CounselWebSocketService {
       message,
       '사용자 나가기',
     );
+  }
+  // 채팅 메시지 발송 함수
+  sendChatMessage(counselorCode, userId, sender, message) {
+    const payload = {
+      event: 'chat',
+      user: userId,
+      sender: sender,
+      content: message,
+      channel: counselorCode,
+      timestamp: new Date().toISOString(),
+    };
+    return this._publishMessage(
+      `/pub/${counselorCode}/chat_recd`,
+      payload,
+      '채팅 메시지',
+    );
+  }
+
+  // 채팅 활성화 상태 설정
+  setChatEnabled(enabled) {
+    this.isChatEnabled = enabled;
+  }
+
+  // 채팅 활성화 상태 확인
+  isChatActive() {
+    return this.isChatEnabled;
   }
 }
 

@@ -21,6 +21,7 @@ function CounselChannelVideo() {
   const [isVoiceTranslationOn, setIsVoiceTranslationOn] = useState(false);
   const [isSignLanguageOn, setIsSignLanguageOn] = useState(false);
   const [isSessionStarted, setIsSessionStarted] = useState(false); // 상담 세션 시작 여부
+  const [isChatEnabled, setIsChatEnabled] = useState(true); // 채팅 활성화 상태
   const [roomInfo, setRoomInfo] = useState({
     name: '상담방',
     maxParticipants: 4,
@@ -210,11 +211,42 @@ function CounselChannelVideo() {
     toggleVideo,
   } = useOpenVidu(counselorCode, 'randomNickname', isMicOn, isCameraOn);
 
+  // 채팅 핸들러 함수 추가
+  const handleSendChatMessage = message => {
+    if (!message.trim() || !isChatEnabled) return;
+
+    try {
+      // 사용자 정보 가져오기
+      const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
+      const userId = userObj.id;
+      const userName = userObj.name || userObj.username || '사용자';
+
+      // 웹소켓으로 메시지 전송
+      const success = counselWebSocketService.sendChatMessage(
+        counselorCode,
+        userId,
+        userName,
+        message,
+      );
+
+      if (success) {
+        console.log('[채팅] 메시지 전송 성공:', message);
+        // 내가 보낸 메시지를 즉시 표시
+        addMessage(message, userName, userId);
+        // 메시지 입력창 초기화
+        setNewMessage('');
+      } else {
+        console.error('[채팅] 메시지 전송 실패');
+      }
+    } catch (error) {
+      console.error('[채팅] 메시지 전송 중 오류:', error);
+    }
+  };
+
   const {
     messages,
     newMessage,
     setNewMessage,
-    handleSendMessage,
     handleKeyDown,
     chatContainerRef,
     addMessage,
@@ -268,18 +300,117 @@ function CounselChannelVideo() {
     }
   };
 
-  // CounselChannelVideo.jsx (핵심 부분)
   useEffect(() => {
     if (!hasJoined.current && !isLoading) {
       console.log('OpenVidu 세션 참여, counselor_code:', counselorCode);
 
+      // 상담사 나가기 처리 함수
+      const handleCounselorLeft = message => {
+        console.log('[웹소켓] 상담사 나가기 응답 수신:', message);
+
+        // 현재 사용자 역할 확인
+        const userRole = sessionStorage.getItem('userRole');
+        const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+        const isCounselor =
+          userRole === 'ROLE_COUNSELOR' ||
+          userRole === 'counselor' ||
+          user.role === 'ROLE_COUNSELOR' ||
+          user.role === 'counselor';
+
+        console.log(
+          '[웹소켓] 현재 사용자 역할:',
+          userRole,
+          '상담사 여부:',
+          isCounselor,
+        );
+        console.log('[웹소켓] 상담사 나가기 후 처리 시작');
+
+        // 일반 사용자인 경우
+        if (
+          userRole === 'ROLE_USER' ||
+          (!isCounselor && userRole !== 'ROLE_COUNSELOR')
+        ) {
+          console.log(
+            '[웹소켓] 일반 사용자로 확인됨, 알림 표시 및 리다이렉트 처리 시작',
+          );
+
+          // 알림 표시
+          alert('상담사가 상담을 종료했습니다.');
+
+          // 웹소켓 연결 종료
+          if (counselWebSocketService.isConnected) {
+            console.log('[웹소켓] 웹소켓 연결 종료');
+            counselWebSocketService.stompClient.deactivate();
+          }
+
+          // 상담 목록 페이지로 리다이렉트
+          navigate('/counsel-channel');
+        } else {
+          console.log('[웹소켓] 상담사로 확인됨, 리다이렉트하지 않음');
+        }
+      };
+
       const handleAccessCallback = message => {
         console.log('[웹소켓] 메시지 수신:', message);
+
+        // 이벤트 값을 추출하고 소문자로 변환하여 비교
         const event = message.event ? message.event.trim().toLowerCase() : '';
+
+        // con_leaved 이벤트 처리
+        if (event === 'con_leaved') {
+          handleCounselorLeft(message);
+          return;
+        }
 
         if (event === 'started') {
           console.log('[웹소켓] 상담 시작 메시지 수신:', message);
           addMessage('상담이 시작되었습니다.', '시스템', 'system');
+
+          // 채팅 활성화 상태로 변경
+          setIsChatEnabled(true);
+          counselWebSocketService.setChatEnabled(true);
+          console.log('[웹소켓] 채팅 활성화 상태 설정:', true);
+
+          // 채팅 메시지를 위한 추가 구독
+          if (counselWebSocketService.isConnected && counselorCode) {
+            const chatTopic = `/sub/${counselorCode}/chat`;
+            console.log(`[웹소켓] 채팅 메시지 구독 추가: ${chatTopic}`);
+
+            const handleChatMessage = chatMsg => {
+              try {
+                const parsed = JSON.parse(chatMsg.body);
+                console.log(`[웹소켓] 채팅 메시지 수신:`, parsed);
+                if (parsed.event === 'chat' && parsed.content) {
+                  addMessage(parsed.content, parsed.sender, parsed.user);
+                }
+              } catch (err) {
+                console.error('[웹소켓] 채팅 메시지 파싱 오류:', err);
+              }
+            };
+
+            // 기존 구독이 있으면 제거
+            const existingSub = counselWebSocketService.subscriptions.get(
+              `chat-${counselorCode}`,
+            );
+            if (existingSub) {
+              existingSub.unsubscribe();
+              counselWebSocketService.subscriptions.delete(
+                `chat-${counselorCode}`,
+              );
+            }
+
+            // 새 구독 추가
+            const chatSub = counselWebSocketService.stompClient.subscribe(
+              chatTopic,
+              handleChatMessage,
+            );
+            counselWebSocketService.subscriptions.set(
+              `chat-${counselorCode}`,
+              chatSub,
+            );
+            console.log(`[웹소켓] ${chatTopic} 구독 성공!`);
+          }
+
           return;
         }
 
@@ -329,8 +460,6 @@ function CounselChannelVideo() {
             alert('상담자가 상담방을 떠났습니다.');
             return;
           }
-
-          // 입장 요청/응답 이벤트 처리
         } else if (event === 'join_con') {
           if (message.role === 'ROLE_USER') {
             console.log(
@@ -419,6 +548,13 @@ function CounselChannelVideo() {
     counselorCode,
     navigate,
     addMessage,
+    setIsSessionStarted,
+    setIsPageMoveActive,
+    isSessionStarted,
+    showRequestAlert,
+    requestUserInfo,
+    setShowRequestAlert,
+    setRequestUserInfo,
   ]);
 
   // 토글 함수
@@ -458,6 +594,10 @@ function CounselChannelVideo() {
     );
     if (success) {
       setIsSessionStarted(true);
+      // 채팅 활성화 상태 직접 설정
+      setIsChatEnabled(true);
+      counselWebSocketService.setChatEnabled(true);
+      console.log('채팅 활성화 상태:', true);
       alert('상담이 시작되었습니다.');
     } else {
       console.error('상담 세션 시작 요청 실패');
@@ -715,10 +855,11 @@ function CounselChannelVideo() {
           messages={messages}
           newMessage={newMessage}
           setNewMessage={setNewMessage}
-          handleSendMessage={handleSendMessage}
+          handleSendMessage={handleSendChatMessage}
           handleKeyDown={handleKeyDown}
           chatContainerRef={chatContainerRef}
           currentUserId={currentUserId}
+          isChatEnabled={isChatEnabled}
         />
       </div>
 
