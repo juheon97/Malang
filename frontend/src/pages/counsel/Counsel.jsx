@@ -87,7 +87,25 @@ const Counsel = () => {
         // Counsel.jsx의 콜백 함수 업데이트
         const handleAccessCallback = message => {
           console.log('[웹소켓] 입장 요청 메시지 수신:', message);
+          
+           // 수락 이벤트 처리 - 이 부분 추가
+           if (message.event === 'accepted') {
+            console.log('[웹소켓] 상담사 수락 메시지 수신:', message);
 
+            // 상담 승인 상태를 세션 스토리지에 저장
+            sessionStorage.setItem('counselSessionApproved', 'true');
+            sessionStorage.setItem('approvedCounselorCode', message.channel);
+            sessionStorage.setItem('approvalTimestamp', Date.now().toString());
+
+            // 대기 모달 닫기
+            setShowWaitingModal(false);
+            
+            // 안내 메시지 표시 후 이동
+            alert('상담 요청이 수락되었습니다. 상담방으로 이동합니다.');
+            navigate(`/counsel-channel-video/${message.channel}`);
+            return;
+          }
+          
           // 상담사 나가기 응답 처리
           if (message.event === 'con_leaved') {
             console.log('[웹소켓] 상담사 나가기 응답 수신:', message);

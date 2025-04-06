@@ -228,20 +228,40 @@ function CounselChannelVideo() {
         `[웹소켓] 입장 요청 수락: 사용자 ${requestUserInfo.userId}, 채널 ${counselorCode}`,
       );
 
-      // 웹소켓으로 수락 메시지 전송
-      const success = counselWebSocketService.sendAcceptRequest(
-        counselorCode,
-        requestUserInfo.userId,
-      );
+      try {
+        // 1. 채널 상태 활성화
+        setIsSessionStarted(true);
+        
+        // 2. 웹소켓으로 수락 메시지 전송
+        const success = counselWebSocketService.sendAcceptRequest(
+          counselorCode,
+          requestUserInfo.userId,
+        );
 
-      if (success) {
-        console.log('[웹소켓] 수락 메시지가 성공적으로 전송되었습니다.');
-      } else {
-        console.error('[웹소켓] 수락 메시지 전송 실패');
-        alert('요청 수락 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+        if (success) {
+          console.log('[웹소켓] 수락 메시지가 성공적으로 전송되었습니다.');
+          
+          // 3. 채널 정보 업데이트 (세션 스토리지)
+          const channelInfo = JSON.parse(
+            sessionStorage.getItem('currentChannel') || '{}'
+          );
+          channelInfo.status = 'ACTIVE';
+          channelInfo.isActive = true;
+          sessionStorage.setItem('currentChannel', JSON.stringify(channelInfo));
+          
+          // 4. 모달 닫기
+          setShowRequestAlert(false);
+          
+          // 5. 준비 안내
+          alert('상담 요청을 수락했습니다. 상담자가 입장할 때까지 잠시 기다려주세요.');
+        } else {
+          console.error('[웹소켓] 수락 메시지 전송 실패');
+          alert('요청 수락 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+        }
+      } catch (error) {
+        console.error('[웹소켓] 요청 수락 처리 중 오류:', error);
+        alert('요청 수락 중 오류가 발생했습니다. 다시 시도해주세요.');
       }
-
-      setShowRequestAlert(false);
     }
   };
 
@@ -276,16 +296,48 @@ function CounselChannelVideo() {
       const userRole = sessionStorage.getItem('userRole');
         const isCounselor =
           userRole === 'ROLE_COUNSELOR' || userRole === 'counselor';
-      if(isCounselor) {
-        console.log('video.jsx에서 상담사 모드로 고고');
-        createAndJoinSession(counselorCode);
-        }else{
-          console.log('video.jsx에서 참여자 모드로 고고');
-          joinExistingSession();
-        }
-      // 웹소켓 연결 확인
-      console.log('세션 참여 전 웹소켓 상태:');
-      logWebSocketStatus();
+
+      // 상담사는 항상 세션 생성 권한 있음
+     if (isCounselor) {
+       console.log('video.jsx에서 상담사 모드로 고고');
+       createAndJoinSession(counselorCode);
+     } else {
+       // 일반 사용자의 경우 승인 여부 확인
+       const isApproved = sessionStorage.getItem('counselSessionApproved') === 'true';
+       const approvedCode = sessionStorage.getItem('approvedCounselorCode');
+       const approvalTime = parseInt(sessionStorage.getItem('approvalTimestamp') || '0');
+       const currentTime = Date.now();
+       
+       // 승인 상태 디버깅 로그 추가
+      console.log('승인 상태 확인:', {
+        isApproved, 
+        approvedCode, 
+        counselorCode, 
+        approvalTime,
+        currentTime,
+        timeDiff: currentTime - approvalTime
+      });
+      
+      // 일단 모든 사용자가 접근 가능하도록 임시 허용
+      console.log('테스트 모드: 승인 확인 건너뛰기');
+      joinExistingSession();
+      
+    //    // 승인된 상담코드와 현재 URL의 코드가 일치하고, 승인 시간이 10분 이내인지 확인
+    //    if (isApproved && approvedCode === counselorCode && (currentTime - approvalTime < 10 * 60 * 1000)) {
+    //      console.log('승인된 사용자로 세션 참여');
+    //      console.log('video.jsx에서 참여자 모드로 고고');
+    //      joinExistingSession();
+    //    } else {
+    //      console.error('승인되지 않은 접근 시도');
+    //      alert('상담 요청이 승인되지 않았거나 만료되었습니다. 상담 목록으로 이동합니다.');
+    //      navigate('/counsel-channel');
+    //      return; // 승인되지 않은 경우 이후 코드 실행 방지
+    //    }
+    }
+     
+     // 웹소켓 연결 확인
+     console.log('세션 참여 전 웹소켓 상태:');
+     logWebSocketStatus();
 
       // 웹소켓이 연결되어 있지 않으면 연결 시도
       if (!counselWebSocketService.isConnected) {
@@ -486,45 +538,45 @@ function CounselChannelVideo() {
     }
   };
 
-  // 상담 세션 종료 처리 함수 수정
   const handleEndSession = async () => {
     try {
-      console.log('상담 세션 종료 요청:', counselorCode);
-
-      // 사용자 정보에서 userId 추출
+      console.log('=== 상담 종료 프로세스 시작 ===');
       const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
       const userId = userObj.id;
-
-      // 웹소켓을 통해 상담 종료 요청 메시지 전송 (백엔드 명세에 따라 전송)
-      const success = counselWebSocketService.sendEndRequest(
-        counselorCode,
-        userId,
-      );
-
+      console.log('상담 세션 종료 요청 파라미터:', { counselorCode, userId });
+  
+      // 웹소켓을 통해 상담 종료 요청 메시지 전송
+      const success = counselWebSocketService.sendEndRequest(counselorCode, userId);
+      console.log('웹소켓 종료 요청 결과:', success);
+  
       if (success) {
         console.log('상담 종료 요청이 성공적으로 전송되었습니다.');
-
-        // HTTP API 호출 대신 웹소켓만 사용하여 처리
-        // 웹소켓 응답에 따라 상태 업데이트
+        
+        // 상태 업데이트 전 이전 값 확인
+        console.log('상태 업데이트 전 isSessionStarted:', isSessionStarted);
         setIsSessionStarted(false);
-
-        // 현재 채널 정보 업데이트 (세션 스토리지)
-        const channelInfo = JSON.parse(
-          sessionStorage.getItem('currentChannel') || '{}',
-        );
-        channelInfo.status = 'INACTIVE';
-        channelInfo.isActive = false;
+        
+        // 세션 스토리지 업데이트 전후 상태 확인
+        const beforeUpdate = JSON.parse(sessionStorage.getItem('currentChannel') || '{}');
+        console.log('상태 업데이트 전 채널 정보:', beforeUpdate);
+        
+        // 현재 채널 정보 업데이트
+        const channelInfo = { ...beforeUpdate, status: 'INACTIVE', isActive: false };
         sessionStorage.setItem('currentChannel', JSON.stringify(channelInfo));
-
-        // 알림 표시
-        alert('상담이 종료되었습니다.');
+        console.log('상태 업데이트 후 채널 정보:', channelInfo);
+        
+        // 알림 전 로그
+        console.log('=== 상담 종료 프로세스 완료 ===');
       } else {
-        console.error('상담 종료 요청 전송 실패');
-        alert('상담 세션을 종료하는데 실패했습니다.');
+        console.error('상담 종료 요청 전송 실패 - 원인 조사 필요');
       }
     } catch (error) {
-      console.error('상담 세션 종료 처리 중 오류:', error);
-      alert('상담 세션을 종료하는데 실패했습니다.');
+      console.error('상담 세션 종료 처리 중 예외 발생:', error);
+      console.error('에러 상세:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
     }
   };
 
@@ -532,6 +584,11 @@ function CounselChannelVideo() {
   const handleLeaveChannel = async () => {
     try {
       console.log('방 나가기 처리 시작');
+
+      // 승인 정보 제거 (추가)
+     sessionStorage.removeItem('counselSessionApproved');
+     sessionStorage.removeItem('approvedCounselorCode');
+     sessionStorage.removeItem('approvalTimestamp');
 
       // 현재 사용자 역할 확인
       const userRole = sessionStorage.getItem('userRole');
