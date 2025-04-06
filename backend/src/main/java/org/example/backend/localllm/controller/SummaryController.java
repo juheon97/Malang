@@ -3,6 +3,7 @@ package org.example.backend.localllm.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.backend.auth.model.Counselor;
 import org.example.backend.auth.model.User;
+import org.example.backend.auth.repository.CounselorRepository;
 import org.example.backend.auth.repository.UserRepository;
 import org.example.backend.localllm.dto.request.SummaryRequest;
 import org.example.backend.localllm.dto.response.SummaryResponse;
@@ -21,10 +22,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class SummaryController {
     private final SummaryService summaryService;
     private final UserRepository userRepository;
+    private final CounselorRepository counselorRepository;
 
-    public SummaryController(SummaryService summaryService, UserRepository userRepository) {
+
+    public SummaryController(SummaryService summaryService, UserRepository userRepository, CounselorRepository counselorRepository) {
         this.summaryService = summaryService;
         this.userRepository = userRepository;
+        this.counselorRepository = counselorRepository;
     }
 
     @PostMapping
@@ -39,8 +43,16 @@ public class SummaryController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        Long counselorUserId = user.getId();
-        SummaryResponse summary = summaryService.summarizeAndSave(dto, counselorUserId); // 변경: 결과 반환
+//        Long counselorUserId = user.getId();
+//        SummaryResponse summary = summaryService.summarizeAndSave(dto, counselorUserId); // 변경: 결과 반환
+
+        Counselor counselor = counselorRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("상담사 정보가 없습니다."));
+
+        Long counselorId = counselor.getId(); // <- 올바르게 추출된 counselor_id
+
+        SummaryResponse summary = summaryService.summarizeAndSave(dto, counselorId);
+
 
         return ResponseEntity.ok(summary); // 프론트로 요약 응답 전송
     }

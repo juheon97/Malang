@@ -20,8 +20,9 @@ public class SummaryRequest {
     @Schema(example = "1")
     private Long userId;
 
-    @Schema(example = "2")
-    private Long counselorUserId;
+    @Schema(example = "1001")
+//    private Long counselorUSerId;
+    private Long counselorId;
 
     @Schema(example = "1")
     private Long channelId; // Redis key
