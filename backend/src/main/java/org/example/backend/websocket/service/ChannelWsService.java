@@ -160,7 +160,7 @@ public class ChannelWsService {
     /**
      * 요약 데이터를 가져와서 SummaryController로 전송 후 Redis에서 삭제
      */
-    public void sendSummaryRequest(Long channelId, Long counselorUserId) {
+    public void sendSummaryRequest(Long channelId) {
         try {
             // Redis에서 채팅 요약 데이터 가져오기
             String summaryJson = channelChatRecrodService.getChatSummary(channelId);
@@ -174,8 +174,12 @@ public class ChannelWsService {
 
             // SummaryRequest 객체 생성
             SummaryRequest summaryRequest = new SummaryRequest();
-            summaryRequest.setUserId((Long) summaryData.get("userId"));
-            summaryRequest.setCounselorUserId(counselorUserId);
+            // Long 타입 변환
+            Number userId = (Number) summaryData.get("userId");
+            summaryRequest.setUserId(userId != null ? userId.longValue() : null);
+            Number counselorUserId = (Number) summaryData.get("counselorUserId");
+            summaryRequest.setCounselorUserId(counselorUserId != null ? counselorUserId.longValue() : null);
+            
             summaryRequest.setChannelId(channelId);
             summaryRequest.setMessages((java.util.List<Map<String, String>>) summaryData.get("messages"));
 
