@@ -1,5 +1,6 @@
 package org.example.backend.websocket.controller;
 
+import org.example.backend.localllm.dto.response.SummaryResponse;
 import org.example.backend.websocket.service.ChannelChatRecrodService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
