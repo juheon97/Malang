@@ -197,20 +197,6 @@ class CounselWebSocketService {
       });
       this.subscriptions.set(`channel-${counselorCode}`, channelSub);
     }
-
-    if (chatCallback) {
-      const chatTopic = `/sub/${counselorCode}/chat`;
-      const chatSub = this.stompClient.subscribe(chatTopic, message => {
-        try {
-          const parsed = JSON.parse(message.body);
-          console.log(`[웹소켓] ${chatTopic} 메시지:`, parsed);
-          chatCallback(parsed);
-        } catch (err) {
-          console.error('[웹소켓] 채팅 메시지 파싱 실패:', err);
-        }
-      });
-      this.subscriptions.set(`chat-${counselorCode}`, chatSub);
-    }
   }
 
   // 공통 메시지 발행 함수
@@ -328,8 +314,8 @@ class CounselWebSocketService {
       '사용자 나가기',
     );
   }
-  // 채팅 메시지 발송 함수
-  sendChatMessage(counselorCode, userId, nickname, message) {
+
+  sendChatMessage(counselorCode, userId, nickname, message, role = null) {
     const payload = {
       event: 'record_send',
       content: message,
@@ -337,7 +323,7 @@ class CounselWebSocketService {
       user: userId,
       nickname: nickname,
       currentTime: new Date().toISOString(),
-      role: 'sample', // 필요에 따라 사용자 역할 정보를 넣을 수 있음
+      role: role,
     };
     return this._publishMessage(
       `/pub/${counselorCode}/chat_recd`,

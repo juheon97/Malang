@@ -211,7 +211,6 @@ function CounselChannelVideo() {
     toggleVideo,
   } = useOpenVidu(counselorCode, 'randomNickname', isMicOn, isCameraOn);
 
-  // 수정 후 코드
   const handleSendChatMessage = event => {
     event.preventDefault(); // 폼 제출 시 페이지 새로고침 방지
     const messageText = newMessage; // useChat 훅의 상태값 사용
@@ -220,20 +219,59 @@ function CounselChannelVideo() {
       const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
       const userId = userObj.id;
       const userName = userObj.name || userObj.username || '사용자';
+
+      // 사용자 역할을 ROLE_COUNSELOR 또는 ROLE_USER로 보정, 아니라면 null
+      const storedRole = sessionStorage.getItem('userRole') || userObj.role;
+      let userRole = null;
+      if (storedRole === 'ROLE_COUNSELOR' || storedRole === 'counselor') {
+        userRole = 'ROLE_COUNSELOR';
+      } else if (storedRole === 'ROLE_USER' || storedRole === 'user') {
+        userRole = 'ROLE_USER';
+      } else {
+        userRole = null;
+      }
+
+      // 전송할 payload(로그 출력용) 구성
+      const payload = {
+        event: 'record_send',
+        content: messageText,
+        channel: counselorCode,
+        user: userId,
+        nickname: userName,
+        currentTime: new Date().toISOString(),
+        role: userRole,
+      };
+
+      // 수정된 sendChatMessage를 호출하면서 computed role 전달
       const success = counselWebSocketService.sendChatMessage(
         counselorCode,
         userId,
         userName,
         messageText,
+        userRole,
       );
+
       if (success) {
+        // 사용자 전송 메시지 출력
         addMessage(messageText, userName, userId);
+        // 시스템 메시지로 payload 정보를 채팅창에 출력
+        addMessage(
+          `전송된 메시지 정보:\n${JSON.stringify(payload, null, 2)}`,
+          '시스템',
+          'system',
+        );
         setNewMessage('');
       } else {
         console.error('[채팅] 메시지 전송 실패');
+        addMessage('[채팅] 메시지 전송 실패', '시스템', 'system');
       }
     } catch (error) {
       console.error('[채팅] 메시지 전송 중 오류:', error);
+      addMessage(
+        '[채팅] 메시지 전송 중 오류: ' + error.message,
+        '시스템',
+        'system',
+      );
     }
   };
 
@@ -364,46 +402,6 @@ function CounselChannelVideo() {
           setIsChatEnabled(true);
           counselWebSocketService.setChatEnabled(true);
           console.log('[웹소켓] 채팅 활성화 상태 설정:', true);
-
-          // 채팅 메시지를 위한 추가 구독
-          if (counselWebSocketService.isConnected && counselorCode) {
-            const chatTopic = `/sub/${counselorCode}/chat`;
-            console.log(`[웹소켓] 채팅 메시지 구독 추가: ${chatTopic}`);
-
-            const handleChatMessage = chatMsg => {
-              try {
-                const parsed = JSON.parse(chatMsg.body);
-                console.log(`[웹소켓] 채팅 메시지 수신:`, parsed);
-                if (parsed.event === 'chat' && parsed.content) {
-                  addMessage(parsed.content, parsed.sender, parsed.user);
-                }
-              } catch (err) {
-                console.error('[웹소켓] 채팅 메시지 파싱 오류:', err);
-              }
-            };
-
-            // 기존 구독이 있으면 제거
-            const existingSub = counselWebSocketService.subscriptions.get(
-              `chat-${counselorCode}`,
-            );
-            if (existingSub) {
-              existingSub.unsubscribe();
-              counselWebSocketService.subscriptions.delete(
-                `chat-${counselorCode}`,
-              );
-            }
-
-            // 새 구독 추가
-            const chatSub = counselWebSocketService.stompClient.subscribe(
-              chatTopic,
-              handleChatMessage,
-            );
-            counselWebSocketService.subscriptions.set(
-              `chat-${counselorCode}`,
-              chatSub,
-            );
-            console.log(`[웹소켓] ${chatTopic} 구독 성공!`);
-          }
 
           return;
         }
