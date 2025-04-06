@@ -28,8 +28,9 @@ public class Summary {
     private User user; // 일반 사용자 중 role 필드로 일반 유조 추가 구분함
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "counselor_user_id", nullable = false)
-    private User counselor; // 일반 사용자 중 role 필드로 상담사 추가 구분함
+//    @JoinColumn(name = "counselor_user_id", nullable = false)
+    @JoinColumn(name = "counselor_id", nullable = false)
+    private Counselor counselor; // 1001 시작하는 counselor_id
 
     @Column(columnDefinition = "TEXT")
     private String summaryTopic;
