@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import voiceChangeApi from '../api/voiceChangeApi';
+import SelfApi from '../api/SelfApi';
 import '../styles/fonts.css';
 import toWav from 'audiobuffer-to-wav';
 
@@ -10,6 +10,8 @@ const SelfDiagnosis = () => {
   const [audioUrl, setAudioUrl] = useState(null);
   const [improvedAudioUrl, setImprovedAudioUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false); // 버튼 비활성화 상태 추가
+  const [buttonTimer, setButtonTimer] = useState(0); // 타이머 카운트다운 상태 추가
   const [serviceStatus, setServiceStatus] = useState({
     isAvailable: false,
     message: "서비스 상태 확인 중...",
@@ -18,12 +20,13 @@ const SelfDiagnosis = () => {
   
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const timerRef = useRef(null); // 타이머 참조 추가
   
   // 컴포넌트 마운트 시 서비스 상태 확인
   useEffect(() => {
     const checkServiceHealth = async () => {
       try {
-        const healthData = await voiceChangeApi.checkServiceHealth();
+        const healthData = await SelfApi.checkServiceHealth();
         setServiceStatus({
           isAvailable: healthData.status === "ok",
           message: healthData.status === "ok" 
@@ -47,6 +50,46 @@ const SelfDiagnosis = () => {
     return () => clearInterval(intervalId);
   }, []);
   
+  // 타이머 관련 useEffect 추가
+  useEffect(() => {
+    // 버튼이 비활성화 상태이고 타이머가 0보다 크면 타이머 감소
+    if (isButtonDisabled && buttonTimer > 0) {
+      timerRef.current = setTimeout(() => {
+        setButtonTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (buttonTimer === 0 && isButtonDisabled) {
+      // 타이머가 0이 되면 버튼 활성화
+      setIsButtonDisabled(false);
+    }
+    
+    // 컴포넌트 언마운트 시 타이머 정리
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [isButtonDisabled, buttonTimer]);
+  
+  // WebM을 WAV로 변환하는 함수
+  const convertToWav = async (webmBlob) => {
+    // 오디오 컨텍스트 생성
+    const audioContext = new (window.AudioContext || window.AudioContext)();
+    
+    // Blob을 ArrayBuffer로 변환
+    const arrayBuffer = await webmBlob.arrayBuffer();
+    
+    // ArrayBuffer를 AudioBuffer로 디코딩
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    
+    // AudioBuffer를 WAV로 변환 (audiobuffer-to-wav 라이브러리 사용)
+    const wavBuffer = toWav(audioBuffer);
+    
+    // WAV ArrayBuffer를 Blob으로 변환
+    const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+    
+    return wavBlob;
+  };
+  
   const startRecording = async () => {
     // 서비스가 이용 불가능한 경우 녹음 시작 불가
     if (!serviceStatus.isAvailable) {
@@ -64,7 +107,7 @@ const SelfDiagnosis = () => {
         } 
       });
       
-      // WAV 형식으로 녹음 (대부분의 브라우저에서 지원)
+      // WebM 형식으로 녹음 (대부분의 브라우저에서 지원)
       mediaRecorderRef.current = new MediaRecorder(stream, {
         mimeType: 'audio/webm', // 대부분의 브라우저에서 지원하는 형식
       });
@@ -89,8 +132,16 @@ const SelfDiagnosis = () => {
           setIsLoading(true);
       
           try {
-            // API를 통해 webm 파일을 텍스트로 변환
-            const result = await voiceChangeApi.convertSpeechToText(webmBlob);
+            // WebM을 WAV로 변환
+            const wavBlob = await convertToWav(webmBlob);
+            console.log('변환된 WAV 파일 타입:', wavBlob.type); // 'audio/wav' 출력
+            
+            // WAV 파일을 재생할 수 있는 URL 생성
+            const wavUrl = URL.createObjectURL(wavBlob);
+            setAudioUrl(wavUrl); // 기존 URL 대체
+            
+            // API를 통해 wav 파일을 텍스트로 변환
+            const result = await SelfApi.convertSpeechToText(wavBlob);
       
             console.log('STT 응답:', result);
       
@@ -102,12 +153,12 @@ const SelfDiagnosis = () => {
             }
           } catch (error) {
             console.error('음성 변환 처리 오류:', error);
-            setTranscribedText('음성 변환 중 오류가 발생했습니다. 다시 시도해주세요.');
+            setTranscribedText('주위 환경이 너무 시끄럽습니다 순화해서 적고 조용한 환경에서 다시 시도해주세요..');
           } finally {
             setIsLoading(false);
           }
         } catch (error) {
-          console.error('webm 처리 오류:', error);
+          console.error('오디오 처리 오류:', error);
           setIsLoading(false);
           setTranscribedText('오디오 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
         }
@@ -127,6 +178,10 @@ const SelfDiagnosis = () => {
       
       // 스트림 트랙 중지
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      
+      // 버튼 비활성화 및 타이머 시작 (10초)
+      setIsButtonDisabled(true);
+      setButtonTimer(10);
     }
   };
 
@@ -233,14 +288,20 @@ const SelfDiagnosis = () => {
                   className={`w-full py-3 rounded-lg transition duration-300 ${
                     isRecording
                       ? 'bg-red-600 text-white'
-                      : serviceStatus.isAvailable 
-                        ? 'bg-[#55BCA4] text-white hover:bg-[#55BCA6]'
-                        : 'bg-gray-400 text-white cursor-not-allowed'
+                      : isButtonDisabled
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : serviceStatus.isAvailable 
+                          ? 'bg-[#55BCA4] text-white hover:bg-[#55BCA6]'
+                          : 'bg-gray-400 text-white cursor-not-allowed'
                   }`}
                   onClick={isRecording ? stopRecording : startRecording}
-                  disabled={isLoading || !serviceStatus.isAvailable || serviceStatus.checking}
+                  disabled={isLoading || isButtonDisabled || !serviceStatus.isAvailable || serviceStatus.checking}
                 >
-                  {isRecording ? '녹음 중지' : '녹음 시작'}
+                  {isRecording 
+                    ? '녹음 중지' 
+                    : isButtonDisabled 
+                      ? `${buttonTimer}초 후 재시도` 
+                      : '녹음 시작'}
                 </button>
               </div>
             </div>
@@ -261,7 +322,23 @@ const SelfDiagnosis = () => {
                       <p>변환 중...</p>
                     </div>
                   ) : (
-                    <p className="text-gray-700">{transcribedText}</p>
+                    <div className="text-gray-700">
+                      {typeof transcribedText === 'object' ? (
+                        <div>
+                          <p className="font-bold text-lg mb-2">진단 결과:</p>
+                          <ul className="space-y-2">
+                            {Object.entries(transcribedText).map(([key, value]) => (
+                              <li key={key} className="flex justify-between border-b pb-1">
+                                <span>{key}:</span> 
+                                <span className="font-medium">{value}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : (
+                        <p>{transcribedText}</p>
+                      )}
+                    </div>
                   )}
                 </div>
                 
