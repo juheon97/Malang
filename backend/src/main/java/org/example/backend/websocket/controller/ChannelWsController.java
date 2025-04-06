@@ -72,7 +72,7 @@ public class ChannelWsController {
 
             case "end":
                 logger.info("Counselor ended conversation request from user {} in channel {}", request.user(), channel_id);
-                channelWsService.sendSummaryRequest(channel_id, request.user());
+                channelWsService.sendSummaryRequest(channel_id);
                 return new ChannelEventResponse(channel_id, request.user(), "ended", request.role());
 
             case "user_leave":
