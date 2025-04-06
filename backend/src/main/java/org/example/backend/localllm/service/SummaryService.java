@@ -7,6 +7,5 @@ import org.springframework.stereotype.Service;
 @Service
 public interface SummaryService {
 
-//    SummaryResponse summarizeAndSave(SummaryRequest dto, Long counselorUserId);
     SummaryResponse summarizeAndSave(SummaryRequest dto, Long counselorId);
 }

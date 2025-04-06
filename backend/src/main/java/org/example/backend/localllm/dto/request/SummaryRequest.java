@@ -21,7 +21,6 @@ public class SummaryRequest {
     private Long userId;
 
     @Schema(example = "1001")
-//    private Long counselorUSerId;
     private Long counselorId;
 
     @Schema(example = "1")

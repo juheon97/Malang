@@ -43,13 +43,11 @@ public class SummaryController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-//        Long counselorUserId = user.getId();
-//        SummaryResponse summary = summaryService.summarizeAndSave(dto, counselorUserId); // 변경: 결과 반환
 
         Counselor counselor = counselorRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("상담사 정보가 없습니다."));
 
-        Long counselorId = counselor.getId(); // <- 올바르게 추출된 counselor_id
+        Long counselorId = counselor.getId(); // 올바르게 추출된 counselor_id
 
         SummaryResponse summary = summaryService.summarizeAndSave(dto, counselorId);
 
