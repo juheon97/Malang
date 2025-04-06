@@ -211,29 +211,23 @@ function CounselChannelVideo() {
     toggleVideo,
   } = useOpenVidu(counselorCode, 'randomNickname', isMicOn, isCameraOn);
 
-  // 채팅 핸들러 함수 추가
-  const handleSendChatMessage = message => {
-    if (!message.trim() || !isChatEnabled) return;
-
+  // 수정 후 코드
+  const handleSendChatMessage = event => {
+    event.preventDefault(); // 폼 제출 시 페이지 새로고침 방지
+    const messageText = newMessage; // useChat 훅의 상태값 사용
+    if (!messageText.trim() || !isChatEnabled) return;
     try {
-      // 사용자 정보 가져오기
       const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
       const userId = userObj.id;
       const userName = userObj.name || userObj.username || '사용자';
-
-      // 웹소켓으로 메시지 전송
       const success = counselWebSocketService.sendChatMessage(
         counselorCode,
         userId,
         userName,
-        message,
+        messageText,
       );
-
       if (success) {
-        console.log('[채팅] 메시지 전송 성공:', message);
-        // 내가 보낸 메시지를 즉시 표시
-        addMessage(message, userName, userId);
-        // 메시지 입력창 초기화
+        addMessage(messageText, userName, userId);
         setNewMessage('');
       } else {
         console.error('[채팅] 메시지 전송 실패');

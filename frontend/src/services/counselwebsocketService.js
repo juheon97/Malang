@@ -329,14 +329,15 @@ class CounselWebSocketService {
     );
   }
   // 채팅 메시지 발송 함수
-  sendChatMessage(counselorCode, userId, sender, message) {
+  sendChatMessage(counselorCode, userId, nickname, message) {
     const payload = {
-      event: 'chat',
-      user: userId,
-      sender: sender,
+      event: 'record_send',
       content: message,
       channel: counselorCode,
-      timestamp: new Date().toISOString(),
+      user: userId,
+      nickname: nickname,
+      currentTime: new Date().toISOString(),
+      role: 'sample', // 필요에 따라 사용자 역할 정보를 넣을 수 있음
     };
     return this._publishMessage(
       `/pub/${counselorCode}/chat_recd`,
