@@ -24,7 +24,7 @@ public class SummaryRequest {
     private Long counselorUserId;
 
     @Schema(example = "1")
-    private String channelId; // Redis key
+    private Long channelId; // Redis key
 
     @Schema(description = "상담 메시지 리스트 예시",
             example = "[{\"role\":\"user\",\"content\":\"요즘 불안해서 잠을 잘 못 자요.\"}," +
