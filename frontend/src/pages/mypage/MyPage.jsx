@@ -90,7 +90,7 @@ const MyPage = () => {
       <ProfileAlert error={error} success={success} />
 
       {/* 탭 네비게이션 */}
-      <div className="flex mb-6 border-b border-gray-200">
+      <div className="flex  border-b border-gray-200">
         <button
           className={`px-6 py-3 font-medium text-sm transition-colors ${
             activeTab === 'profile'
@@ -140,7 +140,7 @@ const MyPage = () => {
 
       {/* 상담 기록 탭 */}
       {activeTab === 'counseling-history' && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm ">
           <CounselingHistoryList counselorId={currentUser?.id} />
         </div>
       )}
