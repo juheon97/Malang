@@ -7,6 +7,7 @@ import HomeMain3 from '../../components/home/HomeMain3';
 import HomeMain4 from '../../components/home/HomeMain4';
 import HomeMain5 from '../../components/home/HomeMain5';
 import { useSignLanguage } from '../../contexts/SignLanguageContext';
+import { Link } from 'react-router-dom';
 
 function Home() {
   // 각 섹션에 대한 ref 생성
@@ -54,7 +55,9 @@ function Home() {
 
   return (
     <div className={styles.homeContainer}>
-      <button onClick={openSignLanguageModal}>수어 인식 시작</button>
+      <Link to="/sign-language">
+        <button className={styles.signLanguageButton}>수어 인식 시작</button>
+      </Link>
 
       <HomeMain1 />
 

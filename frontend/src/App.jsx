@@ -19,6 +19,7 @@ import CounselChannelVideo from './pages/counselchannel/CounselChannelVideo';
 import VoiceChange from './pages/VoiceChange';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import { SignLanguageProvider } from './contexts/SignLanguageContext';
+import SignLanguagePage from './pages/SignLanguagePage';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/Signup" element={<Signup />} />
                   <Route path="/community/*" element={<Community />} />
+                  <Route path="/sign-language" element={<SignLanguagePage />} />
                   {/* 보호된 라우트 - 인증 필요 */}
                   <Route
                     path="/mypage"
