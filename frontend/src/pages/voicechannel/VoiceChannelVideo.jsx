@@ -20,25 +20,22 @@ function VoiceChannelVideo() {
   const [connectionError, setConnectionError] = useState('');
   const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
   const hasJoined = useRef(false);
-  const {state} = useLocation();
+  const { state } = useLocation();
   const creatorNickname = state?.sessionConfig?.creatorNickname;
-const isCreator = currentUser?.username === creatorNickname;
+  const isCreator = currentUser?.username === creatorNickname;
   // Destructure with all the available properties returned by useOpenVidu
-  const {  
-    createAndJoinSession, 
-    joinExistingSession,  
-    leaveSession, 
-    toggleAudio, 
-    toggleVideo, 
-    error, 
-    isConnecting, 
-    isConnected: isOpenViduConnected,  
-    participants, 
-    renderParticipantInfo
-  } = useVoiceOpenVidu(
-    channelId,
-    currentUser?.username || 'Guest'
-  );
+  const {
+    createAndJoinSession,
+    joinExistingSession,
+    leaveSession,
+    toggleAudio,
+    toggleVideo,
+    error,
+    isConnecting,
+    isConnected: isOpenViduConnected,
+    participants,
+    renderParticipantInfo,
+  } = useVoiceOpenVidu(channelId, currentUser?.username || 'Guest');
 
   const { messages, newMessage, setNewMessage, handleKeyDown, addMessage } =
     useChat(currentUser?.id || 'guest');
@@ -91,13 +88,13 @@ const isCreator = currentUser?.username === creatorNickname;
     const connectWebSocket = () => {
       const token = sessionStorage.getItem('token');
       if (!token || !isAuthenticated || !channelId) return;
-  
+
       websocketService.connect(
         channelId,
         handleChatMessage,
         handleChannelEvent,
       );
-  
+
       const checkConnection = setInterval(() => {
         if (websocketService.isConnected) {
           setIsWebSocketConnected(true);
@@ -107,7 +104,7 @@ const isCreator = currentUser?.username === creatorNickname;
         }
       }, 500);
     };
-  
+
     if (!hasJoined.current && isAuthenticated && channelId) {
       hasJoined.current = true;
       connectWebSocket();
@@ -119,7 +116,7 @@ const isCreator = currentUser?.username === creatorNickname;
         joinExistingSession();
       }
     }
-  
+
     return () => {
       if (hasJoined.current) {
         websocketService.sendLeaveEvent(channelId, currentUser?.id);
@@ -139,7 +136,7 @@ const isCreator = currentUser?.username === creatorNickname;
       event: 'send',
       content: newMessage,
       userId: currentUser?.id,
-      nickname: currentUser?.username
+      nickname: currentUser?.username,
     };
 
     console.log('📤 백엔드로 전송될 메시지:', messagePayload);
@@ -183,13 +180,14 @@ const isCreator = currentUser?.username === creatorNickname;
     const fetchChannelInfo = async () => {
       try {
         setChannelInfo({
-          channelName: state?.sessionConfig?.channelName || `음성 채널 ${channelId}`
+          channelName:
+            state?.sessionConfig?.channelName || `음성 채널 ${channelId}`,
         });
       } catch (error) {
         console.error('채널 정보 조회 실패:', error);
       }
     };
-    
+
     if (channelId) {
       fetchChannelInfo();
     }
@@ -220,7 +218,7 @@ const isCreator = currentUser?.username === creatorNickname;
             onClick={() => {
               // 방장 여부에 따라 적절한 함수 호출
               const isHost = sessionStorage.getItem('isChannelHost') === 'true';
-              console.log(sessionStorage.data)
+              console.log(sessionStorage.data);
               setConnectionError('');
               if (isHost) {
                 createAndJoinSession(channelId);

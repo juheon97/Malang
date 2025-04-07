@@ -127,8 +127,11 @@ const Counsel = () => {
             );
             console.log('[웹소켓] 상담사 나가기 후 처리 시작');
 
-            // 일반 사용자인 경우 (상담사가 아닌 모든 사용자) 상담 목록 페이지로 리다이렉트
-            if (!isCounselor) {
+            // 일반 사용자인 경우 명시적으로 체크
+            if (
+              userRole === 'ROLE_USER' ||
+              (!isCounselor && userRole !== 'ROLE_COUNSELOR')
+            ) {
               console.log(
                 '[웹소켓] 일반 사용자로 확인됨, 알림 표시 및 리다이렉트 처리 시작',
               );
@@ -141,7 +144,7 @@ const Counsel = () => {
               // 모든 모달 닫기
               closeModal();
 
-              // 알림 표시 후 리다이렉트
+              // 알림 표시
               alert('상담사가 상담을 종료했습니다.');
 
               // 웹소켓 연결 종료
@@ -150,13 +153,9 @@ const Counsel = () => {
                 counselWebSocketService.stompClient.deactivate();
               }
 
-              // setTimeout으로 지연시켜 알림이 먼저 표시되도록 함
-              setTimeout(() => {
-                // 상담 목록 페이지로 이동
-                console.log('[웹소켓] /counsel-channel로 페이지 이동 시도');
-                navigate('/counsel-channel'); // 강제 페이지 이동 대신 navigate 사용
-                console.log('[웹소켓] 페이지 이동 후');
-              }, 500);
+              // 즉시 상담 목록 페이지로 이동
+              console.log('[웹소켓] /counsel-channel로 페이지 이동 시도');
+              navigate('/counsel-channel');
             } else {
               console.log('[웹소켓] 상담사로 확인됨, 리다이렉트하지 않음');
             }

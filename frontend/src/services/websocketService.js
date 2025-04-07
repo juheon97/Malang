@@ -77,18 +77,26 @@ class WebSocketService {
   sendJoinEvent(channelId, userId) {
     const payload = JSON.stringify({
       event: 'join',
-      user_id: parseInt(userId, 10),
+      user: parseInt(userId, 10),
       channel: parseInt(channelId, 10),
     });
+
+    // 백엔드로 보내는 데이터 콘솔에 출력
+    console.log('📤 백엔드로 전송하는 JOIN 이벤트:', JSON.parse(payload));
+
     return this.sendMessage(`/pub/${channelId}`, payload);
   }
 
   sendLeaveEvent(channelId, userId) {
     const payload = JSON.stringify({
       event: 'leave',
-      user_id: parseInt(userId, 10),
+      user: parseInt(userId, 10),
       channel: parseInt(channelId, 10),
     });
+
+    // 백엔드로 보내는 데이터 콘솔에 출력
+    console.log('📤 백엔드로 전송하는 LEAVE 이벤트:', JSON.parse(payload));
+
     return this.sendMessage(`/pub/${channelId}`, payload);
   }
 
