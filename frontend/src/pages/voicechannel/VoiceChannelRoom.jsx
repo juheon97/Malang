@@ -28,6 +28,11 @@ function VoiceChannelRoom() {
     }
   }, [isAuthenticated, navigate]);
 
+  // currentUser 확인용 로그 추가
+  useEffect(() => {
+    console.log('현재 로그인된 사용자 정보:', currentUser);
+  }, [currentUser]);
+
   const handleChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -59,34 +64,46 @@ function VoiceChannelRoom() {
     setIsLoading(true);
     setError(null);
 
+    // currentUser 확인 로그 추가
+    console.log('폼 제출 시 currentUser 정보:', currentUser);
+    console.log('현재 사용자 ID:', currentUser?.id);
+    
     // API 명세서에 맞게 데이터 변환
     const apiRequestData = {
       channelName: formData.roomName,
       description: formData.description,
       password: formData.password || null,
       maxPlayer: parseInt(formData.maxUsers),
+      user_id: currentUser?.id
     };
     console.log('1. 방생성 버튼 누르고 : 음성채널 생성 데이터:', apiRequestData);
    
-
     try {
       // 채널 생성만 시킴
       const channelResponse = await voiceChannelApi.createChannel(apiRequestData);
+      console.log('백엔드 응답 데이터:', channelResponse.data);
+      console.log('방 생성자 ID 확인:', channelResponse.data.creatorId || '정보 없음');
+      
       const { channelId, creatorNickname, channelName } = channelResponse.data;
+      
+      // 세션 스토리지에 방 생성자 정보 저장 (추가)
+      sessionStorage.setItem('isChannelHost', 'true');
+      sessionStorage.setItem('channelCreatorId', currentUser?.id);
+      
       // 화면 이동만 수행 (세션 초기화는 다음 페이지에서)
-    navigate(`/voice-channel-video/${channelId}`, {
-      state: { 
-        sessionConfig: {
-          channelId,
-          creatorNickname, // 방장 닉네임 전달
-          channelName
+      navigate(`/voice-channel-video/${channelId}`, {
+        state: { 
+          sessionConfig: {
+            channelId,
+            creatorNickname, // 방장 닉네임 전달
+            channelName,
+            user_id: currentUser?.id, // 현재 사용자 ID 전달
+          }
         }
-      }
-    });
-
-
-    }catch (error) {
+      });
+    } catch (error) {
       console.error('채널 생성 실패:', error);
+      console.error('에러 세부 정보:', error.response?.data);
 
       // 에러 처리
       if (error.response) {
@@ -319,25 +336,37 @@ function VoiceChannelRoom() {
               </div>
 
               <div className="flex justify-end gap-3">
+                {error && (
+                  <div className="text-red-500 text-sm mb-4 p-2 bg-red-50 rounded-lg border border-red-200">
+                    {error}
+                  </div>
+                )}
                 <button
                   type="submit"
                   className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white font-semibold shadow-lg px-14 py-3 rounded-2xl text-base transition-all transform hover:scale-105 flex items-center"
+                  disabled={isLoading}
                 >
-                  <svg
-                    className="w-5 h-5 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    ></path>
-                  </svg>
-                  음성채널 생성하기
+                  {isLoading ? (
+                    <span>처리 중...</span>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-5 h-5 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        ></path>
+                      </svg>
+                      음성채널 생성하기
+                    </>
+                  )}
                 </button>
               </div>
             </form>

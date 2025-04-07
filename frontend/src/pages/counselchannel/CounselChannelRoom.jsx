@@ -201,8 +201,16 @@ function CounselChannelRoom() {
 
       console.log('===========================');
 
+
       // counselor_code로 비디오 페이지 이동
-      navigate(`/counsel-channel-video/${counselorCode}`);
+      navigate(`/counsel-channel-video/${counselorCode}`, {
+        state: {
+          sessionConfig:{
+            counselorCode
+          }
+        }
+      });
+
     } catch (error) {
       console.error('채널 생성 실패:', error);
       console.error('에러 응답 세부 정보:', {
