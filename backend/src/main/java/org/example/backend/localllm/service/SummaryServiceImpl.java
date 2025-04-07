@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -60,6 +61,22 @@ public class SummaryServiceImpl implements SummaryService {
         } catch (DateTimeParseException e) {
             return null; // fallback
         }
+    }
+
+    @Override
+    public List<SummaryResponse> getAllSummariesByCounselorId(Long counselorId) {
+        List<Summary> summaries = summaryRepository.findAllByCounselor_Id(counselorId);
+        return summaries.stream()
+                .map(summary -> SummaryResponse.builder()
+                        .summary_topic(summary.getSummaryTopic())
+                        .symptoms(summary.getSymptoms())
+                        .treatment(summary.getTreatment())
+                        .counselor_note(summary.getCounselorNote())
+                        .next_schedule(summary.getNextSchedule() != null
+                                ? summary.getNextSchedule().toLocalDate().toString()
+                                : null)
+                        .build())
+                .toList();
     }
 
 }

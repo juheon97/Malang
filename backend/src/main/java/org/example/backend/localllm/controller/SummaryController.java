@@ -11,10 +11,9 @@ import org.example.backend.localllm.service.SummaryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Local LLM", description = "redis 에 저장된 채팅 내역을 Local LLM 을 통해 요약본을 가지고 올 수 있습니다.")
 @RestController
@@ -29,6 +28,11 @@ public class SummaryController {
         this.summaryService = summaryService;
         this.userRepository = userRepository;
         this.counselorRepository = counselorRepository;
+    }
+
+    @GetMapping("/counselor/{counselorId}")
+    public List<SummaryResponse> getSummariesByCounselor(@PathVariable Long counselorId) {
+        return summaryService.getAllSummariesByCounselorId(counselorId);
     }
 
     @PostMapping
