@@ -1,96 +1,102 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import counselorHistoryApi from '../../../api/counselorHistoryApi';
 
-const CounselingHistoryList = ({ counselorId }) => {
+const CounselingHistoryList = () => {
   const [counselingHistory, setCounselingHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [expandedRowId, setExpandedRowId] = useState(null);
-
-  // 임시 데이터 배열
-  const sampleData = [
-    {
-      summary_id: 1,
-      user_id: 29,
-      counselor_id: 1001,
-      summary_topic: '수면 문제',
-      symptoms: '불면기 어렵거나 자주 깨는 증후',
-      treatment: '수면 위생 개선, 이완기법 훈련',
-      counselor_note: '고객님께서 원하는 더 어려움을 극복 체시드로드. 수면에 대한 불안감이 심해 인지행동 테라피를 적용했습니다. 취침 전 루틴을 확립하고 카페인 섭취를 줄이는 것이 중요하다고 말씀드렸습니다. 다음 세션에서는 명상 기법 연습을 더 해볼 예정입니다.',
-      next_schedule: '2025-04-15',
-      created_at: '2025-04-01'
-    },
-    {
-      summary_id: 2,
-      user_id: 29,
-      counselor_id: 1001,
-      summary_topic: '관계 문제',
-      symptoms: '갈가리에 연관된',
-      treatment: '1. 문화적 휴식과 소통의 중요성 배움.',
-      counselor_note: '자주 식으루 작업할때 다른사니드. 내담자가 가족관계에서 의사소통의 어려움을 호소하여 효과적인 대화 기법에 대해 논의했습니다. 특히 "I" 메시지를 사용하는 방법과 적극적 경청에 대해 중점적으로 이야기했습니다. 가족 구성원들과의 대화 빈도를 늘리고 감정을 표현하는 연습을 과제로 내드렸습니다.',
-      next_schedule: '2025-04-18',
-      created_at: '2025-04-02'
-    },
-    {
-      summary_id: 3,
-      user_id: 29,
-      counselor_id: 1001,
-      summary_topic: '정신건강 상담',
-      symptoms: '반복적인 좋을 사용으로 인한 사회적 및 개인적 어려움',
-      treatment: '인지 지료와강화 초점 훈련 전형',
-      counselor_note: '고객의 갈등을 이해하고, 자료하게 답환을 츠소. 내담자의 불안 증상이 일상생활에 미치는 영향이 심각한 수준임을 확인했습니다. 점진적 노출 훈련을 시작했으며, 호흡 기법을 통한 불안 관리 방법도 함께 연습했습니다. 약물 치료에 대한 의사의 상담도 권유했으며, 내담자는 이를 긍정적으로 고려하겠다고 했습니다.',
-      next_schedule: '2025-04-22',
-      created_at: '2025-04-05'
-    },
-    {
-      summary_id: 4,
-      user_id: 29,
-      counselor_id: 1001,
-      summary_topic: '정서 문제 상담',
-      symptoms: '지속적인 절작 클관심',
-      treatment: '주기 정작 답사 및 이비안훈자 상담 관장',
-      counselor_note: '고객의 정서 문제는 향상 성향에 영향을 미쳐 가. 내담자가 최근 경험한 상실감에 대해 깊이 이야기를 나눴습니다. 슬픔을 처리하는 건강한 방법과 자기 돌봄의 중요성에 대해 논의했습니다. 감정 일기를 쓰는 것을 과제로 내드렸고, 다음 세션에서 이에 대해 더 이야기할 예정입니다. 지원 그룹 참여도 권유했습니다.',
-      next_schedule: '2025-04-25',
-      created_at: '2025-04-08'
-    }
-  ];
-
+  const [counselorId, setCounselorId] = useState(null);
+  
+  // 상담사 정보 직접 가져오기
+  useEffect(() => {
+    const fetchCounselorProfile = async () => {
+      try {
+        setLoading(true);
+        
+        // API URL 가져오기
+        const API_URL = import.meta.env.VITE_API_URL;
+        
+        // 토큰 가져오기
+        const token = sessionStorage.getItem('token');
+        if (!token) {
+          console.error('인증 토큰이 없습니다.');
+          setError('로그인이 필요합니다.');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('상담사 프로필 API 호출 시작');
+        const response = await axios.get(`${API_URL}/counselor/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
+        console.log('상담사 프로필 응답:', response.data);
+        
+        if (response.data && response.data.counselorId) {
+          console.log('상담사 ID 발견:', response.data.counselorId);
+          setCounselorId(response.data.counselorId);
+        } else {
+          // counselorId 대신 userId 확인
+          if (response.data && response.data.userId) {
+            const id = response.data.userId;
+            console.log('userId로 대체:', id);
+            // 임시 해결책 - 특정 사용자 ID를 상담사 ID로 매핑
+            // 예: userId 18 -> counselorId 1008
+            if (id === 18) {
+              setCounselorId(1008);
+            } else {
+              setCounselorId(id); // 없으면 userId를 그대로 사용
+            }
+          } else {
+            console.error('상담사 ID를 찾을 수 없습니다.');
+            setError('상담사 정보를 찾을 수 없습니다.');
+          }
+        }
+      } catch (err) {
+        console.error('상담사 정보 가져오기 실패:', err);
+        console.log('오류 상세:', err.response?.data);
+        setError('상담사 정보를 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCounselorProfile();
+  }, []);
+  
+  // counselorId가 설정되면 상담 기록 조회
   useEffect(() => {
     const fetchCounselingHistory = async () => {
-      if (!counselorId) return;
+      if (!counselorId) {
+        console.log('상담사 ID가 없어 API 호출 중단');
+        return;
+      }
       
       setLoading(true);
       setError(null);
       
       try {
-        // 실제 API 호출 대신 임시 데이터 사용
-        /*
-        const response = await axios.get(`/api/counseling/summary/counselor/${counselorId}`, {
-          params: { page: currentPage - 1, size: 10 }
-        });
+        console.log('상담 기록 API 호출 시작, counselorId:', counselorId);
+        const response = await counselorHistoryApi.getCounselorHistory(counselorId);
+        console.log('상담 기록 API 응답 데이터:', response);
         
-        setCounselingHistory(response.data.content || []);
-        setTotalPages(response.data.totalPages || 1);
-        */
-        
-        // 임시 데이터 사용
-        setTimeout(() => {
-          setCounselingHistory(sampleData);
-          setTotalPages(1);
-          setLoading(false);
-        }, 500);
-        
+        setCounselingHistory(response || []);
       } catch (err) {
-        console.error('상담 기록을 불러오는 중 오류가 발생했습니다:', err);
+        console.error('상담 기록 조회 오류:', err);
+        console.log('에러 상세 정보:', err.response?.data);
         setError('상담 기록을 불러오는 중 오류가 발생했습니다.');
+      } finally {
         setLoading(false);
       }
     };
 
     fetchCounselingHistory();
-  }, [counselorId, currentPage]);
+  }, [counselorId]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '-';
@@ -102,13 +108,8 @@ const CounselingHistoryList = ({ counselorId }) => {
     });
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    setExpandedRowId(null); // 페이지 변경 시 확장된 행 초기화
-  };
-
-  const toggleRow = (summaryId) => {
-    setExpandedRowId(expandedRowId === summaryId ? null : summaryId);
+  const toggleRow = (index) => {
+    setExpandedRowId(expandedRowId === index ? null : index);
   };
 
   // 상담 주제에 따른 아이콘과 색상 지정
@@ -122,17 +123,20 @@ const CounselingHistoryList = ({ counselorId }) => {
       return { icon: "👥", color: "bg-blue-50" };
     } else if (topic.includes('정신건강')) {
       return { icon: "🧠", color: "bg-green-50" };
-    } else if (topic.includes('정서')) {
-      return { icon: "😊", color: "bg-yellow-50" };
+    } else if (topic.includes('청각') || topic.includes('귀')) {
+      return { icon: "👂", color: "bg-yellow-50" };
+    } else if (topic.includes('정서') || topic.includes('스트레스')) {
+      return { icon: "😊", color: "bg-purple-50" };
     } else {
       return { icon: "📝", color: "bg-gray-100" };
     }
   };
 
-  if (loading && counselingHistory.length === 0) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center py-10">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#00a173]"></div>
+        <p className="ml-3 text-gray-600">데이터를 불러오는 중입니다...</p>
       </div>
     );
   }
@@ -145,6 +149,19 @@ const CounselingHistoryList = ({ counselorId }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           <p className="text-red-700">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!counselorId) {
+    return (
+      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4 rounded-md">
+        <div className="flex items-center">
+          <svg className="h-6 w-6 text-yellow-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <p className="text-yellow-700">상담사 정보를 찾을 수 없습니다. 상담사로 로그인했는지 확인해주세요.</p>
         </div>
       </div>
     );
@@ -172,16 +189,16 @@ const CounselingHistoryList = ({ counselorId }) => {
       <div className="space-y-4">
         {counselingHistory.map((record, index) => {
           const { icon, color } = getTopicInfo(record.summary_topic);
-          const isExpanded = expandedRowId === record.summary_id;
+          const isExpanded = expandedRowId === index;
           
           return (
             <div 
-              key={record.summary_id} 
+              key={index} 
               className={`border rounded-lg overflow-hidden transition-all duration-200 ${isExpanded ? 'shadow-md' : 'shadow-sm'}`}
             >
               <div 
                 className={`flex items-center p-4 cursor-pointer ${color} hover:bg-opacity-80 transition-colors`}
-                onClick={() => toggleRow(record.summary_id)}
+                onClick={() => toggleRow(index)}
               >
                 <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm text-lg">
                   {icon}
@@ -196,11 +213,6 @@ const CounselingHistoryList = ({ counselorId }) => {
                 
                 <div className="ml-4 flex-shrink-0">
                   <div className="flex items-center space-x-6">
-                    <div className="text-right">
-                      <span className="text-xs text-gray-500 block">생성 일자</span>
-                      <span className="text-sm font-medium text-gray-700">{formatDate(record.created_at)}</span>
-                    </div>
-                    
                     <div className="text-right">
                       <span className="text-xs text-gray-500 block">다음 일정</span>
                       <span className="text-sm font-medium text-gray-700">{formatDate(record.next_schedule)}</span>
@@ -253,51 +265,6 @@ const CounselingHistoryList = ({ counselorId }) => {
           );
         })}
       </div>
-      
-      {/* 페이지네이션 */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-8">
-          <nav className="flex items-center bg-white px-4 py-2 rounded-lg shadow-sm">
-            <button
-              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className={`mx-1 px-3 py-1 rounded-md ${
-                currentPage === 1 
-                  ? 'text-gray-400 cursor-not-allowed' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              이전
-            </button>
-            
-            {[...Array(totalPages).keys()].map(page => (
-              <button
-                key={page + 1}
-                onClick={() => handlePageChange(page + 1)}
-                className={`mx-1 px-3 py-1 rounded-md ${
-                  currentPage === page + 1
-                    ? 'bg-[#00a173] text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {page + 1}
-              </button>
-            ))}
-            
-            <button
-              onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className={`mx-1 px-3 py-1 rounded-md ${
-                currentPage === totalPages
-                  ? 'text-gray-400 cursor-not-allowed'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              다음
-            </button>
-          </nav>
-        </div>
-      )}
     </div>
   );
 };
