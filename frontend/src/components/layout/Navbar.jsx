@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import MalangLogo from '../../assets/image/Malang_logo.svg';
@@ -9,6 +9,8 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
 
   // 상담사 여부 확인
   const isCounselor = currentUser?.role === 'ROLE_COUNSELOR';
@@ -28,6 +30,30 @@ const Navbar = () => {
       // document.body.style.overflowY = '';
     };
   }, []);
+
+  // 외부 클릭 감지를 위한 이벤트 핸들러
+  useEffect(() => {
+    const handleClickOutside = event => {
+      // 드롭다운이 열려 있고, 클릭이 드롭다운 외부에서 발생했고, 버튼 클릭이 아닌 경우
+      if (
+        isOpen &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    // 이벤트 리스너 등록
+    document.addEventListener('mousedown', handleClickOutside);
+
+    // 클린업 함수
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   // 로그아웃 처리
   const handleLogout = () => {
@@ -146,6 +172,12 @@ const Navbar = () => {
             ) : (
               /* 상담사가 아닌 경우에만 음성변환, 음성채널, 커뮤니티 메뉴 표시 */
               <>
+               <Link
+                  to="/self-diagnosis"
+                  className="text-gray-800 hover:text-[#00a173]"
+                >
+                  자가진단
+                </Link>
                 <Link
                   to="/voice-change"
                   className="text-gray-800 hover:text-[#00a173]"
@@ -166,6 +198,7 @@ const Navbar = () => {
                 </Link>
                 <div className="relative">
                   <button
+                    ref={buttonRef}
                     className="flex items-center text-gray-800 hover:text-[#00a173]"
                     onClick={() => setIsOpen(!isOpen)}
                   >
@@ -186,16 +219,21 @@ const Navbar = () => {
                   </button>
 
                   {isOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                    <div
+                      ref={dropdownRef}
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10"
+                    >
                       <Link
                         to="/community"
                         className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                        onClick={() => setIsOpen(false)}
                       >
                         커뮤니티 홈
                       </Link>
                       <Link
                         to="/community/write"
                         className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
+                        onClick={() => setIsOpen(false)}
                       >
                         글쓰기
                       </Link>
@@ -265,6 +303,12 @@ const Navbar = () => {
             ) : (
               /* 상담사가 아닌 경우에만 음성변환, 음성채널, 커뮤니티 메뉴 표시 */
               <>
+              <Link
+                  to="/self-diagnosis"
+                  className="block px-3 py-2 text-gray-800 hover:bg-gray-100 rounded-md"
+                >
+                  자가진단
+                </Link>
                 <Link
                   to="/voice-change"
                   className="block px-3 py-2 text-gray-800 hover:bg-gray-100 rounded-md"

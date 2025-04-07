@@ -1,15 +1,21 @@
+// components/selfdiagnosis/SelfDiagnosis.js
 import React, { useState, useRef, useEffect } from 'react';
-import voiceChangeApi from '../api/voiceChangeApi';
+import SelfApi from '../api/SelfApi';
 import '../styles/fonts.css';
 import toWav from 'audiobuffer-to-wav';
+import NormalResult from '../components/selfdiagnosis/NormalResult';
+import AbnormalResult from '../components/selfdiagnosis/AbnormalResult'; // 경로는 실제 파일 위치에 맞게 조정
 
-const VoiceChange = () => {
-  const [transcribedText, setTranscribedText] = useState('안녕하세요, 만나서 반갑습니다.');
+const SelfDiagnosis = () => {
+  const [transcribedText, setTranscribedText] = useState('여기에 자가 진단 결과가 표시됩니다.');
   const [isRecording, setIsRecording] = useState(false);
   const [isAccessibleMode, setIsAccessibleMode] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
   const [improvedAudioUrl, setImprovedAudioUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [buttonTimer, setButtonTimer] = useState(0);
+  const [resultData, setResultData] = useState(null); // 분석 결과 데이터 저장
   const [serviceStatus, setServiceStatus] = useState({
     isAvailable: false,
     message: "서비스 상태 확인 중...",
@@ -18,17 +24,34 @@ const VoiceChange = () => {
   
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const timerRef = useRef(null);
   
+  const isAbnormalResult = (data) => {
+    if (!data || typeof data !== 'string') return false;
+    
+    console.log("확인할 데이터:", data); // 디버깅용
+    
+    // 정규식 개선: 소수점 이하 자릿수가 다양한 형식을 처리
+    const match = data.match(/뇌 질환:\s*([\d.]+)%/);
+    if (!match) return false;
+    
+    const abnormalProbability = parseFloat(match[1]);
+    console.log("뇌 질환 확률:", abnormalProbability); // 디버깅용
+    
+    // 99% 이상일 때 비정상으로 판단
+    return abnormalProbability >= 95;
+  };
+
   // 컴포넌트 마운트 시 서비스 상태 확인
   useEffect(() => {
     const checkServiceHealth = async () => {
       try {
-        const healthData = await voiceChangeApi.checkServiceHealth();
+        const healthData = await SelfApi.checkServiceHealth();
         setServiceStatus({
           isAvailable: healthData.status === "ok",
           message: healthData.status === "ok" 
-            ? "AI 음성 인식 서비스 이용 가능" 
-            : healthData.message || "AI 음성 인식 서비스 이용 불가",
+            ? "AI 자가 진단 서비스 이용 가능" 
+            : healthData.message || "AI 자가 진단 서비스 이용 불가",
           checking: false
         });
       } catch (error) {
@@ -47,26 +70,51 @@ const VoiceChange = () => {
     return () => clearInterval(intervalId);
   }, []);
   
+  // 타이머 관련 useEffect
+  useEffect(() => {
+    if (isButtonDisabled && buttonTimer > 0) {
+      timerRef.current = setTimeout(() => {
+        setButtonTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (buttonTimer === 0 && isButtonDisabled) {
+      setIsButtonDisabled(false);
+    }
+    
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [isButtonDisabled, buttonTimer]);
+  
+  // WebM을 WAV로 변환하는 함수
+  const convertToWav = async (webmBlob) => {
+    const audioContext = new (window.AudioContext || window.AudioContext)();
+    const arrayBuffer = await webmBlob.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    const wavBuffer = toWav(audioBuffer);
+    const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+    return wavBlob;
+  };
+  
   const startRecording = async () => {
-    // 서비스가 이용 불가능한 경우 녹음 시작 불가
     if (!serviceStatus.isAvailable) {
-      alert("현재 AI 음성 인식 서비스를 이용할 수 없습니다. 잠시 후 다시 시도해주세요.");
+      alert("현재 AI 자가 진단 서비스를 이용할 수 없습니다. 잠시 후 다시 시도해주세요.");
       return;
     }
     
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          sampleRate: 16000, // 16kHz 샘플링 레이트 (STT에 적합)
-          channelCount: 1,   // 모노 채널
+          sampleRate: 16000,
+          channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
         } 
       });
       
-      // WAV 형식으로 녹음 (대부분의 브라우저에서 지원)
       mediaRecorderRef.current = new MediaRecorder(stream, {
-        mimeType: 'audio/webm', // 대부분의 브라우저에서 지원하는 형식
+        mimeType: 'audio/webm',
       });
       
       audioChunksRef.current = [];
@@ -76,40 +124,49 @@ const VoiceChange = () => {
       });
       
       mediaRecorderRef.current.addEventListener('stop', async () => {
-        // webm 형식으로 녹음된 오디오
         const webmBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       
         try {
-          // Blob 객체를 URL로 변환하여 재생 가능하도록 설정
           const url = URL.createObjectURL(webmBlob);
           setAudioUrl(url);
-      
-          console.log('녹음된 파일 타입:', webmBlob.type); // 'audio/webm' 출력
-      
+          console.log('녹음된 파일 타입:', webmBlob.type);
           setIsLoading(true);
+          setResultData(null); // 결과 초기화
       
           try {
-            // API를 통해 webm 파일을 텍스트로 변환
-            const result = await voiceChangeApi.convertSpeechToText(webmBlob);
-      
+            const wavBlob = await convertToWav(webmBlob);
+            console.log('변환된 WAV 파일 타입:', wavBlob.type);
+            
+            const wavUrl = URL.createObjectURL(wavBlob);
+            setAudioUrl(wavUrl);
+            
+            const result = await SelfApi.convertSpeechToText(wavBlob);
             console.log('STT 응답:', result);
       
-            if (result && Object.keys(result).length > 0) {
+            if (result && typeof result === 'string') {
               setTranscribedText(result);
+              setResultData(result); // 결과 데이터 저장
+            } else if (result && result.data) {
+              // API 응답이 {data: "정상: 0.1%, 뇌 질환: 99.9%"} 형태인 경우
+              setTranscribedText(result.data);
+              setResultData(result.data);
             } else {
               console.warn('STT 응답이 비어있습니다:', result);
               setTranscribedText('음성을 인식하지 못했습니다. 다시 시도해주세요.');
+              setResultData(null);
             }
           } catch (error) {
             console.error('음성 변환 처리 오류:', error);
-            setTranscribedText('음성 변환 중 오류가 발생했습니다. 다시 시도해주세요.');
+            setTranscribedText('주위 환경이 너무 시끄럽습니다. 조용한 환경에서 다시 시도해주세요.');
+            setResultData(null);
           } finally {
             setIsLoading(false);
           }
         } catch (error) {
-          console.error('webm 처리 오류:', error);
+          console.error('오디오 처리 오류:', error);
           setIsLoading(false);
           setTranscribedText('오디오 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+          setResultData(null);
         }
       });
       
@@ -125,20 +182,24 @@ const VoiceChange = () => {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       
-      // 스트림 트랙 중지
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      
+      setIsButtonDisabled(true);
+      setButtonTimer(10);
     }
   };
 
   const regenerateWithVoice = () => {
-    // 텍스트를 음성으로 변환하는 로직
-    const utterance = new SpeechSynthesisUtterance(transcribedText);
+    const textToSpeak = typeof transcribedText === 'object' 
+      ? JSON.stringify(transcribedText) 
+      : transcribedText;
+    
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
     utterance.lang = 'ko-KR';
     window.speechSynthesis.speak(utterance);
   };
 
   const playAudio = () => {
-    // 녹음된 오디오 재생
     if (audioUrl) {
       const audio = new Audio(audioUrl);
       audio.play();
@@ -157,15 +218,71 @@ const VoiceChange = () => {
     };
   }, [audioUrl, improvedAudioUrl]);
 
-  const pageStyle = {
-    backgroundImage: `
-        radial-gradient(circle at 5% -2%, rgba(121, 231, 183, 0.2) 0%, rgba(255, 255, 255, 0) 4%),
-        radial-gradient(circle at 0% 4%, rgba(233, 230, 47, 0.16) 0%, rgba(255, 255, 255, 0) 5%),
-        radial-gradient(circle at 80% 3%, rgba(8, 151, 110, 0.1) 0%, rgba(255, 255, 255, 0) 25%),
-        radial-gradient(circle at 6% 95%, rgba(249, 200, 255, 0.52) 0%, rgba(255, 255, 255, 0) 20%)
-      `,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
+  // 결과 표시 컴포넌트 선택
+  const renderResultComponent = () => {
+    if (isLoading) {
+      return (
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="border-b border-gray-200">
+            <div className="px-6 py-4">
+              <h2 className="text-xl font-semibold text-gray-800">분석 결과</h2>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="flex justify-center items-center min-h-[150px]">
+              <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mb-4"></div>
+                <p>음성 분석 중...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // renderResultComponent 함수 내부
+if (resultData) {
+  const abnormal = isAbnormalResult(resultData);
+  console.log("결과가 비정상인가?", abnormal);
+  
+  if (abnormal) {
+    return (
+      <AbnormalResult 
+        data={resultData}
+        audioUrl={audioUrl}
+        playAudio={playAudio}
+        regenerateWithVoice={regenerateWithVoice}
+      />
+    );
+  } else {
+    return (
+      <NormalResult 
+        data={resultData}
+        audioUrl={audioUrl}
+        playAudio={playAudio}
+        regenerateWithVoice={regenerateWithVoice}
+      />
+    );
+  }
+}
+    
+    // 기본 안내 화면
+    return (
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="border-b border-gray-200">
+          <div className="px-6 py-4">
+            <h2 className="text-xl font-semibold text-gray-800">분석 결과</h2>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="bg-[#F8F8F8] rounded-lg p-4 min-h-[150px] border border-gray-200">
+            <p className="text-gray-700 text-center">
+              녹음 버튼을 눌러 말하면 AI가 음성을 분석하여 결과를 표시합니다.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -176,7 +293,7 @@ const VoiceChange = () => {
           <div className="flex items-center">
             <div className="w-1 h-8 bg-gradient-to-b from-green-400 to-green-600 mr-3 rounded-full"></div>
             <h1 className="text-2xl font-bold text-green-600" style={{ fontFamily: "'HancomMalangMalang-Regular', sans-serif" }}>
-              음성 정확도 높이기
+            뇌신경구음장애(뇌졸중) 자가진단
             </h1>
           </div>
           
@@ -201,7 +318,7 @@ const VoiceChange = () => {
           {/* 왼쪽 사이드바 - 녹음 기능 */}
           <div className="md:col-span-1">
             <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">음성 녹음</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">자가진단하기</h2>
               <div className="flex flex-col items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -221,7 +338,7 @@ const VoiceChange = () => {
                   <path d="M12 17l0 4" />
                 </svg>
                 <p className="text-gray-600 mb-6 text-center">
-                  마이크를 누른 후 말해주세요.
+                 녹음 시작 버튼을 누른 후 말해주세요.
                 </p>
                 {!serviceStatus.isAvailable && !serviceStatus.checking && (
                   <div className="text-red-500 text-center mb-4 p-2 bg-red-50 rounded-lg w-full">
@@ -233,87 +350,37 @@ const VoiceChange = () => {
                   className={`w-full py-3 rounded-lg transition duration-300 ${
                     isRecording
                       ? 'bg-red-600 text-white'
-                      : serviceStatus.isAvailable 
-                        ? 'bg-[#55BCA4] text-white hover:bg-[#55BCA6]'
-                        : 'bg-gray-400 text-white cursor-not-allowed'
+                      : isButtonDisabled
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : serviceStatus.isAvailable 
+                          ? 'bg-[#55BCA4] text-white hover:bg-[#55BCA6]'
+                          : 'bg-gray-400 text-white cursor-not-allowed'
                   }`}
                   onClick={isRecording ? stopRecording : startRecording}
-                  disabled={isLoading || !serviceStatus.isAvailable || serviceStatus.checking}
+                  disabled={isLoading || isButtonDisabled || !serviceStatus.isAvailable || serviceStatus.checking}
                 >
-                  {isRecording ? '녹음 중지' : '녹음 시작'}
+                  {isRecording 
+                    ? '녹음 중지' 
+                    : isButtonDisabled 
+                      ? `${buttonTimer}초 후 재시도` 
+                      : '녹음 시작'}
                 </button>
               </div>
             </div>
           </div>
   
-          {/* 오른쪽 메인 콘텐츠 - 변환된 텍스트 및 재생 */}
+          {/* 오른쪽 메인 콘텐츠 - 결과 컴포넌트 */}
           <div className="md:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="border-b border-gray-200">
-                <div className="px-6 py-4">
-                  <h2 className="text-xl font-semibold text-gray-800">변환된 텍스트</h2>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="bg-[#F8F8F8] rounded-lg p-4 min-h-[150px] border border-gray-200">
-                  {isLoading ? (
-                    <div className="flex justify-center items-center h-full">
-                      <p>변환 중...</p>
-                    </div>
-                  ) : (
-                    <p className="text-gray-700">{transcribedText}</p>
-                  )}
-                </div>
-                
-              {/*}
-                <div className="mt-6 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <button
-                      className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        !isLoading ? 'bg-[#55BCA4] hover:bg-[#4AA090]' : 'bg-gray-400 cursor-not-allowed'
-                      }`}
-                      onClick={regenerateWithVoice}
-                      disabled={isLoading}
-                    >
-                       <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 26 26"
-                className="w-10 h-10"
-              >
-                <circle cx="13" cy="13" r="13" fill="#55BCA4" />
-                <path d="M10,7 L19,13 L10,19 Z" fill="white" />
-              </svg>
-                    </button>
-                    <span className="ml-3 text-gray-700">음성으로 재생하기</span>
-                  </div>
-                  
-                  {audioUrl && (
-                    <div className="flex items-center">
-                      <span className="text-gray-700 mr-3">원본 녹음 듣기</span>
-                      <button
-                        className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
-                        onClick={playAudio}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
-                          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                          <line x1="12" y1="19" x2="12" y2="22"></line>
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                </div>
-                */}
-              </div>
-            </div>
+            {renderResultComponent()}
             
             {/* 추가 정보 섹션 */}
             <div className="mt-6 bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">음성 인식 도움말</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">자가 진단 도움말</h2>
               <ul className="list-disc pl-5 text-gray-700 space-y-2">
                 <li>조용한 환경에서 녹음하면 더 정확한 결과를 얻을 수 있습니다.</li>
                 <li>마이크와 적당한 거리를 유지하고 명확하게 발음해 주세요.</li>
                 <li>녹음 후 텍스트 변환에는 몇 초가 소요될 수 있습니다.</li>
+                <li>이 자가진단은 전문의의 진단을 대체할 수 없으며, 참고용으로만 사용하세요.</li>
               </ul>
             </div>
           </div>
@@ -323,4 +390,4 @@ const VoiceChange = () => {
   );
 }  
 
-export default VoiceChange;
+export default SelfDiagnosis;

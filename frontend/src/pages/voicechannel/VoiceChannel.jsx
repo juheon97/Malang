@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAccessibility } from '../../contexts/AccessibilityContext';
 import PasswordModal from '../../components/modal/PasswordModal';
 import WaitingModal from '../../components/modal/WaitingModal';
-import useOpenVidu from '../../hooks/useOpenvidu';
+import useVoiceOpenVidu from '../../hooks/useVoiceOpenVidu';
 
 const VoiceChannel = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const VoiceChannel = () => {
   const [expandedChannel, setExpandedChannel] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { joinExistingSession } = useOpenVidu();
+  const { joinExistingSession } = useVoiceOpenVidu();
 
   // 모달 관련 상태
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -61,7 +61,6 @@ const VoiceChannel = () => {
     fetchChannels();
   }, []);
 
-
   // 검색어에 따라 필터링된 채널 목록 계산
   const filteredChannels = useMemo(() => {
     console.log('검색어:', searchInput);
@@ -92,48 +91,46 @@ const VoiceChannel = () => {
     }
   };
 
-
   // 채널 참여 버튼 클릭 시
-const handleJoinChannel = async (channel) => {
-  console.log('채널 참여:', channel);
+  const handleJoinChannel = async channel => {
+    console.log('채널 참여:', channel);
 
-  // 접근성 모드인 경우 현재 포커스 요소 저장
-  if (isAccessibleMode) {
-    previousFocusRef.current = document.activeElement;
-  }
-
-  // 참여자 정보 저장
-  sessionStorage.setItem('isChannelHost', 'false');
-
-  // 채널이 잠겨있는지 확인 (비밀번호 필요 여부)
-  if (channel.hasPassword) {
-    // 비밀번호가 필요한 채널인 경우
-    setCurrentChannelId(channel.channelId);
-    setShowPasswordModal(true);
-    setPasswordInput('');
-    setPasswordError('');
-
-    // 접근성 모드에서 모달에 포커스
+    // 접근성 모드인 경우 현재 포커스 요소 저장
     if (isAccessibleMode) {
-      setTimeout(() => {
-        if (modalRef.current) modalRef.current.focus();
-      }, 100);
+      previousFocusRef.current = document.activeElement;
     }
-  } else {
-    try {
-      // OpenVidu 세션 참여
-      await joinExistingSession(channel.channelId);
-      // 화상 채팅 페이지로 이동
-      console.log(`비밀번호 없는 채널 ${channel.channelId} 입장`);
-      navigate(`/voice-channel-video/${channel.channelId}`);
-    } catch (error) {
-      console.error('채널 참여 오류:', error);
-      setError('채널 참여 중 오류가 발생했습니다.');
-    }
-  }
-};
 
-   
+    // 참여자 정보 저장
+    sessionStorage.setItem('isChannelHost', 'false');
+
+    // 채널이 잠겨있는지 확인 (비밀번호 필요 여부)
+    if (channel.hasPassword) {
+      // 비밀번호가 필요한 채널인 경우
+      setCurrentChannelId(channel.channelId);
+      setShowPasswordModal(true);
+      setPasswordInput('');
+      setPasswordError('');
+
+      // 접근성 모드에서 모달에 포커스
+      if (isAccessibleMode) {
+        setTimeout(() => {
+          if (modalRef.current) modalRef.current.focus();
+        }, 100);
+      }
+    } else {
+      try {
+        // OpenVidu 세션 참여
+        await joinExistingSession(channel.channelId);
+        // 화상 채팅 페이지로 이동
+        console.log(channel.channelId);
+        console.log(`비밀번호 없는 채널 ${channel.channelId} 입장`);
+        navigate(`/voice-channel-video/${channel.channelId}`);
+      } catch (error) {
+        console.error('채널 참여 오류:', error);
+        setError('채널 참여 중 오류가 발생했습니다.');
+      }
+    }
+  };
 
   // 비밀번호 제출 처리
   const handlePasswordSubmit = async () => {
@@ -158,30 +155,33 @@ const handleJoinChannel = async (channel) => {
         try {
           // OpenVidu 세션 참여
           await joinExistingSession(currentChannelId);
-        // 비밀번호가 맞으면 채널로 이동
-        // navigate(`/voice-channel-video/${currentChannelId}`);
-        setShowPasswordModal(false);
-        setPasswordInput('');
-        // 방장 수락 대기 모달 표시
-        setShowWaitingModal(true);
-        // 서버에 비밀번호 검증 및 방장에게 요청을 보내는 로직 필요
-        console.log(`채널 ${currentChannelId} 비밀번호 제출 후 방장 수락 대기`);
-      } catch (error){
-        console.error('Password submission failed:', error);
-        setPasswordError(
-          error.message || '비밀번호 확인 중 오류가 발생했습니다.');
+          // 비밀번호가 맞으면 채널로 이동
+          // navigate(`/voice-channel-video/${currentChannelId}`);
+          setShowPasswordModal(false);
+          setPasswordInput('');
+          // 방장 수락 대기 모달 표시
+          setShowWaitingModal(true);
+          // 서버에 비밀번호 검증 및 방장에게 요청을 보내는 로직 필요
+          console.log(
+            `채널 ${currentChannelId} 비밀번호 제출 후 방장 수락 대기`,
+          );
+        } catch (error) {
+          console.error('Password submission failed:', error);
+          setPasswordError(
+            error.message || '비밀번호 확인 중 오류가 발생했습니다.',
+          );
         }
-        } else{
+      } else {
         // 비밀번호가 틀리면 오류 메시지 표시
         setPasswordError('비밀번호가 올바르지 않습니다. 다시 시도해주세요.');
-      } 
+      }
     } catch (error) {
       console.error('Password submission failed:', error);
       setPasswordError(
-        error.message || '비밀번호 확인 중 오류가 발생했습니다.'
+        error.message || '비밀번호 확인 중 오류가 발생했습니다.',
       );
     }
-    
+
     console.log(passwordInput);
   };
   // 모달 닫기
@@ -195,7 +195,6 @@ const handleJoinChannel = async (channel) => {
       previousFocusRef.current.focus();
     }
   };
-
 
   // 대기 취소
   const handleCancelWaiting = () => {
@@ -244,7 +243,7 @@ const handleJoinChannel = async (channel) => {
 
   return (
     <div className="min-h-screen bg-white" style={pageStyle}>
-       <div className="w-full bg-white py-"></div>
+      <div className="w-full bg-white py-"></div>
       <div className="w-full bg-transparent py-12">
         <main className="max-w-6xl mx-auto px-6 relative">
           {/* 방 생성 버튼 */}
@@ -254,20 +253,20 @@ const handleJoinChannel = async (channel) => {
               onClick={() => navigate('/voice-channel-room')}
             >
               방 생성
-            </button>   
+            </button>
           </div>
-          <div className ="absolute top-0 right-6">
+          <div className="absolute top-0 right-6">
             {/* 새로 고침 버튼 */}
             <button
-                    onClick={handleRefresh}
-                    className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white px-6 py-2 rounded-lg shadow-md transition duration-200"
-                  >
-                    새로 고침
-                  </button>
-                  </div>
+              onClick={handleRefresh}
+              className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white px-6 py-2 rounded-lg shadow-md transition duration-200"
+            >
+              새로 고침
+            </button>
+          </div>
 
-{/* 제목 */}
-<header className="text-center mb-10">
+          {/* 제목 */}
+          <header className="text-center mb-10">
             <h1
               style={{ fontFamily: "'HancomMalangMalang-Regular', sans-serif" }}
               className="text-4xl font-bold text-[#00a173]"
@@ -286,8 +285,8 @@ const handleJoinChannel = async (channel) => {
             </p>
           )}
 
-         {/* 검색창 */}
-         <div className="mb-12 flex justify-left">
+          {/* 검색창 */}
+          <div className="mb-12 flex justify-left">
             <div className="bg-white p-2 rounded-xl shadow-md w-full max-w-md">
               <div className="relative">
                 <form onSubmit={handleSearch}>
@@ -329,45 +328,44 @@ const handleJoinChannel = async (channel) => {
             ></div>
           )}
 
-            <div className="max-w-7xl mx-auto">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-                  <div className="relative flex-grow sm:flex-grow-0">
-                  </div>
-              </div>
-
-              {isLoading ? (
-                <div className="text-center py-10">
-                  <p className="text-gray-500">채널 목록을 불러오는 중...</p>
-                </div>
-              ) : error ? (
-                <div
-                  className="text-center py-10 bg-white rounded-xl shadow-md"
-                  role="alert"
-                >
-                  <p className="text-red-500">{error}</p>
-                </div>
-              ) : (
-                <VoiceChannelList
-                  channels={filteredChannels}
-                  isAccessibleMode={isAccessibleMode}
-                  onJoinChannel={handleJoinChannel}
-                  onToggleExpand={toggleChannelExpand}
-                  expandedChannel={expandedChannel}
-                />
-              )}
-              {/* 비밀번호 모달 */}
-              <PasswordModal
-                isOpen={showPasswordModal}
-                onClose={handleCloseModal}
-                passwordInput={passwordInput}
-                setPasswordInput={setPasswordInput}
-                onSubmit={handlePasswordSubmit}
-              />
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+              <div className="relative flex-grow sm:flex-grow-0"></div>
             </div>
+
+            {isLoading ? (
+              <div className="text-center py-10">
+                <p className="text-gray-500">채널 목록을 불러오는 중...</p>
+              </div>
+            ) : error ? (
+              <div
+                className="text-center py-10 bg-white rounded-xl shadow-md"
+                role="alert"
+              >
+                <p className="text-red-500">{error}</p>
+              </div>
+            ) : (
+              <VoiceChannelList
+                channels={filteredChannels}
+                isAccessibleMode={isAccessibleMode}
+                onJoinChannel={handleJoinChannel}
+                onToggleExpand={toggleChannelExpand}
+                expandedChannel={expandedChannel}
+              />
+            )}
+            {/* 비밀번호 모달 */}
+            <PasswordModal
+              isOpen={showPasswordModal}
+              onClose={handleCloseModal}
+              passwordInput={passwordInput}
+              setPasswordInput={setPasswordInput}
+              onSubmit={handlePasswordSubmit}
+            />
+          </div>
         </main>
       </div>
-       {/* 모달 컴포넌트 */}
-       {showPasswordModal && (
+      {/* 모달 컴포넌트 */}
+      {showPasswordModal && (
         <div
           ref={isAccessibleMode ? modalRef : null}
           role={isAccessibleMode ? 'dialog' : undefined}

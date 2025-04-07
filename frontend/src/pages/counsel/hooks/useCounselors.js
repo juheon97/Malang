@@ -36,7 +36,7 @@ const useCounselors = () => {
     specialty: '',
     min_rating: 0,
     page: 0,
-    size: 10,
+    size: 20,
   });
 
   // 상담사 목록 조회 함수

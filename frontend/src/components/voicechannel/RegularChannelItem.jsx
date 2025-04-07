@@ -18,7 +18,7 @@ const RegularChannelItem = ({ channel, onJoinChannel }) => {
           </div>
         )}
         <h3 className="text-lg font-bold">{channel.channelName}</h3>
-        <p className="text-sm text-gray-500">최대 {channel.maxPlayer}명</p>
+        <p className="text-sm text-gray-500 "> 　최대 {channel.maxPlayer}명</p>
       </div>
 
       <button

@@ -4,6 +4,8 @@ import useProfileData from './hooks/useProfileData';
 import ProfileSidebar from './components/ProfileSidebar';
 import ProfileForm from './components/ProfileForm';
 import ProfileAlert from './components/ProfileAlert';
+import CounselingHistoryList from './components/CounselingHistoryList';
+
 
 /**
  * 마이페이지 메인 컴포넌트
@@ -99,6 +101,16 @@ const MyPage = () => {
         >
           프로필 정보
         </button>
+        <button
+          className={`px-6 py-3 font-medium text-sm transition-colors ${
+            activeTab === 'counseling-history'
+              ? 'text-[#00a173] border-b-2 border-[#00a173]'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => setActiveTab('counseling-history')}
+        >
+          상담 기록
+        </button>
       </div>
 
       {/* 프로필 정보 탭 */}
@@ -123,6 +135,13 @@ const MyPage = () => {
               loading={loading}
             />
           </div>
+        </div>
+      )}
+
+      {/* 상담 기록 탭 */}
+      {activeTab === 'counseling-history' && (
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <CounselingHistoryList counselorId={currentUser?.id} />
         </div>
       )}
     </div>

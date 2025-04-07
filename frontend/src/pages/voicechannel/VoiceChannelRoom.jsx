@@ -1,9 +1,14 @@
+//src>pages>voicechannel>VoiceChannelRoom.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import voiceChannelApi from '../../api/voiceChannelApi';
+import useVoiceOpenVidu from '../../hooks/useVoiceOpenVidu';
 
 function VoiceChannelRoom() {
+  const { createAndJoinSession } = useVoiceOpenVidu(); // ✅ 컴포넌트 최상위에서 호출
+
+  const [createdChannelId, setCreatedChannelId] = useState(null);
   const navigate = useNavigate();
   const { currentUser, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
@@ -22,6 +27,11 @@ function VoiceChannelRoom() {
       navigate('/login', { state: { from: '/voice-channel-form' } });
     }
   }, [isAuthenticated, navigate]);
+
+  // currentUser 확인용 로그 추가
+  useEffect(() => {
+    console.log('현재 로그인된 사용자 정보:', currentUser);
+  }, [currentUser]);
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -54,61 +64,75 @@ function VoiceChannelRoom() {
     setIsLoading(true);
     setError(null);
 
+    // currentUser 확인 로그 추가
+    console.log('폼 제출 시 currentUser 정보:', currentUser);
+    console.log('현재 사용자 ID:', currentUser?.id);
+
     // API 명세서에 맞게 데이터 변환
     const apiRequestData = {
       channelName: formData.roomName,
       description: formData.description,
       password: formData.password || null,
       maxPlayer: parseInt(formData.maxUsers),
+      user_id: currentUser?.id,
     };
-    console.log('음성채널 생성 데이터:', apiRequestData);
-   
+    console.log(
+      '1. 방생성 버튼 누르고 : 음성채널 생성 데이터:',
+      apiRequestData,
+    );
+
     try {
-      // 1. 채널 생성
+      // 채널 생성만 시킴
       const channelResponse =
         await voiceChannelApi.createChannel(apiRequestData);
-      console.log('채널 생성 성공:', channelResponse.data);
-      const channelId = channelResponse.data.channelId;
-      console.log('채널 ID:', channelId);
-      // navigate(`/voice-channel-video/${channelId}`);
-      // 2. OpenVidu 세션 생성 (openviduApi.createSession 사용)
-      const sessionId = await openviduApi.createSession(channelId);
-      // 3. 토큰 발급
-      const token = await openviduApi.getToken(sessionId);
- 
-      // 4. 방장 정보 저장
+      console.log('백엔드 응답 데이터:', channelResponse.data);
+      console.log(
+        '방 생성자 ID 확인:',
+        channelResponse.data.creatorId || '정보 없음',
+      );
+
+      const { channelId, creatorNickname, channelName } = channelResponse.data;
+
+      // 세션 스토리지에 방 생성자 정보 저장 (추가)
       sessionStorage.setItem('isChannelHost', 'true');
-      sessionStorage.setItem('openviduSessionId', sessionId);
-      sessionStorage.setItem('openviduToken', token);
-      
-      // 5. 화상 채팅 페이지로 이동
-      navigate(`/voice-channel-video/${channelId}`);
-      } catch (error) {
-            console.error('채널 생성 실패:', error);
+      sessionStorage.setItem('channelCreatorId', currentUser?.id);
 
-            // 에러 처리
-            if (error.response) {
-              // 서버 응답이 있는 경우
-              setError(error.response.data.message || '채널 생성에 실패했습니다.');
+      // 화면 이동만 수행 (세션 초기화는 다음 페이지에서)
+      navigate(`/voice-channel-video/${channelId}`, {
+        state: {
+          sessionConfig: {
+            channelId,
+            creatorNickname, // 방장 닉네임 전달
+            channelName,
+            user_id: currentUser?.id, // 현재 사용자 ID 전달
+          },
+        },
+      });
+    } catch (error) {
+      console.error('채널 생성 실패:', error);
+      console.error('에러 세부 정보:', error.response?.data);
 
-              // 토큰 만료 에러인 경우 (401 Unauthorized)
-              if (error.response.status === 401) {
-                // 로그인 페이지로 리다이렉트하거나 토큰 갱신 로직 실행
-                navigate('/login', { state: { from: '/voice-channel-form' } });
-              }
-            } else if (error.request) {
-              // 요청은 보냈지만 응답이 없는 경우
-              setError('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.');
-            } else {
-              // 요청 설정 중 오류 발생
-              setError('요청 중 오류가 발생했습니다: ' + error.message);
-            }
-          } finally {
-            setIsLoading(false);
-          }
+      // 에러 처리
+      if (error.response) {
+        // 서버 응답이 있는 경우
+        setError(error.response.data.message || '채널 생성에 실패했습니다.');
 
-
-        };
+        // 토큰 만료 에러인 경우 (401 Unauthorized)
+        if (error.response.status === 401) {
+          // 로그인 페이지로 리다이렉트하거나 토큰 갱신 로직 실행
+          navigate('/login', { state: { from: '/voice-channel-form' } });
+        }
+      } else if (error.request) {
+        // 요청은 보냈지만 응답이 없는 경우
+        setError('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.');
+      } else {
+        // 요청 설정 중 오류 발생
+        setError('요청 중 오류가 발생했습니다: ' + error.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // 인증 로딩 중이거나 인증되지 않은 경우 로딩 표시
   if (!isAuthenticated) {
@@ -147,7 +171,6 @@ function VoiceChannelRoom() {
                   음성 채널
                 </span>
               </div>
-              
             </div>
             {/* 시각적 요소 추가 */}
             <div className="mt-6 bg-[#f5fbf7] rounded-lg p-3 border border-dashed border-[#b0daaf]">
@@ -319,25 +342,37 @@ function VoiceChannelRoom() {
               </div>
 
               <div className="flex justify-end gap-3">
+                {error && (
+                  <div className="text-red-500 text-sm mb-4 p-2 bg-red-50 rounded-lg border border-red-200">
+                    {error}
+                  </div>
+                )}
                 <button
                   type="submit"
                   className="bg-gradient-to-r from-[#5CCA88] to-[#3FB06C] hover:from-[#6AD3A6] hover:to-[#078263] text-white font-semibold shadow-lg px-14 py-3 rounded-2xl text-base transition-all transform hover:scale-105 flex items-center"
+                  disabled={isLoading}
                 >
-                  <svg
-                    className="w-5 h-5 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    ></path>
-                  </svg>
-                  음성채널 생성하기
+                  {isLoading ? (
+                    <span>처리 중...</span>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-5 h-5 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        ></path>
+                      </svg>
+                      음성채널 생성하기
+                    </>
+                  )}
                 </button>
               </div>
             </form>

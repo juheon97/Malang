@@ -1,8 +1,11 @@
 import axios from 'axios';
+<<<<<<< HEAD
 import openviduApi from './openViduApi';
 // API 기본 URL 설정
 // const BASE_URL = 'https://j12d110.p.ssafy.io/api';
 // const BASE_URL = 'https://10c0-116-36-40-48.ngrok-free.app/api';
+=======
+>>>>>>> b6c1a53958a5419d636a93433ecccd0ad9cb99b0
 const BASE_URL = import.meta.env.VITE_API_URL;
 // axios 인스턴스 생성
 const apiClient = axios.create({
@@ -29,15 +32,13 @@ apiClient.interceptors.request.use(
   error => Promise.reject(error),
 );
 
-// const APPLICATION_SERVER_URL =
-//   import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
-
 const voiceChannelApi = {
   // 채널 생성 API
   createChannel: async channelData => {
     try {
       // 1. 채널 생성 요청
       const response = await apiClient.post('/channels/voice', channelData);
+<<<<<<< HEAD
       const channelId = response.data.channelId;
       
       // 2. OpenVidu 세션 생성 요청
@@ -53,12 +54,22 @@ const voiceChannelApi = {
         sessionId,
         token
       };
+=======
+      console.log('2. response부름. voiceChannelApi 채널 ID :', response.data.channelId)
+      return response; // 전체 response 객체를 반환
+>>>>>>> b6c1a53958a5419d636a93433ecccd0ad9cb99b0
     } catch (error) {
       console.error('채널 생성 오류:', error);
       throw error;
     }
+<<<<<<< HEAD
   },
+=======
+
+
+>>>>>>> b6c1a53958a5419d636a93433ecccd0ad9cb99b0
   // 채널 나가기 API
+  },
   leaveChannel: async channelId => {
     try {
       const response = await apiClient.post(`channels/${channelId}/leave`);
@@ -79,6 +90,7 @@ const voiceChannelApi = {
       throw error;
     }
   },
+  
   // 채널 비밀번호 확인 함수
   checkChannelPassword: async (channelId, password) => {
     // 요청 데이터 확인
@@ -114,6 +126,7 @@ const voiceChannelApi = {
       throw error;
     }
   },
+  
 };
 
 export default voiceChannelApi;

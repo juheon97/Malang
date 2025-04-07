@@ -1,13 +1,12 @@
-//src>pages>voicechannel>voicechannelvideo.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import ChatBox from '../../components/video/ChatBox';
-import VideoControls from '../../components/video/VideoControls';
-import useOpenVidu from '../../hooks/useOpenvidu';
+import VoiceVideoControls from '../../components/video/VoiceVideoControls';
+import useVoiceOpenVidu from '../../hooks/useVoiceOpenVidu';
 import useChat from '../../hooks/useChat';
 import { useAuth } from '../../contexts/AuthContext';
 import websocketService from '../../services/websocketService';
-import VideoLayout from '../../components/video/VideoLayout';
+import VoiceVideoLayout from '../../components/video/VoiceVideoLayout';
 
 function VoiceChannelVideo() {
   const { channelId } = useParams();
@@ -21,25 +20,34 @@ function VoiceChannelVideo() {
   const [connectionError, setConnectionError] = useState('');
   const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
   const hasJoined = useRef(false);
+  const { state } = useLocation();
+  const creatorNickname = state?.sessionConfig?.creatorNickname;
+  const isCreator = currentUser?.username === creatorNickname;
+  // Destructure with all the available properties returned by useOpenVidu
+  const {
+    createAndJoinSession,
+    joinExistingSession,
+    leaveSession,
+    toggleAudio,
+    toggleVideo,
+    error,
+    isConnecting,
+    isConnected: isOpenViduConnected,
+    participants,
+    renderParticipantInfo,
+  } = useVoiceOpenVidu(channelId, currentUser?.username || 'Guest');
 
-  const {  createAndJoinSession, 
-    joinExistingSession,  leaveSession, toggleAudio, toggleVideo, error, isConnecting, isConnected: isOpenViduConnected,  participants, renderParticipantInfo } = useOpenVidu(
-    channelId,
-    currentUser?.username || 'Guest',
-    isMicOn,
-    isCameraOn,
-  );
+  const { messages, newMessage, setNewMessage, handleKeyDown, addMessage } =
+    useChat(currentUser?.id || 'guest');
 
-  // 에러 상태 동기화
+  // Update connectionError from OpenVidu's error
   useEffect(() => {
     if (error) {
       setConnectionError(error);
     }
   }, [error]);
 
-  const { messages, newMessage, setNewMessage, handleKeyDown, addMessage } =
-    useChat(currentUser?.id || 'guest');
-
+  // WebSocket handlers
   const handleChatMessage = message => {
     try {
       const data = JSON.parse(message.body);
@@ -100,10 +108,11 @@ function VoiceChannelVideo() {
     if (!hasJoined.current && isAuthenticated && channelId) {
       hasJoined.current = true;
       connectWebSocket();
-      const isHost = sessionStorage.getItem('isChannelHost') === 'true';
-      if (isHost) {
-        createAndJoinSession();
+      if (isCreator) {
+        console.log('video.jsx에서 방장모드로 고고');
+        createAndJoinSession(channelId);
       } else {
+        console.log('video.jsx에서 참여자모드로');
         joinExistingSession();
       }
     }
@@ -117,28 +126,7 @@ function VoiceChannelVideo() {
         hasJoined.current = false;
       }
     };
-  }, [isAuthenticated, channelId]);
-
-
-  // 채널 정보 로딩
-  useEffect(() => {
-    const fetchChannelInfo = async () => {
-      try {
-        // 채널 정보를 가져오는 API 호출 (구현 필요)
-        // const response = await apiClient.get(`channels/${channelId}`);
-        // setChannelInfo(response.data);
-        
-        // 임시로 채널 정보 설정
-        setChannelInfo({ channelName: `음성 채널 ${channelId}` });
-      } catch (error) {
-        console.error('채널 정보 로딩 오류:', error);
-      }
-    };
-    
-    if (channelId) {
-      fetchChannelInfo();
-    }
-  }, [channelId]);
+  }, [isAuthenticated, channelId, isCreator]);
 
   const handleSendMessage = e => {
     e.preventDefault();
@@ -148,7 +136,7 @@ function VoiceChannelVideo() {
       event: 'send',
       content: newMessage,
       userId: currentUser?.id,
-      nickname: currentUser?.username
+      nickname: currentUser?.username,
     };
 
     console.log('📤 백엔드로 전송될 메시지:', messagePayload);
@@ -165,12 +153,12 @@ function VoiceChannelVideo() {
 
   const toggleMic = () => {
     setIsMicOn(!isMicOn);
-    toggleAudio(!isMicOn);
+    toggleAudio();
   };
 
   const toggleCamera = () => {
     setIsCameraOn(!isCameraOn);
-    toggleVideo(!isCameraOn);
+    toggleVideo();
   };
 
   const toggleVoiceTranslation = () => {
@@ -180,6 +168,30 @@ function VoiceChannelVideo() {
   const toggleSignLanguage = () => {
     setIsSignLanguageOn(!isSignLanguageOn);
   };
+
+  // For debugging
+  useEffect(() => {
+    console.log('Current participants:', participants);
+  }, [participants]);
+
+  // 채널 정보 로딩
+  useEffect(() => {
+    // 채널 정보 조회 로직
+    const fetchChannelInfo = async () => {
+      try {
+        setChannelInfo({
+          channelName:
+            state?.sessionConfig?.channelName || `음성 채널 ${channelId}`,
+        });
+      } catch (error) {
+        console.error('채널 정보 조회 실패:', error);
+      }
+    };
+
+    if (channelId) {
+      fetchChannelInfo();
+    }
+  }, [channelId, state]);
 
   return (
     <div
@@ -198,32 +210,34 @@ function VoiceChannelVideo() {
       </div>
 
       {connectionError && (
-  <div className="mx-4 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between text-sm">
-    <div className="flex items-center text-red-600">
-      {connectionError}
-    </div>
-    <button
-      onClick={() => {
-        // 방장 여부에 따라 적절한 함수 호출
-        const isHost = sessionStorage.getItem('isChannelHost') === 'true';
-        if (isHost) {
-          createAndJoinSession();
-        } else {
-          joinExistingSession();
-        }
-      }}
-      className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
-    >
-      {isConnecting ? '연결 중...' : '재연결'}
-    </button>
-  </div>
-)}
+        <div className="mx-4 mt-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between text-sm">
+          <div className="flex items-center text-red-600">
+            {connectionError}
+          </div>
+          <button
+            onClick={() => {
+              // 방장 여부에 따라 적절한 함수 호출
+              const isHost = sessionStorage.getItem('isChannelHost') === 'true';
+              console.log(sessionStorage.data);
+              setConnectionError('');
+              if (isHost) {
+                createAndJoinSession(channelId);
+              } else {
+                joinExistingSession();
+              }
+            }}
+            className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
+          >
+            {isConnecting ? '연결 중...' : '재연결'}
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
-         {/* 메인 컨텐츠 - 영상과 채팅 */}
+        {/* 메인 컨텐츠 - 영상과 채팅 */}
         {/* 영상 영역 */}
         <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
-          <VideoLayout
+          <VoiceVideoLayout
             participants={participants}
             renderParticipantInfo={renderParticipantInfo}
           />
@@ -242,7 +256,7 @@ function VoiceChannelVideo() {
         />
       </div>
 
-      <VideoControls
+      <VoiceVideoControls
         isMicOn={isMicOn}
         isCameraOn={isCameraOn}
         toggleMic={toggleMic}

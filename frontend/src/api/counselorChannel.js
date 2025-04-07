@@ -8,7 +8,7 @@ const isDevelopment = import.meta.env
 
 // axios 인스턴스 생성
 const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: BASE_URL.endsWith('') ? BASE_URL : `${BASE_URL}`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -128,24 +128,65 @@ apiClient.interceptors.response.use(
 );
 
 /**
+ * ID를 정수로 변환하는 헬퍼 함수
+ */
+const ensureIntId = id => {
+  if (id === undefined || id === null) return null;
+  if (typeof id === 'number') return id;
+
+  const parsed = parseInt(id, 10);
+  return isNaN(parsed) ? null : parsed;
+};
+
+/**
  * 상담방 관련 API
  */
 const counselorChannel = {
   /**
    * 상담방 생성 (상담사)
    * @param {Object} channelData - 상담방 생성 데이터
-   * @param {string} channelData.channel_name - 상담방 이름
-   * @param {string} channelData.channel_text - 상담방 설명
-   * @param {number} channelData.max_player - 최대 참여 인원
+   * @param {string} channelData.channelName - 상담방 이름
+   * @param {string} channelData.description - 상담방 설명
+   * @param {number} channelData.maxPlayer - 최대 참여 인원
    * @returns {Promise<Object>} 생성된 상담방 정보
    */
   createChannel: async channelData => {
     try {
-      const response = await apiClient.post(
-        '/channels/counseling/create',
+      console.log('상담방 생성 요청 데이터:', channelData);
+
+      // 사용자 정보와 상관없이 무조건 ID 1 사용
+      const counselorId = 1;
+
+      console.log('상담방 생성 사용할 상담사 ID:', counselorId);
+
+      // API 요청 - PUT 메서드로 변경
+      const response = await apiClient.put(
+        `/counselor/profile/${counselorId}`,
         channelData,
       );
-      return response.data;
+
+      console.log('상담방 생성 원본 응답:', response.data);
+
+      let counselorCode = null;
+      if (
+        response.data &&
+        (response.data.counselor_code || response.data.counselorCode)
+      ) {
+        counselorCode =
+          response.data.counselorCode || response.data.counselor_code;
+      } else {
+        alert('상담사 코드를 찾을 수 없습니다. 다시 로그인해주세요.');
+        throw new Error('counselorCode not found in response');
+      }
+
+      // 응답 데이터에 counselorCode 추가
+      const responseData = {
+        ...response.data,
+        counselorCode: counselorCode,
+      };
+
+      console.log('상담방 생성 가공된 응답:', responseData);
+      return responseData;
     } catch (error) {
       console.error('상담방 생성 오류:', error);
       throw error;
@@ -181,6 +222,18 @@ const counselorChannel = {
         '/channels/counseling/counselors',
         config,
       );
+
+      // ID를 정수로 변환
+      if (response.data && response.data.content) {
+        response.data.content = response.data.content.map(counselor => ({
+          ...counselor,
+          id: ensureIntId(counselor.id),
+          // status를 숫자로 변환 (문자열 '가능'/'불가능' 대신 1/0 사용)
+          status:
+            counselor.status === '가능' ? 1 : counselor.status === 1 ? 1 : 0,
+        }));
+      }
+
       return response.data;
     } catch (error) {
       console.error('상담방/상담사 목록 조회 오류:', error);
@@ -190,7 +243,7 @@ const counselorChannel = {
 
   /**
    * 상담사 리뷰 조회
-   * @param {string} counselorId 상담사 ID
+   * @param {string|number} counselorId 상담사 ID
    * @param {Object} params - 페이징 및 정렬 파라미터
    * @param {number} [params.page=1] - 페이지 번호
    * @param {number} [params.size=10] - 페이지당 항목 수
@@ -199,6 +252,9 @@ const counselorChannel = {
    */
   getCounselorReviews: async (counselorId, params = {}) => {
     try {
+      // ID를 정수로 변환
+      const intCounselorId = ensureIntId(counselorId);
+
       // 타임스탬프 추가 (캐시 방지)
       const timestamp = new Date().getTime();
 
@@ -221,7 +277,7 @@ const counselorChannel = {
       };
 
       const response = await apiClient.get(
-        `/channels/counseling/counselors/${counselorId}/reviews`,
+        `/channels/counseling/counselors/${intCounselorId}/reviews`,
         {
           params: updatedParams,
           headers: {
@@ -231,6 +287,15 @@ const counselorChannel = {
           },
         },
       );
+
+      // 리뷰 ID를 정수로 변환
+      if (response.data && response.data.content) {
+        response.data.content = response.data.content.map(review => ({
+          ...review,
+          review_id: ensureIntId(review.review_id),
+        }));
+      }
+
       return response.data;
     } catch (error) {
       console.error('상담사 리뷰 조회 오류:', error);
@@ -240,15 +305,20 @@ const counselorChannel = {
 
   /**
    * 입장 요청 수락/거절 (상담사)
-   * @param {string|number} channelId - 채널 ID
+   * @param {string|number} counselorCode - 상담사 코드
    * @param {string|number} requestId - 요청 ID
    * @param {string} status - 처리 상태 ('accept' 또는 'reject')
    * @returns {Promise<Object>} 처리 결과
    */
-  approveChannelRequest: async (channelId, requestId, status) => {
+  approveChannelRequest: async (counselorCode, requestId, status) => {
     try {
+      // counselor_code 사용
+      console.log(
+        `입장 요청 처리: counselor_code=${counselorCode}, requestId=${requestId}, status=${status}`,
+      );
+
       const response = await apiClient.post(
-        `/channels/counseling/${channelId}/approve`,
+        `/channels/counseling/counselor/${counselorCode}/approve`,
         {
           status: status,
         },
@@ -265,13 +335,15 @@ const counselorChannel = {
 
   /**
    * 상담방 입장 (연결)
-   * @param {string|number} channelId - 채널 ID
+   * @param {string|number} counselorCode - 상담사 코드
    * @returns {Promise<Object>} 입장 결과 및 방 정보
    */
-  connectToChannel: async channelId => {
+  connectToChannel: async counselorCode => {
     try {
+      console.log(`상담방 입장 요청: counselor_code=${counselorCode}`);
+
       const response = await apiClient.post(
-        `/channels/counseling/${channelId}/connect`,
+        `/channels/counseling/counselor/${counselorCode}/connect`,
       );
       return response.data;
     } catch (error) {
@@ -290,11 +362,14 @@ const counselorChannel = {
    */
   submitCounselingReview: async (sessionId, reviewData) => {
     try {
+      // ID를 정수로 변환
+      const intSessionId = ensureIntId(sessionId);
+
       const response = await apiClient.post(
         `/channels/counseling/review`,
         reviewData,
         {
-          params: { session_id: sessionId },
+          params: { session_id: intSessionId },
         },
       );
       return response.data;
@@ -306,15 +381,26 @@ const counselorChannel = {
 
   /**
    * 상담방 입장 요청 (사용자)
-   * @param {string|number} channelId - 채널 ID
+   * @param {string|number} counselorCode - 상담사 코드
    * @param {Object} userData - 사용자 정보 (이름, 생년월일 등)
    * @returns {Promise<Object>} 요청 결과
    */
-  requestChannelEntry: async (channelId, userData) => {
+  requestChannelEntry: async (counselorCode, userData) => {
     try {
-      const response = await apiClient.post(
-        `/channels/counseling/request`,
+      console.log(
+        `상담방 입장 요청: counselor_code=${counselorCode}, userData=`,
         userData,
+      );
+
+      // counselor_code 사용
+      const updatedUserData = {
+        ...userData,
+        counselor_code: counselorCode, // 백엔드 API 호출 시 counselor_code 키 사용
+      };
+
+      const response = await apiClient.post(
+        `/channels/counseling/counselor/request`,
+        updatedUserData,
       );
       return response.data;
     } catch (error) {
@@ -325,14 +411,17 @@ const counselorChannel = {
 
   /**
    * 입장 요청 목록 조회 (상담사용)
-   * @param {string|number} channelId - 상담방 ID
+   * @param {string|number} counselorCode - 상담사 코드
    * @returns {Promise<Object>} 입장 요청 목록
    */
-  getEntryRequests: async channelId => {
+  getEntryRequests: async counselorCode => {
     try {
+      console.log(`입장 요청 목록 조회: counselor_code=${counselorCode}`);
+
       const response = await apiClient.get(
-        `/channels/counseling/${channelId}/requests`,
+        `/channels/counseling/counselor/${counselorCode}/requests`,
       );
+
       return response.data;
     } catch (error) {
       console.error('입장 요청 목록 조회 오류:', error);
@@ -347,11 +436,14 @@ const counselorChannel = {
    */
   getCounselorDetails: async counselorId => {
     try {
+      // ID를 정수로 변환
+      const intCounselorId = ensureIntId(counselorId);
+
       // 타임스탬프 추가 (캐시 방지)
       const timestamp = new Date().getTime();
 
       const response = await apiClient.get(
-        `/channels/counseling/counselors/${counselorId}`,
+        `/channels/counseling/counselors/${intCounselorId}`,
         {
           params: { _t: timestamp },
           headers: {
@@ -361,6 +453,16 @@ const counselorChannel = {
           },
         },
       );
+
+      // ID를 정수로 변환
+      if (response.data) {
+        response.data.id = ensureIntId(response.data.id);
+        // status가 문자열인 경우 숫자로 변환
+        if (typeof response.data.status === 'string') {
+          response.data.status = response.data.status === '가능' ? 1 : 0;
+        }
+      }
+
       return response.data;
     } catch (error) {
       console.error('상담사 상세 정보 조회 오류:', error);
@@ -370,14 +472,21 @@ const counselorChannel = {
 
   /**
    * 상담 세션 종료
-   * @param {string|number} channelId - 채널 ID
+   * @param {string|number} counselorCode - 상담사 코드
    * @returns {Promise<Object>} 종료 결과
    */
-  endCounselingSession: async channelId => {
+  endCounselingSession: async counselorCode => {
     try {
+      console.log(`상담 세션 종료 요청: counselor_code=${counselorCode}`);
+
+      // counselor_code 사용
       const response = await apiClient.post(
-        `/channels/counseling/${channelId}/end`,
+        `/channels/counseling/counselor/${counselorCode}/end`,
       );
+
+      // 상담사의 상태를 '불가능'(0)으로 변경
+      await counselorChannel.updateCounselorStatus(false);
+
       return response.data;
     } catch (error) {
       console.error('상담 세션 종료 오류:', error);
@@ -386,19 +495,245 @@ const counselorChannel = {
   },
 
   /**
-   * 상담방 나가기 (사용자용)
-   * @param {string|number} channelId - 채널 ID
+   * 상담방 나가기 (상담사용)
+   * @param {string|number} counselorCode - 상담사 코드
    * @returns {Promise<Object>} 처리 결과
    */
-  leaveChannel: async channelId => {
+  leaveCounselorChannel: async counselorCode => {
     try {
-      const response = await apiClient.post(
-        `/channels/counseling/${channelId}/leave`,
-      );
-      return response.data;
+      console.log(`상담사 방 나가기: counselor_code=${counselorCode}`);
+
+      // 상담사가 방을 나가면 방 종료 API 호출
+      try {
+        // counselor_code로 API 호출
+        const response = await apiClient.post(
+          `/channels/counseling/counselor/${counselorCode}/end`,
+        );
+        console.log('방 종료 API 응답:', response.data);
+      } catch (error) {
+        console.error('방 종료 API 호출 실패:', error);
+        // 실패해도 계속 진행
+      }
+
+      // 상담사 상태를 '불가능'(0)으로 변경
+      await counselorChannel.updateCounselorStatus(false);
+
+      // 성공 응답 반환
+      return { success: true, message: '상담방 종료 완료' };
     } catch (error) {
       console.error('상담방 나가기 오류:', error);
       throw error;
+    }
+  },
+
+  /**
+   * 상담방 나가기 (사용자용)
+   * @param {string|number} counselorCode - 상담사 코드
+   * @returns {Promise<Object>} 처리 결과
+   */
+  leaveChannel: async counselorCode => {
+    try {
+      console.log(`내담자 방 나가기: counselor_code=${counselorCode}`);
+
+      try {
+        // counselor_code로 API 호출
+        const response = await apiClient.post(
+          `/channels/counseling/counselor/${counselorCode}/leave`,
+        );
+        console.log('방 나가기 API 응답:', response.data);
+        return response.data;
+      } catch (error) {
+        console.error('방 나가기 API 호출 실패:', error);
+        // 실패해도 성공 응답 반환
+        return { success: true, message: '상담방 나가기 완료' };
+      }
+    } catch (error) {
+      console.error('상담방 나가기 오류:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 상담사 상태 업데이트 (가능/불가능)
+   * @param {boolean} isAvailable - 상담 가능 여부 (true: 가능, false: 불가능)
+   * @returns {Promise<Object>} 업데이트 결과
+   */
+  updateCounselorStatus: async isAvailable => {
+    try {
+      // 상담사 ID 1 고정
+      const counselorId = 1;
+
+      // 상태값 변환 (true면 '가능'(1), false면 '불가능'(0))
+      const statusValue = isAvailable ? 1 : 0;
+
+      console.log(
+        `상담사(${counselorId}) 상태 업데이트: ${isAvailable ? '가능' : '불가능'}`,
+      );
+
+      // API 기본 URL 중복  문제 해결
+      const API_BASE = import.meta.env.VITE_API_URL;
+      const FIXED_URL = API_BASE.endsWith('')
+        ? API_BASE.slice(0, -4) // '' 제거
+        : API_BASE;
+
+      // API 요청 - PUT 메서드로 상담사 프로필 상태 업데이트
+      const response = await apiClient.put(
+        `${FIXED_URL}/counselor/profile/${counselorId}`,
+        { status: statusValue },
+      );
+
+      // 상태 변경 이벤트 발생 (UI 업데이트용)
+      const statusChangeEvent = new CustomEvent('counselor:statusChange', {
+        detail: {
+          isAvailable,
+          counselorId: counselorId,
+        },
+      });
+      window.dispatchEvent(statusChangeEvent);
+
+      return response.data;
+    } catch (error) {
+      console.error('상담사 상태 업데이트 오류:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 채널 상태 업데이트 (활성/비활성)
+   * @param {string|number} counselorCode - 상담사 코드
+   * @param {boolean} isActive - 채널 활성 여부 (true: 활성, false: 비활성)
+   * @returns {Promise<Object>} 업데이트 결과
+   */
+  updateChannelStatus: async (counselorCode, isActive) => {
+    try {
+      console.log(
+        `채널 상태 업데이트: counselor_code=${counselorCode}, isActive=${isActive}`,
+      );
+
+      // API 요청 - POST 메서드로 채널 상태 업데이트
+      const endpoint = isActive
+        ? `/channels/counseling/counselor/${counselorCode}/start`
+        : `/channels/counseling/counselor/${counselorCode}/end`;
+
+      const response = await apiClient.post(endpoint);
+
+      // 상담 세션 정보 업데이트
+      const channelInfo = JSON.parse(
+        sessionStorage.getItem('currentChannel') || '{}',
+      );
+      channelInfo.status = isActive ? 'ACTIVE' : 'INACTIVE';
+      channelInfo.isActive = isActive;
+      sessionStorage.setItem('currentChannel', JSON.stringify(channelInfo));
+
+      return response.data;
+    } catch (error) {
+      console.error('채널 상태 업데이트 오류:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 채널 상태 확인 (채널이 존재하는지, 상담사가 상담 가능한지)
+   * @param {string|number} counselorId - 상담사 ID
+   * @returns {Promise<Object>} 채널 상태 정보
+   */
+  checkChannelStatus: async counselorId => {
+    try {
+      // ID를 정수로 변환
+      const intCounselorId = ensureIntId(counselorId);
+
+      console.log('채널 상태 확인 요청 ID:', intCounselorId);
+
+      const timestamp = new Date().getTime();
+      const response = await apiClient.get(
+        `/channels/counseling/counselors/${intCounselorId}`,
+        {
+          params: { _t: timestamp },
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0',
+          },
+        },
+      );
+
+      console.log('채널 상태 확인 응답 원본:', response.data);
+
+      // ID를 정수로 변환
+      if (response.data) {
+        response.data.id = ensureIntId(response.data.id);
+
+        // status가 문자열인 경우 숫자로 변환
+        if (typeof response.data.status === 'string') {
+          response.data.status = response.data.status === '가능' ? 0 : 1;
+        }
+
+        console.log('처리 후 상담사 상태:', response.data.status);
+      }
+
+      // 응답에서 status 값 확인 (0이면 상담 가능)
+      const isAvailable = response.data && response.data.status === 0;
+      console.log('최종 isAvailable 값:', isAvailable);
+
+      return {
+        isAvailable: isAvailable,
+        channelExists: response.data && (response.data.hasChannel || false),
+        counselor: response.data,
+      };
+    } catch (error) {
+      console.error('채널 상태 확인 오류:', error);
+      // 기본값 반환
+      return {
+        isAvailable: false,
+        channelExists: false,
+        counselor: null,
+      };
+    }
+  },
+
+  /**
+   * 상담사 코드 가져오기
+   * @param {string|number} counselorId - 상담사 ID
+   * @returns {Promise<Object>} 상담사 코드 정보
+   */
+  getCounselorCode: async counselorId => {
+    try {
+      // ID를 정수로 변환
+      const intCounselorId = ensureIntId(counselorId);
+
+      console.log('상담사 코드 조회 요청:', intCounselorId);
+
+      const response = await apiClient.get(
+        `/channels/counseling/counselors/${intCounselorId}/channel`,
+      );
+
+      console.log('상담사 코드 조회 응답:', response.data);
+
+      // 응답에 counselorCode 추가
+      if (
+        response.data &&
+        !response.data.counselorCode &&
+        response.data.counselor_code
+      ) {
+        response.data.counselorCode = response.data.counselor_code;
+      }
+
+      // 응답이 있지만 counselorCode가 없는 경우, 기본값 사용
+      if (response.data && !response.data.counselorCode) {
+        console.warn('응답에서 counselor_code를 찾을 수 없어 기본값 사용');
+        response.data.counselorCode = 10001;
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('상담사 코드 조회 오류:', error);
+
+      // 에러 발생 시 기본 응답 반환
+      return {
+        counselorCode: 10001,
+        error: true,
+        message: '상담사 코드 정보를 가져오는데 실패했습니다',
+      };
     }
   },
 
@@ -411,7 +746,7 @@ const counselorChannel = {
       const counselors = [];
       for (let i = 1; i <= count; i++) {
         counselors.push({
-          id: i,
+          id: i, // 이미 정수형
           name: `상담사 ${i}`,
           title: '심리 상담 전문가',
           specialty: ['자존감 향상', '가족 관계', '직장 문제', '학업 스트레스'][
@@ -422,9 +757,11 @@ const counselorChannel = {
           certifications: ['심리상담사 1급', '가족상담사 2급'],
           rating_avg: (Math.random() * 1.5 + 3.5).toFixed(1),
           review_count: Math.floor(Math.random() * 50) + 5,
-          status: Math.random() > 0.5 ? '가능' : '불가능',
+          // 상태를 문자열에서 정수로 변경 (1: 가능, 0: 불가능)
+          status: Math.random() > 0.5 ? 1 : 0,
           profile_url: '',
           isAvailable: Math.random() > 0.5,
+          counselor_code: 10000 + i, // 상담사 코드 추가
         });
       }
       return counselors;
@@ -435,7 +772,8 @@ const counselorChannel = {
       const reviews = [];
       for (let i = 1; i <= count; i++) {
         reviews.push({
-          review_id: i.toString(),
+          // 문자열 대신 정수형 ID 사용
+          review_id: i,
           user_nickname: `사용자${i}`,
           content: '상담이 매우 도움이 되었습니다. 감사합니다.',
           score: Math.floor(Math.random() * 2) + 4,

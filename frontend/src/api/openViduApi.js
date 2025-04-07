@@ -1,6 +1,7 @@
 // src>api>openViduApi.js
 import axios from 'axios';
 
+<<<<<<< HEAD
 // API 기본 URL 설정
 // const BASE_URL = 'https://J12D110.p.ssafy.io/api';
 //const BASE_URL = 'https://10c0-116-36-40-48.ngrok-free.app/api';
@@ -10,6 +11,9 @@ const API_URL = import.meta.env.VITE_API_URL;
 // ? 'http://localhost:8080/api'
 // : 'https://j12d110.p.ssafy.io/api';
 
+=======
+const BASE_URL = import.meta.env.VITE_API_URL;
+>>>>>>> b6c1a53958a5419d636a93433ecccd0ad9cb99b0
 // axios 인스턴스 생성
 const apiClient = axios.create({
   baseURL: API_URL,
