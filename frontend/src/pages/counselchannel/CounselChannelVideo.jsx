@@ -231,18 +231,6 @@ function CounselChannelVideo() {
         userRole = null;
       }
 
-      // 전송할 payload(로그 출력용) 구성
-      const payload = {
-        event: 'record_send',
-        content: messageText,
-        channel: counselorCode,
-        user: userId,
-        nickname: userName,
-        currentTime: new Date().toISOString(),
-        role: userRole,
-      };
-
-      // 수정된 sendChatMessage를 호출하면서 computed role 전달
       const success = counselWebSocketService.sendChatMessage(
         counselorCode,
         userId,
@@ -254,12 +242,6 @@ function CounselChannelVideo() {
       if (success) {
         // 사용자 전송 메시지 출력
         addMessage(messageText, userName, userId);
-        // 시스템 메시지로 payload 정보를 채팅창에 출력
-        addMessage(
-          `전송된 메시지 정보:\n${JSON.stringify(payload, null, 2)}`,
-          '시스템',
-          'system',
-        );
         setNewMessage('');
       } else {
         console.error('[채팅] 메시지 전송 실패');
@@ -387,6 +369,38 @@ function CounselChannelVideo() {
 
         // 이벤트 값을 추출하고 소문자로 변환하여 비교
         const event = message.event ? message.event.trim().toLowerCase() : '';
+
+        // record_sent 이벤트 처리 - 채팅 메시지 표시
+        if (event === 'record_sent') {
+          console.log('[웹소켓] 채팅 메시지 수신:', message);
+
+          // 현재 로그인한 사용자 정보 가져오기
+          const currentUser = JSON.parse(
+            sessionStorage.getItem('user') || '{}',
+          );
+          const currentUserId = currentUser.id;
+
+          // 메시지 발신자 ID와 현재 사용자 ID 비교
+          const messageUserId = message.user;
+
+          // 자신이 보낸 메시지가 아닌 경우에만 채팅창에 추가
+          if (currentUserId != messageUserId) {
+            // 느슨한 비교(!=)를 사용하여 문자열/숫자 형변환 문제 방지
+            // 메시지 내용, 발신자 이름, 발신자 ID를 추출하여 채팅창에 표시
+            const content = message.content;
+            const nickname = message.nickname || '익명';
+            const userId = message.user;
+
+            // 메시지를 채팅창에 추가
+            addMessage(content, nickname, userId);
+          } else {
+            console.log(
+              '[웹소켓] 자신이 보낸 메시지이므로 채팅창에 추가하지 않음:',
+              message,
+            );
+          }
+          return;
+        }
 
         // con_leaved 이벤트 처리
         if (event === 'con_leaved') {
