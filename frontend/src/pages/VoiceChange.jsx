@@ -265,6 +265,7 @@ const VoiceChange = () => {
                   )}
                 </div>
                 
+              {/*}
                 <div className="mt-6 flex items-center justify-between">
                   <div className="flex items-center">
                     <button
@@ -302,6 +303,7 @@ const VoiceChange = () => {
                     </div>
                   )}
                 </div>
+                */}
               </div>
             </div>
             
