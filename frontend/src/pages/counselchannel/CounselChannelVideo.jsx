@@ -1,9 +1,10 @@
+//src/pages/counselchannel/CounselChannelVideo.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import VideoLayout from '../../components/video/VideoLayout';
 import ChatBox from '../../components/video/ChatBox';
 import VideoControls from '../../pages/counsel/components/VideoControls';
-import useOpenVidu from '../../hooks/useOpenvidu';
+import useCounselOpenVidu from '../../pages/counsel/hooks/useCounselOpenVidu';
 import useChat from '../../hooks/useChat';
 import axios from 'axios';
 import counselorChannel from '../../api/counselorChannel';
@@ -204,12 +205,15 @@ function CounselChannelVideo() {
   // 커스텀 훅 사용
   const {
     participants,
-    connectionError,
-    joinSession,
+    connectionError,// error를 connectionError로 매핑
+  createAndJoinSession,
+  joinExistingSession,
     leaveSession,
     toggleAudio,
     toggleVideo,
-  } = useOpenVidu(counselorCode, 'randomNickname', isMicOn, isCameraOn);
+    isConnected,
+    isConnecting,
+  } = useCounselOpenVidu(counselorCode);
 
   const handleSendChatMessage = event => {
     event.preventDefault(); // 폼 제출 시 페이지 새로고침 방지
@@ -537,31 +541,70 @@ function CounselChannelVideo() {
         }
       };
 
-      // 웹소켓 연결
-      counselWebSocketService.connect(counselorCode, handleAccessCallback);
-      hasJoined.current = true;
-      joinSession();
-    }
+        // 우선 웹소켓 연결 수행
+    counselWebSocketService.connect(counselorCode, handleAccessCallback);
+    
+    // OpenVidu 연결은 웹소켓 연결이 완료된 후에 지연 실행
+    const connectTimeout = setTimeout(async () => {
+      try {
+        // 역할 확인
+        const userRole = sessionStorage.getItem('userRole');
+        const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+        const isCounselor = 
+          userRole === 'ROLE_COUNSELOR' || 
+          userRole === 'counselor' || 
+          user.role === 'ROLE_COUNSELOR' || 
+          user.role === 'counselor';
+        
+        console.log('[세션 참여] 사용자 역할:', userRole, '상담사 여부:', isCounselor);
+        
+        // 이전에 연결된 세션 정리
+        try {
+          leaveSession();
+          await new Promise(resolve => setTimeout(resolve, 500)); // 세션 정리가 완료될 시간 확보
+        } catch (e) {
+          console.log('이전 세션 정리 중 오류:', e);
+        }
+        
+        // 연결 플래그 설정
+        hasJoined.current = true;
+        
+        // 역할에 따라 다른 함수 호출
+        if (isCounselor) {
+          console.log('[세션 참여] 상담사로 세션 생성 및 참여');
+          await createAndJoinSession(counselorCode);
+        } else {
+          console.log('[세션 참여] 일반 사용자로 기존 세션에 참여');
+          await joinExistingSession();
+        }
+      } catch (error) {
+        console.error('[OpenVidu] 세션 참여 중 오류:', error);
+        hasJoined.current = false;
+      }
+    }, 2000); // 웹소켓 연결이 완료될 충분한 시간 부여
 
     return () => {
+      clearTimeout(connectTimeout);
       console.log('세션 종료 시작');
       leaveSession();
     };
-  }, [
-    isLoading,
-    joinSession,
-    leaveSession,
-    counselorCode,
-    navigate,
-    addMessage,
-    setIsSessionStarted,
-    setIsPageMoveActive,
-    isSessionStarted,
-    showRequestAlert,
-    requestUserInfo,
-    setShowRequestAlert,
-    setRequestUserInfo,
-  ]);
+  }
+}, [
+  isLoading,
+  leaveSession,
+  counselorCode,
+  navigate,
+  addMessage,
+  setIsSessionStarted,
+  setIsPageMoveActive,
+  isSessionStarted,
+  showRequestAlert,
+  requestUserInfo,
+  setShowRequestAlert,
+  setRequestUserInfo,
+  createAndJoinSession,
+  joinExistingSession,
+]);
 
   // 토글 함수
   const toggleMic = () => {
@@ -823,11 +866,26 @@ function CounselChannelVideo() {
             화상 연결 중 오류가 발생했습니다.
           </div>
           <button
-            onClick={joinSession}
-            className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
-          >
-            재연결
-          </button>
+      onClick={() => {
+        // 역할 확인 후 적절한 함수 호출
+        const userRole = sessionStorage.getItem('userRole');
+        const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+        const isCounselor = 
+          userRole === 'ROLE_COUNSELOR' || 
+          userRole === 'counselor' || 
+          user.role === 'ROLE_COUNSELOR' || 
+          user.role === 'counselor';
+        
+        if (isCounselor) {
+          createAndJoinSession(counselorCode);
+        } else {
+          joinExistingSession();
+        }
+      }}
+      className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
+    >
+      재연결
+    </button>
         </div>
       )}
 
