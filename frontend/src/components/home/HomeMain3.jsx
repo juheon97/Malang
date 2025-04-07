@@ -1,5 +1,6 @@
 // src/components/home/HomeMain3.jsx
 import React from 'react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import styles from '../../styles/home/Home3.module.css';
 import homeStyles from '../../styles/home/Home.module.css';
 import home2Styles from '../../styles/home/Home2.module.css';
@@ -134,9 +135,27 @@ const HomeMain3 = () => {
       </div>
       <div
         className={`${homeStyles.featureImage} ${homeStyles.slideFromRight}`}
-        style={{ position: 'relative', zIndex: '2' }}
+        style={{ 
+          position: 'relative', 
+          zIndex: '2',
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center'
+        }}
       >
-        {/* 이미지가 있다면 여기에 추가 */}
+        {/* Lottie 애니메이션 추가 - 크기 키움 */}
+        <div className={styles.lottieContainer} style={{ width: '90%', maxWidth: '600px' }}>
+          <DotLottieReact
+            src="https://lottie.host/8c30fc71-4697-43eb-b5aa-91edf55b2cbb/ogvT3ut3Mm.lottie"
+            loop
+            autoplay
+            style={{
+              width: '1000px',
+              height: 'auto',
+              minHeight: '400px', // 최소 높이 설'
+            }}
+          />
+        </div>
       </div>
     </>
   );
