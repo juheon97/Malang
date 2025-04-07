@@ -142,19 +142,9 @@ function CounselChannelRoom() {
       const handleAccessCallback = message => {
         console.log('[웹소켓] 입장 요청 메시지 수신:', message);
       };
-      const handleChannelCallback = message => {
-        console.log('웹소켓 채널 이벤트 메시지 수신:', message);
-      };
-      const handleChatCallback = message => {
-        console.log('웹소켓 채팅 메시지 수신:', message);
-      };
 
-      counselWebSocketService.connect(
-        counselorCode,
-        handleAccessCallback,
-        handleChannelCallback,
-        handleChatCallback,
-      );
+      // 원래 코드와 동일하게 첫 번째 콜백만 전달 (다른 콜백은 전달하지 않음)
+      counselWebSocketService.connect(counselorCode, handleAccessCallback);
 
       // setTimeout으로 웹소켓 연결 후 상태를 확인
       setTimeout(() => {
@@ -175,6 +165,38 @@ function CounselChannelRoom() {
           Array.from(counselWebSocketService.subscriptions.keys()),
         );
         console.log('===============================');
+
+        // 백엔드 작동을 위한 추가 메시지 전송 (다른 코드에 영향 없음)
+        // 백엔드 작동을 위한 추가 메시지 전송 (다른 코드에 영향 없음)
+        if (
+          counselWebSocketService.isConnected &&
+          counselWebSocketService.stompClient
+        ) {
+          // 사용자 정보 가져오기
+          const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+          const userId = parseInt(user.id, 10) || 0; // 문자열을 정수로 명시적 변환
+
+          // con_join 메시지 구성 및 전송
+          const joinMessage = {
+            event: 'con_join',
+            user: userId,
+            channel: counselorCode,
+            role: 'ROLE_COUNSELOR',
+          };
+
+          const destination = `/pub/${counselorCode}`;
+
+          // 전송 정보 로깅 (어떤 주소로 어떤 JSON이 전송되는지)
+          console.log(`[웹소켓] 메시지 전송 - 대상 주소: ${destination}`);
+          console.log('[웹소켓] 메시지 내용:', joinMessage);
+
+          counselWebSocketService.stompClient.publish({
+            destination: destination,
+            body: JSON.stringify(joinMessage),
+          });
+
+          console.log('[웹소켓] 메시지 전송 완료');
+        }
       }, 1000);
 
       console.log('===========================');
