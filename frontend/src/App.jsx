@@ -29,93 +29,95 @@ function App() {
       <AuthProvider>
         <AccessibilityProvider>
           <CounselorProfileProvider>
-            <Layout>
-              <Routes>
-                {/* 공개 라우트 - 인증 필요 없음 */}
-                <Route path="/login-counsel" element={<LoginCounsel />} />
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/Signup" element={<Signup />} />
-                <Route path="/community/*" element={<Community />} />
-                <Route path="/voice-change" element={<VoiceChange />} />
-                <Route path="/self-diagnosis" element={<SelfDiagnosis />} />
-                <Route path="/sign-language" element={<SignLanguagePage />} />
-                {/* 보호된 라우트 - 인증 필요 */}
-                <Route
-                  path="/mypage"
-                  element={
-                    <ProtectedRoute>
-                      <Mypage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/community/write"
-                  element={
-                    <ProtectedRoute>
-                      <CommunityWrite />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/counsel-channel"
-                  element={
-                    <ProtectedRoute>
-                      <Counsel />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/voice-channel"
-                  element={
-                    <ProtectedRoute>
-                      <VoiceChannel />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/voice-channel-room"
-                  element={
-                    <ProtectedRoute>
-                      <VoiceChannelRoom />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/voice-channel-video"
-                  element={
-                    <ProtectedRoute>
-                      <VoiceChannelVideo />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/voice-channel-video/:channelId"
-                  element={
-                    <ProtectedRoute>
-                      <VoiceChannelVideo />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/counsel-channel-room"
-                  element={
-                    <ProtectedRoute>
-                      <CounselChannelRoom />
-                    </ProtectedRoute>
-                  }
-                />
+            <SignLanguageProvider>
+              <Layout>
+                <Routes>
+                  {/* 공개 라우트 - 인증 필요 없음 */}
+                  <Route path="/login-counsel" element={<LoginCounsel />} />
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/Signup" element={<Signup />} />
+                  <Route path="/community/*" element={<Community />} />
+                  <Route path="/voice-change" element={<VoiceChange />} />
+                  <Route path="/self-diagnosis" element={<SelfDiagnosis />} />
+                  <Route path="/sign-language" element={<SignLanguagePage />} />
+                  {/* 보호된 라우트 - 인증 필요 */}
+                  <Route
+                    path="/mypage"
+                    element={
+                      <ProtectedRoute>
+                        <Mypage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/community/write"
+                    element={
+                      <ProtectedRoute>
+                        <CommunityWrite />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/counsel-channel"
+                    element={
+                      <ProtectedRoute>
+                        <Counsel />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/voice-channel"
+                    element={
+                      <ProtectedRoute>
+                        <VoiceChannel />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/voice-channel-room"
+                    element={
+                      <ProtectedRoute>
+                        <VoiceChannelRoom />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/voice-channel-video"
+                    element={
+                      <ProtectedRoute>
+                        <VoiceChannelVideo />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/voice-channel-video/:channelId"
+                    element={
+                      <ProtectedRoute>
+                        <VoiceChannelVideo />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/counsel-channel-room"
+                    element={
+                      <ProtectedRoute>
+                        <CounselChannelRoom />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                <Route
-                  path="/counsel-channel-video/:counselorCode"
-                  element={
-                    <ProtectedRoute>
-                      <CounselChannelVideo />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </Layout>
+                  <Route
+                    path="/counsel-channel-video/:counselorCode"
+                    element={
+                      <ProtectedRoute>
+                        <CounselChannelVideo />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </Layout>
+            </SignLanguageProvider>
           </CounselorProfileProvider>
         </AccessibilityProvider>
       </AuthProvider>

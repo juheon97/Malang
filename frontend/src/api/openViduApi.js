@@ -1,19 +1,7 @@
 // src>api>openViduApi.js
 import axios from 'axios';
 
-<<<<<<< HEAD
-// API 기본 URL 설정
-// const BASE_URL = 'https://J12D110.p.ssafy.io/api';
-//const BASE_URL = 'https://10c0-116-36-40-48.ngrok-free.app/api';
-
-// 환경에 따른 API URL 설정
-const API_URL = import.meta.env.VITE_API_URL;
-// ? 'http://localhost:8080/api'
-// : 'https://j12d110.p.ssafy.io/api';
-
-=======
 const BASE_URL = import.meta.env.VITE_API_URL;
->>>>>>> b6c1a53958a5419d636a93433ecccd0ad9cb99b0
 // axios 인스턴스 생성
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -38,14 +26,18 @@ const openviduApi = {
   // 세션 생성 API
   createSession: async channelId => {
     try {
-      const response = await apiClient.post('openvidu/session', {
-        customSessionId: channelId,
-      }, {
-        headers: {
-          'Authorization': `Basic ${btoa("OPENVIDUAPP:lsw")}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await apiClient.post(
+        'openvidu/session',
+        {
+          customSessionId: channelId,
+        },
+        {
+          headers: {
+            Authorization: `Basic ${btoa('OPENVIDUAPP:lsw')}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
       return response.data.sessionId;
     } catch (error) {
       console.error('세션 생성 오류:', error);
@@ -63,9 +55,9 @@ const openviduApi = {
           headers: {
             'Content-Type': 'application/json',
             // 💡 아래 라인 추가 (URL 인코딩 방지)
-            'Accept-Encoding': null // 명시적으로 null 설정
-          }
-        }
+            'Accept-Encoding': null, // 명시적으로 null 설정
+          },
+        },
       );
       return response.data.token;
     } catch (error) {
