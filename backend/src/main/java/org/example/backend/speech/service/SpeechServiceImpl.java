@@ -6,68 +6,70 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
-import java.io.File;
-import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.TimeoutException;
+import java.util.Collections;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SpeechServiceImpl implements SpeechService {
 
-    private final WebClient speechWebClient;
+    @Value("${speech.base-url}")
+    private String speechApiUrl;
+
+    private final RestTemplate restTemplate;
 
     public String processFile(MultipartFile file) {
         try {
-            // 1. MultipartFile에서 바이트 배열 추출
             byte[] fileBytes = file.getBytes();
 
-            // 2. ByteArrayResource로 변환 (파일 이름도 설정)
-            ByteArrayResource byteArrayResource = new ByteArrayResource(fileBytes) {
+            // 1. ByteArrayResource 생성 (파일 이름 포함)
+            ByteArrayResource resource = new ByteArrayResource(fileBytes) {
                 @Override
                 public String getFilename() {
                     return file.getOriginalFilename();
                 }
             };
 
-            // 3. MultipartBodyBuilder로 전송 준비
-            MultipartBodyBuilder builder = new MultipartBodyBuilder();
-            builder.part("file", byteArrayResource);
+            // 2. Multipart 데이터 구성
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add("file", resource);
 
-            // 4. WebClient 호출
-            String response = speechWebClient.post()
-                    .uri("/classification")
-                    .contentType(MediaType.MULTIPART_FORM_DATA)
-                    .body(BodyInserters.fromMultipartData(builder.build()))
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block(Duration.ofSeconds(30));
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-            // 5. 응답 파싱
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            // 3. RestTemplate 호출
+            ResponseEntity<String> responseEntity = restTemplate.postForEntity(
+                    speechApiUrl + "/classification",
+                    requestEntity,
+                    String.class
+            );
+
+            String responseBody = responseEntity.getBody();
+
+            // 4. 응답 파싱
             ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(response);
+            JsonNode jsonNode = objectMapper.readTree(responseBody);
 
             if (jsonNode.has("transcript")) {
                 return jsonNode.get("transcript").asText();
             } else if (jsonNode.has("정상") && jsonNode.has("뇌 질환")) {
-                float normal = jsonNode.get("정상").floatValue() * 100; // 보정값 적용
+                float normal = jsonNode.get("정상").floatValue();
                 float brain = jsonNode.get("뇌 질환").floatValue();
-                log.info("[STT] 분류 결과 - 정상*100: {}, 정상: {}, 뇌 질환: {}", normal, normal/100, brain);
+                log.info("[STT] 분류 결과 - 정상*100: {}, 정상: {}, 뇌 질환: {}", normal, normal / 100, brain);
                 return String.format("정상: %.6f%%, 뇌 질환: %.6f%%", normal, brain);
             } else {
-                throw new RuntimeException("AI 응답 포맷이 예상과 다름: " + response);
+                throw new RuntimeException("AI 응답 포맷이 예상과 다름: " + responseBody);
             }
 
         } catch (Exception e) {
