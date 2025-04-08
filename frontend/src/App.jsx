@@ -34,7 +34,6 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/Signup" element={<Signup />} />
-                <Route path="/community/*" element={<Community />} />
                 <Route path="/voice-change" element={<VoiceChange />} />
                 <Route path="/self-diagnosis" element={<SelfDiagnosis />} />
                 {/* 보호된 라우트 - 인증 필요 */}
@@ -43,6 +42,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Mypage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/community"
+                  element={
+                    <ProtectedRoute>
+                      <Community />
                     </ProtectedRoute>
                   }
                 />
