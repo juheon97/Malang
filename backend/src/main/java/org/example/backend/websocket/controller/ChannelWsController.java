@@ -61,7 +61,7 @@ public class ChannelWsController {
 
             case "con_leave":
                 logger.info("Counselor leaved session request from user {} in channel {}", request.user(), channel_id);
-                channelWsService.counselStatusChange(request.user());
+//                channelWsService.counselStatusChange(request.user());
                 channelWsService.CounselorLeave(channel_id);
                 return new ChannelEventResponse(channel_id, request.user(), "con_leaved", request.role());
 

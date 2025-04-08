@@ -90,14 +90,14 @@ public class ChannelWsService {
             }
         }
     }
-    public void counselStatusChange(Long userId) {
-        try {
-            counselorProfileController.updateStatusIntoZero();
-            logger.info("Counselor status changed to 0 (busy) for userId={}", userId);
-        } catch (Exception e) {
-            logger.error("Failed to change counselor status: {}", e.getMessage());
-        }
-    }
+//    public void counselStatusChange(Long userId) {
+//        try {
+//            counselorProfileController.updateStatusIntoZero();
+//            logger.info("Counselor status changed to 0 (busy) for userId={}", userId);
+//        } catch (Exception e) {
+//            logger.error("Failed to change counselor status: {}", e.getMessage());
+//        }
+//    }
 
     /**
      * 상담사 전용 방 Redis 방 상담 유저 저장기능
