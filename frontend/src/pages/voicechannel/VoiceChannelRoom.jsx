@@ -1,4 +1,4 @@
-//src>pages>voicechannel>VoiceChannelRoom.jsx
+// src/pages/voicechannel/VoiceChannelRoom.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -67,39 +67,46 @@ function VoiceChannelRoom() {
     // currentUser 확인 로그 추가
     console.log('폼 제출 시 currentUser 정보:', currentUser);
     console.log('현재 사용자 ID:', currentUser?.id);
-    
+
     // API 명세서에 맞게 데이터 변환
     const apiRequestData = {
       channelName: formData.roomName,
       description: formData.description,
       password: formData.password || null,
       maxPlayer: parseInt(formData.maxUsers),
-      user_id: currentUser?.id
+      user_id: currentUser?.id,
     };
-    console.log('1. 방생성 버튼 누르고 : 음성채널 생성 데이터:', apiRequestData);
-   
+    console.log(
+      '1. 방생성 버튼 누르고 : 음성채널 생성 데이터:',
+      apiRequestData,
+    );
+
     try {
       // 채널 생성만 시킴
-      const channelResponse = await voiceChannelApi.createChannel(apiRequestData);
+      const channelResponse =
+        await voiceChannelApi.createChannel(apiRequestData);
       console.log('백엔드 응답 데이터:', channelResponse.data);
-      console.log('방 생성자 ID 확인:', channelResponse.data.creatorId || '정보 없음');
-      
+      console.log(
+        '방 생성자 ID 확인:',
+        channelResponse.data.creatorId || '정보 없음',
+      );
+
       const { channelId, creatorNickname, channelName } = channelResponse.data;
-      
+
       // 세션 스토리지에 방 생성자 정보 저장 (추가)
       sessionStorage.setItem('isChannelHost', 'true');
       sessionStorage.setItem('channelCreatorId', currentUser?.id);
-      
+
       // 화면 이동만 수행 (세션 초기화는 다음 페이지에서)
       navigate(`/voice-channel-video/${channelId}`, {
-        state: { 
+        state: {
           sessionConfig: {
             channelId,
             creatorNickname, // 방장 닉네임 전달
             channelName,
             user_id: currentUser?.id, // 현재 사용자 ID 전달
-          }
-        }
+          },
+        },
       });
     } catch (error) {
       console.error('채널 생성 실패:', error);
@@ -151,32 +158,7 @@ function VoiceChannelRoom() {
 
       <div className="w-full max-w-4xl bg-[#EFF5F2] rounded-xl p-6 shadow-xl border border-[#e0f5e9] relative">
         {/* 상단 배지 */}
-
         <div className="flex flex-col md:flex-row gap-6 mt-8">
-          {/* 방 유형 선택 */}
-          <div className="w-full md:w-48 bg-white rounded-lg p-4 shadow-md h-fit border border-[#e0e0e0]">
-            <h3 className="text-gray-700 font-semibold mb-4">방 유형</h3>
-
-            <div className="space-y-3">
-              <div className="flex items-center bg-gradient-to-b from-[#E0FEE0] to-[#B0DAAF] rounded-lg shadow-md p-3 cursor-pointer transition-transform hover:scale-105">
-                <div className="text-green-600 mr-2">✓</div>
-                <span className="text-sm font-semibold text-gray-700">
-                  음성 채널
-                </span>
-              </div>
-        
-            </div>
-            {/* 시각적 요소 추가 */}
-            <div className="mt-6 bg-[#f5fbf7] rounded-lg p-3 border border-dashed border-[#b0daaf]">
-              <p className="text-xs text-gray-600">
-                <span className="block font-medium text-[#3FB06C] mb-1">
-                  TIP
-                </span>
-                방 유형에 따라 필요한 설정이 달라질 수 있어요.
-              </p>
-            </div>
-          </div>
-
           {/* 상담채널 생성 폼 */}
           <div className="flex-1 bg-white rounded-lg p-6 shadow-lg border border-[#e0e0e0]">
             <div className="relative">
@@ -193,7 +175,8 @@ function VoiceChannelRoom() {
 
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
+                {/* 방 이름 입력란이 md 이상에서 두 열을 모두 차지하도록 수정 */}
+                <div className="md:col-span-2">
                   <label
                     htmlFor="roomName"
                     className="block text-base font-semibold text-gray-600 mb-3 flex items-center"
@@ -223,38 +206,6 @@ function VoiceChannelRoom() {
                     placeholder="음성채널 공간의 이름을 지어주세요"
                     className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5CCA88] transition-all"
                     required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block font-semibold text-base text-gray-600 mb-3 flex items-center"
-                  >
-                    <svg
-                      className="w-5 h-5 mr-2 text-[#3FB06C]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      ></path>
-                    </svg>
-                    비밀번호 (선택사항)
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="비밀번호를 설정하세요 (선택사항)"
-                    className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5CCA88] transition-all"
                   />
                 </div>
               </div>
@@ -287,52 +238,6 @@ function VoiceChannelRoom() {
                   placeholder="방 설명을 입력해주세요."
                   className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5CCA88] transition-all min-h-[80px]"
                 />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div>
-                  <label
-                    htmlFor="maxUsers"
-                    className="block font-semibold text-base text-gray-600 mb-3 flex items-center"
-                  >
-                    <svg
-                      className="w-5 h-5 mr-2 text-[#3FB06C]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      ></path>
-                    </svg>
-                    최대 인원
-                  </label>
-                  <div className="flex bg-white items-center border border-gray-200 rounded-xl p-2 w-fit shadow-sm hover:shadow transition-shadow">
-                    <span className="mr-3 text-base px-3 py-1 bg-[#f0f9f4] rounded-lg">
-                      {formData.maxUsers}명
-                    </span>
-                    <div className="flex flex-col">
-                      <button
-                        type="button"
-                        className="text-xs px-2 text-gray-500 hover:text-[#3FB06C] leading-none"
-                        onClick={increaseMaxUsers}
-                      >
-                        ▲
-                      </button>
-                      <button
-                        type="button"
-                        className="text-xs text-gray-500 hover:text-[#3FB06C] leading-none"
-                        onClick={decreaseMaxUsers}
-                      >
-                        ▼
-                      </button>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               <div className="flex justify-end gap-3">
