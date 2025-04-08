@@ -568,7 +568,7 @@ const renderResultComponent = () => {
       </header>
   
       {/* 메인 콘텐츠 */}
-      <main className="max-w-6xl mx-auto p-4 mt-6 malang-font">
+      <main className="max-w-6xl mx-auto p-4 mt-1 malang-font">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* 왼쪽 사이드바 - 녹음 기능 */}
           <div className="md:col-span-1">
