@@ -6,9 +6,12 @@ import HomeMain2 from '../../components/home/HomeMain2';
 import HomeMain3 from '../../components/home/HomeMain3';
 import HomeMain4 from '../../components/home/HomeMain4';
 import HomeMain5 from '../../components/home/HomeMain5';
+import { useSignLanguage } from '../../contexts/SignLanguageContext';
 
 function Home() {
   // 각 섹션에 대한 ref 생성
+
+  const { openSignLanguageModal } = useSignLanguage();
   const featureSectionRefs = useRef([]);
 
   useEffect(() => {

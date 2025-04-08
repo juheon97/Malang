@@ -31,15 +31,16 @@ const voiceChannelApi = {
     try {
       // 1. 채널 생성 요청
       const response = await apiClient.post('/channels/voice', channelData);
-      console.log('2. response부름. voiceChannelApi 채널 ID :', response.data.channelId)
+      console.log(
+        '2. response부름. voiceChannelApi 채널 ID :',
+        response.data.channelId,
+      );
       return response; // 전체 response 객체를 반환
     } catch (error) {
       console.error('채널 생성 오류:', error);
-      throw error; // 에러를 다시 throw하여 호출자에게 전달
+      throw error;
     }
-
-
-  // 채널 나가기 API
+    // 채널 나가기 API
   },
   leaveChannel: async channelId => {
     try {
@@ -61,7 +62,7 @@ const voiceChannelApi = {
       throw error;
     }
   },
-  
+
   // 채널 비밀번호 확인 함수
   checkChannelPassword: async (channelId, password) => {
     // 요청 데이터 확인
@@ -97,7 +98,6 @@ const voiceChannelApi = {
       throw error;
     }
   },
-  
 };
 
 export default voiceChannelApi;

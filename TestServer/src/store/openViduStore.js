@@ -3,8 +3,8 @@ import { create } from 'zustand';
 import { OpenVidu } from 'openvidu-browser';
 import axios from 'axios';
 
-const OPENVIDU_SERVER_URL = 'http://localhost:4443';
-const OPENVIDU_SERVER_SECRET = 'MY_SECRET';
+const OPENVIDU_SERVER_URL = 'https://j12d110.p.ssafy.io';
+const OPENVIDU_SERVER_SECRET = 'lsw';
 
 const useOpenViduStore = create((set, get) => ({
   session: undefined,

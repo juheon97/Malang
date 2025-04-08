@@ -159,6 +159,28 @@ function VoiceChannelRoom() {
       <div className="w-full max-w-4xl bg-[#EFF5F2] rounded-xl p-6 shadow-xl border border-[#e0f5e9] relative">
         {/* 상단 배지 */}
         <div className="flex flex-col md:flex-row gap-6 mt-8">
+          {/* 방 유형 선택 */}
+          <div className="w-full md:w-48 bg-white rounded-lg p-4 shadow-md h-fit border border-[#e0e0e0]">
+            <h3 className="text-gray-700 font-semibold mb-4">방 유형</h3>
+
+            <div className="space-y-3">
+              <div className="flex items-center bg-gradient-to-b from-[#E0FEE0] to-[#B0DAAF] rounded-lg shadow-md p-3 cursor-pointer transition-transform hover:scale-105">
+                <div className="text-green-600 mr-2">✓</div>
+                <span className="text-sm font-semibold text-gray-700">
+                  음성 채널
+                </span>
+              </div>
+            </div>
+            {/* 시각적 요소 추가 */}
+            <div className="mt-6 bg-[#f5fbf7] rounded-lg p-3 border border-dashed border-[#b0daaf]">
+              <p className="text-xs text-gray-600">
+                <span className="block font-medium text-[#3FB06C] mb-1">
+                  TIP
+                </span>
+                방 유형에 따라 필요한 설정이 달라질 수 있어요.
+              </p>
+            </div>
+          </div>
           {/* 상담채널 생성 폼 */}
           <div className="flex-1 bg-white rounded-lg p-6 shadow-lg border border-[#e0e0e0]">
             <div className="relative">

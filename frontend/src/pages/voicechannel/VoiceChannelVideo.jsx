@@ -40,6 +40,49 @@ function VoiceChannelVideo() {
   const { messages, newMessage, setNewMessage, handleKeyDown, addMessage } =
     useChat(currentUser?.id || 'guest');
 
+  // 마지막으로 전송된 메시지 내용과 시간을 저장할 상태 추가
+  const [lastSentMessage, setLastSentMessage] = useState({
+    text: '',
+    timestamp: 0,
+  });
+
+  // 수어 번역 결과 처리 함수 수정
+  const handleTranslationResult = text => {
+    if (!text || text.trim() === '' || !websocketService.isConnected) return;
+
+    const currentTime = Date.now();
+
+    // 동일한 메시지가 3초 이내에 다시 전송되는 것 방지
+    if (
+      lastSentMessage.text === text &&
+      currentTime - lastSentMessage.timestamp < 3000
+    ) {
+      console.log(
+        '중복 메시지 방지: 동일한 메시지가 3초 이내에 다시 전송되었습니다',
+      );
+      return;
+    }
+
+    const messagePayload = {
+      event: 'send',
+      content: `[수어 번역] ${text}`,
+      userId: currentUser?.id,
+      nickname: currentUser?.username,
+    };
+
+    console.log('📤 수어 번역 메시지 전송:', messagePayload);
+    websocketService.sendChatMessage(channelId, messagePayload);
+
+    addMessage(
+      `[수어 번역] ${text}`,
+      currentUser?.username || 'Me',
+      currentUser?.id || 'guest',
+    );
+
+    // 마지막 전송 메시지 정보 업데이트
+    setLastSentMessage({ text, timestamp: currentTime });
+  };
+
   // Update connectionError from OpenVidu's error
   useEffect(() => {
     if (error) {
@@ -240,6 +283,8 @@ function VoiceChannelVideo() {
           <VoiceVideoLayout
             participants={participants}
             renderParticipantInfo={renderParticipantInfo}
+            isSignLanguageOn={isSignLanguageOn}
+            onTranslationResult={handleTranslationResult}
           />
         </div>
 
