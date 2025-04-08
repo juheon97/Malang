@@ -15,11 +15,7 @@ const NormalResult = ({ data, audioUrl, playAudio, regenerateWithVoice }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="border-b border-gray-200">
-        <div className="px-6 py-4">
-          <h2 className="text-xl font-semibold text-gray-800">분석 결과</h2>
-        </div>
-      </div>
+     
       <div className="p-6">
         <div className="flex justify-center mb-6">
           <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center">

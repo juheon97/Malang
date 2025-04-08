@@ -17,11 +17,7 @@ const AbnormalResult = ({ data, audioUrl, playAudio, regenerateWithVoice }) => {
   
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="border-b border-gray-200">
-        <div className="px-6 py-4">
-          <h2 className="text-xl font-semibold text-gray-800">분석 결과</h2>
-        </div>
-      </div>
+    
       <div className="p-6">
         <div className="flex justify-center mb-6">
           <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center">
@@ -59,7 +55,7 @@ const AbnormalResult = ({ data, audioUrl, playAudio, regenerateWithVoice }) => {
         
         {/* 상담 유도 섹션 추가 */}
         <div className="mt-8 bg-blue-50 p-6 rounded-lg border border-blue-200">
-          <h4 className="text-lg font-semibold text-blue-800 mb-3">전문가 상담이 필요하신가요?</h4>
+          <h4 className="text-lg font-semibold text-blue-800 mb-3">전문 상담이 필요하신가요?</h4>
           <p className="text-gray-700 mb-4">
             자가진단 결과 뇌신경 또는 뇌졸중 관련 징후가 감지되었습니다. 
             정확한 진단과 적절한 조치를 위해 전문 상담사와의 상담을 권장드립니다.
@@ -72,7 +68,7 @@ const AbnormalResult = ({ data, audioUrl, playAudio, regenerateWithVoice }) => {
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-              전문가 상담 시작하기
+              상담 시작하기
             </Link>
           </div>
         </div>

@@ -1,4 +1,4 @@
-//src>pages>voicechannel>VoiceChannelRoom.jsx
+// src/pages/voicechannel/VoiceChannelRoom.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -158,7 +158,6 @@ function VoiceChannelRoom() {
 
       <div className="w-full max-w-4xl bg-[#EFF5F2] rounded-xl p-6 shadow-xl border border-[#e0f5e9] relative">
         {/* 상단 배지 */}
-
         <div className="flex flex-col md:flex-row gap-6 mt-8">
           {/* 방 유형 선택 */}
           <div className="w-full md:w-48 bg-white rounded-lg p-4 shadow-md h-fit border border-[#e0e0e0]">
@@ -182,7 +181,6 @@ function VoiceChannelRoom() {
               </p>
             </div>
           </div>
-
           {/* 상담채널 생성 폼 */}
           <div className="flex-1 bg-white rounded-lg p-6 shadow-lg border border-[#e0e0e0]">
             <div className="relative">
@@ -199,7 +197,8 @@ function VoiceChannelRoom() {
 
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
+                {/* 방 이름 입력란이 md 이상에서 두 열을 모두 차지하도록 수정 */}
+                <div className="md:col-span-2">
                   <label
                     htmlFor="roomName"
                     className="block text-base font-semibold text-gray-600 mb-3 flex items-center"
@@ -229,38 +228,6 @@ function VoiceChannelRoom() {
                     placeholder="음성채널 공간의 이름을 지어주세요"
                     className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5CCA88] transition-all"
                     required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block font-semibold text-base text-gray-600 mb-3 flex items-center"
-                  >
-                    <svg
-                      className="w-5 h-5 mr-2 text-[#3FB06C]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      ></path>
-                    </svg>
-                    비밀번호 (선택사항)
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="비밀번호를 설정하세요 (선택사항)"
-                    className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5CCA88] transition-all"
                   />
                 </div>
               </div>
@@ -293,52 +260,6 @@ function VoiceChannelRoom() {
                   placeholder="방 설명을 입력해주세요."
                   className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#5CCA88] transition-all min-h-[80px]"
                 />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div>
-                  <label
-                    htmlFor="maxUsers"
-                    className="block font-semibold text-base text-gray-600 mb-3 flex items-center"
-                  >
-                    <svg
-                      className="w-5 h-5 mr-2 text-[#3FB06C]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      ></path>
-                    </svg>
-                    최대 인원
-                  </label>
-                  <div className="flex bg-white items-center border border-gray-200 rounded-xl p-2 w-fit shadow-sm hover:shadow transition-shadow">
-                    <span className="mr-3 text-base px-3 py-1 bg-[#f0f9f4] rounded-lg">
-                      {formData.maxUsers}명
-                    </span>
-                    <div className="flex flex-col">
-                      <button
-                        type="button"
-                        className="text-xs px-2 text-gray-500 hover:text-[#3FB06C] leading-none"
-                        onClick={increaseMaxUsers}
-                      >
-                        ▲
-                      </button>
-                      <button
-                        type="button"
-                        className="text-xs text-gray-500 hover:text-[#3FB06C] leading-none"
-                        onClick={decreaseMaxUsers}
-                      >
-                        ▼
-                      </button>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               <div className="flex justify-end gap-3">
