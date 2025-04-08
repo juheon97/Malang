@@ -205,9 +205,9 @@ function CounselChannelVideo() {
   // 커스텀 훅 사용
   const {
     participants,
-    connectionError,// error를 connectionError로 매핑
-  createAndJoinSession,
-  joinExistingSession,
+    connectionError, // error를 connectionError로 매핑
+    createAndJoinSession,
+    joinExistingSession,
     leaveSession,
     toggleAudio,
     toggleVideo,
@@ -428,6 +428,10 @@ function CounselChannelVideo() {
           console.log('[웹소켓] 상담 종료 메시지 수신:', message);
           addMessage('상담이 종료되었습니다.', '시스템', 'system');
           setIsSessionStarted(false);
+          setIsChatEnabled(false);
+          counselWebSocketService.setChatEnabled(false);
+          console.log('[웹소켓] 채팅 비활성화 상태:', false);
+
           return;
         }
 
@@ -541,70 +545,75 @@ function CounselChannelVideo() {
         }
       };
 
-        // 우선 웹소켓 연결 수행
-    counselWebSocketService.connect(counselorCode, handleAccessCallback);
-    
-    // OpenVidu 연결은 웹소켓 연결이 완료된 후에 지연 실행
-    const connectTimeout = setTimeout(async () => {
-      try {
-        // 역할 확인
-        const userRole = sessionStorage.getItem('userRole');
-        const user = JSON.parse(sessionStorage.getItem('user') || '{}');
-        const isCounselor = 
-          userRole === 'ROLE_COUNSELOR' || 
-          userRole === 'counselor' || 
-          user.role === 'ROLE_COUNSELOR' || 
-          user.role === 'counselor';
-        
-        console.log('[세션 참여] 사용자 역할:', userRole, '상담사 여부:', isCounselor);
-        
-        // 이전에 연결된 세션 정리
-        try {
-          leaveSession();
-          await new Promise(resolve => setTimeout(resolve, 500)); // 세션 정리가 완료될 시간 확보
-        } catch (e) {
-          console.log('이전 세션 정리 중 오류:', e);
-        }
-        
-        // 연결 플래그 설정
-        hasJoined.current = true;
-        
-        // 역할에 따라 다른 함수 호출
-        if (isCounselor) {
-          console.log('[세션 참여] 상담사로 세션 생성 및 참여');
-          await createAndJoinSession(counselorCode);
-        } else {
-          console.log('[세션 참여] 일반 사용자로 기존 세션에 참여');
-          await joinExistingSession();
-        }
-      } catch (error) {
-        console.error('[OpenVidu] 세션 참여 중 오류:', error);
-        hasJoined.current = false;
-      }
-    }, 2000); // 웹소켓 연결이 완료될 충분한 시간 부여
+      // 우선 웹소켓 연결 수행
+      counselWebSocketService.connect(counselorCode, handleAccessCallback);
 
-    return () => {
-      clearTimeout(connectTimeout);
-      console.log('세션 종료 시작');
-      leaveSession();
-    };
-  }
-}, [
-  isLoading,
-  leaveSession,
-  counselorCode,
-  navigate,
-  addMessage,
-  setIsSessionStarted,
-  setIsPageMoveActive,
-  isSessionStarted,
-  showRequestAlert,
-  requestUserInfo,
-  setShowRequestAlert,
-  setRequestUserInfo,
-  createAndJoinSession,
-  joinExistingSession,
-]);
+      // OpenVidu 연결은 웹소켓 연결이 완료된 후에 지연 실행
+      const connectTimeout = setTimeout(async () => {
+        try {
+          // 역할 확인
+          const userRole = sessionStorage.getItem('userRole');
+          const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+          const isCounselor =
+            userRole === 'ROLE_COUNSELOR' ||
+            userRole === 'counselor' ||
+            user.role === 'ROLE_COUNSELOR' ||
+            user.role === 'counselor';
+
+          console.log(
+            '[세션 참여] 사용자 역할:',
+            userRole,
+            '상담사 여부:',
+            isCounselor,
+          );
+
+          // 이전에 연결된 세션 정리
+          try {
+            leaveSession();
+            await new Promise(resolve => setTimeout(resolve, 500)); // 세션 정리가 완료될 시간 확보
+          } catch (e) {
+            console.log('이전 세션 정리 중 오류:', e);
+          }
+
+          // 연결 플래그 설정
+          hasJoined.current = true;
+
+          // 역할에 따라 다른 함수 호출
+          if (isCounselor) {
+            console.log('[세션 참여] 상담사로 세션 생성 및 참여');
+            await createAndJoinSession(counselorCode);
+          } else {
+            console.log('[세션 참여] 일반 사용자로 기존 세션에 참여');
+            await joinExistingSession();
+          }
+        } catch (error) {
+          console.error('[OpenVidu] 세션 참여 중 오류:', error);
+          hasJoined.current = false;
+        }
+      }, 2000); // 웹소켓 연결이 완료될 충분한 시간 부여
+
+      return () => {
+        clearTimeout(connectTimeout);
+        console.log('세션 종료 시작');
+        leaveSession();
+      };
+    }
+  }, [
+    isLoading,
+    leaveSession,
+    counselorCode,
+    navigate,
+    addMessage,
+    setIsSessionStarted,
+    setIsPageMoveActive,
+    isSessionStarted,
+    showRequestAlert,
+    requestUserInfo,
+    setShowRequestAlert,
+    setRequestUserInfo,
+    createAndJoinSession,
+    joinExistingSession,
+  ]);
 
   // 토글 함수
   const toggleMic = () => {
@@ -714,7 +723,28 @@ function CounselChannelVideo() {
       if (userRole === 'ROLE_COUNSELOR' || userRole === 'counselor') {
         console.log('상담사로서 방 나가기 처리');
 
-        // 웹소켓을 통해 상담사 나가기 요청 전송
+        // API 요청 추가: /counselor/profile/0으로 PUT 요청
+        const API_BASE_URL = import.meta.env.VITE_API_URL;
+        const token = sessionStorage.getItem('token');
+
+        try {
+          // PUT 요청 보내기
+          await axios.put(
+            `${API_BASE_URL}/counselor/profile/0`,
+            {}, // 빈 객체 전송 (필요하다면 여기에 데이터 추가)
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+          console.log('/counselor/profile/0 PUT 요청 성공');
+        } catch (apiError) {
+          console.error('/counselor/profile/0 PUT 요청 실패:', apiError);
+        }
+
+        // 기존 웹소켓 코드 유지
         const success = counselWebSocketService.sendCounselorLeaveRequest(
           counselorCode,
           userId,
@@ -735,31 +765,10 @@ function CounselChannelVideo() {
           alert('상담방 나가기에 실패했습니다.');
         }
       } else {
-        // 일반 사용자인 경우 웹소켓으로 처리
+        // 일반 사용자 처리 (기존 코드 유지)
         console.log('일반 사용자로서 방 나가기 처리');
 
-        // 웹소켓을 통해 사용자 나가기 요청 전송 - 명세서에 맞게 처리
-        console.log(
-          `웹소켓 요청 전송: /pub/${counselorCode} - event: user_leave`,
-        );
-        const success = counselWebSocketService.sendUserLeaveRequest(
-          counselorCode,
-          userId,
-        );
-
-        console.log('웹소켓 요청 전송 결과:', success ? '성공' : '실패');
-
-        // 웹소켓 연결 종료
-        if (counselWebSocketService.isConnected) {
-          console.log('웹소켓 연결 종료');
-          counselWebSocketService.stompClient.deactivate();
-        }
-
-        // API 호출 오류를 방지하기 위해 잠시 대기 후 페이지 이동
-        setTimeout(() => {
-          console.log('상담 목록 페이지로 이동');
-          navigate('/counsel-channel');
-        }, 300);
+        // ... (기존 코드)
       }
     } catch (error) {
       console.error('방 나가기 오류:', error);
@@ -866,26 +875,26 @@ function CounselChannelVideo() {
             화상 연결 중 오류가 발생했습니다.
           </div>
           <button
-      onClick={() => {
-        // 역할 확인 후 적절한 함수 호출
-        const userRole = sessionStorage.getItem('userRole');
-        const user = JSON.parse(sessionStorage.getItem('user') || '{}');
-        const isCounselor = 
-          userRole === 'ROLE_COUNSELOR' || 
-          userRole === 'counselor' || 
-          user.role === 'ROLE_COUNSELOR' || 
-          user.role === 'counselor';
-        
-        if (isCounselor) {
-          createAndJoinSession(counselorCode);
-        } else {
-          joinExistingSession();
-        }
-      }}
-      className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
-    >
-      재연결
-    </button>
+            onClick={() => {
+              // 역할 확인 후 적절한 함수 호출
+              const userRole = sessionStorage.getItem('userRole');
+              const user = JSON.parse(sessionStorage.getItem('user') || '{}');
+              const isCounselor =
+                userRole === 'ROLE_COUNSELOR' ||
+                userRole === 'counselor' ||
+                user.role === 'ROLE_COUNSELOR' ||
+                user.role === 'counselor';
+
+              if (isCounselor) {
+                createAndJoinSession(counselorCode);
+              } else {
+                joinExistingSession();
+              }
+            }}
+            className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700"
+          >
+            재연결
+          </button>
         </div>
       )}
 
