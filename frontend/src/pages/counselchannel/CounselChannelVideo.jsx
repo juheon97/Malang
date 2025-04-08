@@ -9,6 +9,7 @@ import useChat from '../../hooks/useChat';
 import axios from 'axios';
 import counselorChannel from '../../api/counselorChannel';
 import counselWebSocketService from '../../services/counselwebsocketService';
+import SessionStartModal from '../../components/modal/SessionStartModal';
 
 function CounselChannelVideo() {
   // URL에서 파라미터 가져오기 (counselor_code)
@@ -23,6 +24,8 @@ function CounselChannelVideo() {
   const [isSignLanguageOn, setIsSignLanguageOn] = useState(false);
   const [isSessionStarted, setIsSessionStarted] = useState(false); // 상담 세션 시작 여부
   const [isChatEnabled, setIsChatEnabled] = useState(false); // 채팅 활성화 상태
+  const [showStartModal, setShowStartModal] = useState(false);
+  const [showEndModal, setShowEndModal] = useState(false);
   const [roomInfo, setRoomInfo] = useState({
     name: '상담방',
     maxParticipants: 4,
@@ -421,6 +424,7 @@ function CounselChannelVideo() {
           counselWebSocketService.setChatEnabled(true);
           console.log('[웹소켓] 채팅 활성화 상태 설정:', true);
 
+          setShowStartModal(true);
           return;
         }
 
@@ -430,6 +434,7 @@ function CounselChannelVideo() {
           setIsSessionStarted(false);
           setIsChatEnabled(false);
           counselWebSocketService.setChatEnabled(false);
+          setShowEndModal(true);
           console.log('[웹소켓] 채팅 비활성화 상태:', false);
 
           return;
@@ -656,7 +661,6 @@ function CounselChannelVideo() {
       setIsChatEnabled(true);
       counselWebSocketService.setChatEnabled(true);
       console.log('채팅 활성화 상태:', true);
-      alert('상담이 시작되었습니다.');
     } else {
       console.error('상담 세션 시작 요청 실패');
       alert('상담 세션을 시작하는데 실패했습니다.');
@@ -692,9 +696,6 @@ function CounselChannelVideo() {
         channelInfo.status = 'INACTIVE';
         channelInfo.isActive = false;
         sessionStorage.setItem('currentChannel', JSON.stringify(channelInfo));
-
-        // 알림 표시
-        alert('상담이 종료되었습니다.');
       } else {
         console.error('상담 종료 요청 전송 실패');
         alert('상담 세션을 종료하는데 실패했습니다.');
@@ -813,7 +814,7 @@ function CounselChannelVideo() {
         </div>
       </div>
 
-      {/* 상담 코드 표시 (개발용, 실제 배포시 제거) */}
+      {/* 상담 코드 표시 */}
       <div className="mx-4 mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between text-sm">
         <div className="flex items-center text-yellow-600">
           <svg
@@ -876,7 +877,6 @@ function CounselChannelVideo() {
           </div>
           <button
             onClick={() => {
-              // 역할 확인 후 적절한 함수 호출
               const userRole = sessionStorage.getItem('userRole');
               const user = JSON.parse(sessionStorage.getItem('user') || '{}');
               const isCounselor =
@@ -884,7 +884,6 @@ function CounselChannelVideo() {
                 userRole === 'counselor' ||
                 user.role === 'ROLE_COUNSELOR' ||
                 user.role === 'counselor';
-
               if (isCounselor) {
                 createAndJoinSession(counselorCode);
               } else {
@@ -908,22 +907,17 @@ function CounselChannelVideo() {
 
       {/* 메인 컨텐츠 - 영상과 채팅 */}
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
-        {/* 영상 영역 */}
         <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
           <VideoLayout
             participants={participants}
             renderParticipantInfo={participant => (
-              <>
-                <div className="absolute bottom-2 left-2 bg-black bg-opacity-30 text-white px-2 py-1 rounded text-xs">
-                  {participant.name}
-                  {participant.isSelf && ' (나)'}
-                </div>
-              </>
+              <div className="absolute bottom-2 left-2 bg-black bg-opacity-30 text-white px-2 py-1 rounded text-xs">
+                {participant.name}
+                {participant.isSelf && ' (나)'}
+              </div>
             )}
           />
         </div>
-
-        {/* ChatBox 컴포넌트 사용 */}
         <ChatBox
           messages={messages}
           newMessage={newMessage}
@@ -936,7 +930,7 @@ function CounselChannelVideo() {
         />
       </div>
 
-      {/* VideoControls 컴포넌트 사용 */}
+      {/* 하단 컨트롤러 */}
       <VideoControls
         isMicOn={isMicOn}
         isCameraOn={isCameraOn}
@@ -953,6 +947,22 @@ function CounselChannelVideo() {
         isSessionStarted={isSessionStarted}
         isPageMoveActive={isPageMoveActive}
       />
+
+      {/* ✅ 상담 시작 모달 */}
+      {showStartModal && (
+        <SessionStartModal
+          isOpen={showStartModal}
+          onConfirm={() => setShowStartModal(false)}
+          title="상담이 시작되었습니다."
+        />
+      )}
+      {showEndModal && (
+        <SessionStartModal
+          isOpen={showEndModal}
+          onConfirm={() => setShowEndModal(false)}
+          title="상담이 종료되었습니다."
+        />
+      )}
 
       {/* 상담 요청 알림 모달 */}
       {showRequestAlert && requestUserInfo && (
@@ -976,7 +986,7 @@ function CounselChannelVideo() {
                 </svg>
                 <div>
                   <p className="text-sm text-blue-800 font-medium">
-                    <span className="font-bold">{requestUserInfo.name}</span>
+                    <span className="font-bold">{requestUserInfo.name}</span>{' '}
                     님이 상담을 요청했습니다.
                   </p>
                   <p className="text-xs text-blue-600 mt-1">
