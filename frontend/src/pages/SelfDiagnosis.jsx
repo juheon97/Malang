@@ -7,6 +7,7 @@ import NormalResult from '../components/selfdiagnosis/NormalResult';
 import AbnormalResult from '../components/selfdiagnosis/AbnormalResult'; // 경로는 실제 파일 위치에 맞게 조정
 
 const SelfDiagnosis = () => {
+  const speechSynthesisRef = useRef(null);
   const [transcribedText, setTranscribedText] = useState('여기에 자가 진단 결과가 표시됩니다.');
   const [isRecording, setIsRecording] = useState(false);
   const [isAccessibleMode, setIsAccessibleMode] = useState(false);
@@ -365,22 +366,39 @@ const stopRecording = () => {
     };
   }, [isRecording]);
   
-  // 예시 오디오 재생 종료 감지
-  useEffect(() => {
-    const audioElement = exampleAudioRef.current;
+  // 1. 예시 음성 재생 종료 감지 함수 수정
+// 2. 예시 음성 재생 종료 감지 함수를 다음과 같이 수정
+useEffect(() => {
+  const audioElement = exampleAudioRef.current;
+  
+  if (audioElement) {
+    const handleEnded = () => {
+      setIsPlaying(false);
+    };
     
-    if (audioElement) {
-      const handleEnded = () => {
+    audioElement.addEventListener('ended', handleEnded);
+    
+    return () => {
+      audioElement.removeEventListener('ended', handleEnded);
+    };
+  }
+  
+  // speechSynthesis 이벤트 처리를 위한 간접 확인 메커니즘 추가
+  if (isPlaying && !speechSynthesisRef.current) {
+    // 음성 합성 진행 상태를 주기적으로 확인
+    const checkSpeechStatus = setInterval(() => {
+      // 음성 합성이 더 이상 말하고 있지 않으면 isPlaying 상태 업데이트
+      if (!window.speechSynthesis.speaking) {
         setIsPlaying(false);
-      };
-      
-      audioElement.addEventListener('ended', handleEnded);
-      
-      return () => {
-        audioElement.removeEventListener('ended', handleEnded);
-      };
-    }
-  }, []);
+        clearInterval(checkSpeechStatus);
+      }
+    }, 100); // 100ms마다 확인
+    
+    return () => {
+      clearInterval(checkSpeechStatus);
+    };
+  }
+}, [isPlaying]);
   
   // 결과 데이터가 변경될 때마다 로컬 스토리지에 저장
   useEffect(() => {
@@ -463,34 +481,68 @@ const stopRecording = () => {
     });
   };
   
-  // 예시 문장 음성 재생
-  const playExampleAudio = () => {
+  // 3. playExampleAudio 함수 - 웹 음성 API 재생 종료 이벤트 핸들러 추가
+// 3. playExampleAudio 함수 수정
+const playExampleAudio = () => {
+  // 이미 재생 중인 경우 중지
+  if (isPlaying) {
+    // 오디오 요소가 있는 경우
     if (exampleAudioRef.current) {
-      if (isPlaying) {
-        exampleAudioRef.current.pause();
-        exampleAudioRef.current.currentTime = 0;
-        setIsPlaying(false);
-      } else {
-        exampleAudioRef.current.play()
-          .then(() => {
-            setIsPlaying(true);
-          })
-          .catch(error => {
-            console.error('예시 음성 재생 오류:', error);
-          });
-      }
-    } else {
-      // TTS로 예시 문장 읽기
-      const utterance = new SpeechSynthesisUtterance(sampleSentence);
-      utterance.lang = 'ko-KR';
-      utterance.rate = 0.8; // 약간 느리게 읽기
-      
-      utterance.onstart = () => setIsPlaying(true);
-      utterance.onend = () => setIsPlaying(false);
-      
-      window.speechSynthesis.speak(utterance);
+      exampleAudioRef.current.pause();
+      exampleAudioRef.current.currentTime = 0;
     }
-  };
+    
+    // 웹 음성 API를 사용 중인 경우
+    window.speechSynthesis.cancel();
+    
+    // 상태 업데이트
+    setIsPlaying(false);
+    
+    // ref 초기화
+    speechSynthesisRef.current = null;
+    
+    return;
+  }
+  
+  // 재생 시작
+  if (exampleAudioRef.current) {
+    exampleAudioRef.current.play()
+      .then(() => {
+        setIsPlaying(true);
+      })
+      .catch(error => {
+        console.error('예시 음성 재생 오류:', error);
+      });
+  } else {
+    // 기존 음성 합성 중단
+    window.speechSynthesis.cancel();
+    
+    // 새 음성 합성 생성
+    const utterance = new SpeechSynthesisUtterance(sampleSentence);
+    utterance.lang = 'ko-KR';
+    utterance.rate = 0.8; // 약간 느리게 읽기
+    
+    // 이벤트 핸들러 등록
+    utterance.onstart = () => {
+      setIsPlaying(true);
+      speechSynthesisRef.current = utterance; // ref에 현재 음성 객체 저장
+    };
+    
+    utterance.onend = () => {
+      setIsPlaying(false);
+      speechSynthesisRef.current = null; // ref 초기화
+    };
+    
+    utterance.onerror = () => {
+      setIsPlaying(false);
+      speechSynthesisRef.current = null; // ref 초기화
+    };
+    
+    // 음성 합성 시작
+    window.speechSynthesis.speak(utterance);
+  }
+};
+
   
   const startRecording = async () => {
     if (!serviceStatus.isAvailable) {
@@ -647,35 +699,47 @@ const stopRecording = () => {
    }
  };
  
- // 다시 시도하기 버튼
- const resetAndTryAgain = () => {
-   setShowExamplePanel(true);
-   setResultData(null);
-   
-   // 로컬 스토리지에서 결과 데이터 삭제
-   localStorage.removeItem(RESULT_DATA_KEY);
-   localStorage.removeItem(AUDIO_URL_KEY);
-   localStorage.setItem(SHOW_EXAMPLE_KEY, 'true');
-   localStorage.removeItem(TRANSCRIBED_TEXT_KEY);
-   
-   // 오디오 URL 해제
-   if (audioUrl) {
-     URL.revokeObjectURL(audioUrl);
-     setAudioUrl(null);
-   }
- };
+ // 2. resetAndTryAgain 함수 수정 - 예시 음성 재생 상태 초기화 추가
+const resetAndTryAgain = () => {
+  setShowExamplePanel(true);
+  setResultData(null);
+  
+  // 예시 음성 재생 상태 초기화 추가
+  setIsPlaying(false);
+  if (exampleAudioRef.current) {
+    exampleAudioRef.current.pause();
+    exampleAudioRef.current.currentTime = 0;
+  }
+  
+  // 로컬 스토리지에서 결과 데이터 삭제
+  localStorage.removeItem(RESULT_DATA_KEY);
+  localStorage.removeItem(AUDIO_URL_KEY);
+  localStorage.setItem(SHOW_EXAMPLE_KEY, 'true');
+  localStorage.removeItem(TRANSCRIBED_TEXT_KEY);
+  
+  // 오디오 URL 해제
+  if (audioUrl) {
+    URL.revokeObjectURL(audioUrl);
+    setAudioUrl(null);
+  }
+};
 
- // 컴포넌트 언마운트 시 리소스 정리
- useEffect(() => {
-   return () => {
-     if (audioUrl) {
-       URL.revokeObjectURL(audioUrl);
-     }
-     if (improvedAudioUrl) {
-       URL.revokeObjectURL(improvedAudioUrl);
-     }
-   };
- }, [audioUrl, improvedAudioUrl]);
+
+// 4. 컴포넌트 언마운트 시 정리 함수 수정
+useEffect(() => {
+  return () => {
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+    if (improvedAudioUrl) {
+      URL.revokeObjectURL(improvedAudioUrl);
+    }
+    // 음성 합성 중단 추가
+    window.speechSynthesis.cancel();
+    speechSynthesisRef.current = null;
+    setIsPlaying(false);
+  };
+}, [audioUrl, improvedAudioUrl]);
 
  // 예시 문장 패널 렌더링
  const renderExamplePanel = () => {
