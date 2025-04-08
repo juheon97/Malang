@@ -54,9 +54,5 @@ public class RedisConfig {
         template.afterPropertiesSet();
         return template;
     }
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
 
 }
