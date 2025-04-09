@@ -13,20 +13,6 @@ services:
     networks:
       - app-network
 
-  nginx:
-    image: nginx:latest
-    container_name: nginx-proxy-container
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - ./nginx/html:/usr/share/nginx/html:ro
-    restart: always
-    networks:
-      - app-network
-
 volumes:
   redis_data:
 
