@@ -4,7 +4,8 @@ import '../styles/fonts.css';
 import toWav from 'audiobuffer-to-wav';
 
 const VoiceChange = () => {
-  const [transcribedText, setTranscribedText] = useState('안녕하세요, 만나서 반갑습니다.');
+  const [transcribedText, setTranscribedText] =
+    useState('안녕하세요, 만나서 반갑습니다.');
   const [isRecording, setIsRecording] = useState(false);
   const [isAccessibleMode, setIsAccessibleMode] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
@@ -12,107 +13,118 @@ const VoiceChange = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serviceStatus, setServiceStatus] = useState({
     isAvailable: false,
-    message: "서비스 상태 확인 중...",
-    checking: true
+    message: '서비스 상태 확인 중...',
+    checking: true,
   });
-  
+
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  
+
   // 컴포넌트 마운트 시 서비스 상태 확인
   useEffect(() => {
     const checkServiceHealth = async () => {
       try {
         const healthData = await voiceChangeApi.checkServiceHealth();
         setServiceStatus({
-          isAvailable: healthData.status === "ok",
-          message: healthData.status === "ok" 
-            ? "AI 음성 인식 서비스 이용 가능" 
-            : healthData.message || "AI 음성 인식 서비스 이용 불가",
-          checking: false
+          isAvailable: healthData.status === 'ok',
+          message:
+            healthData.status === 'ok'
+              ? 'AI 음성 인식 서비스 이용 가능'
+              : healthData.message || 'AI 음성 인식 서비스 이용 불가',
+          checking: false,
         });
       } catch (error) {
         setServiceStatus({
           isAvailable: false,
-          checking: false
+          checking: false,
         });
       }
     };
 
     checkServiceHealth();
-    
+
     // 30초마다 서비스 상태 확인
     const intervalId = setInterval(checkServiceHealth, 30000);
-    
+
     return () => clearInterval(intervalId);
   }, []);
-  
+
   const startRecording = async () => {
     // 서비스가 이용 불가능한 경우 녹음 시작 불가
     if (!serviceStatus.isAvailable) {
-      alert("현재 AI 음성 인식 서비스를 이용할 수 없습니다. 잠시 후 다시 시도해주세요.");
+      alert(
+        '현재 AI 음성 인식 서비스를 이용할 수 없습니다. 잠시 후 다시 시도해주세요.',
+      );
       return;
     }
-    
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 16000, // 16kHz 샘플링 레이트 (STT에 적합)
-          channelCount: 1,   // 모노 채널
+          channelCount: 1, // 모노 채널
           echoCancellation: true,
           noiseSuppression: true,
-        } 
+        },
       });
-      
+
       // WAV 형식으로 녹음 (대부분의 브라우저에서 지원)
       mediaRecorderRef.current = new MediaRecorder(stream, {
         mimeType: 'audio/webm', // 대부분의 브라우저에서 지원하는 형식
       });
-      
+
       audioChunksRef.current = [];
-      
-      mediaRecorderRef.current.addEventListener('dataavailable', (event) => {
+
+      mediaRecorderRef.current.addEventListener('dataavailable', event => {
         audioChunksRef.current.push(event.data);
       });
-      
+
       mediaRecorderRef.current.addEventListener('stop', async () => {
         // webm 형식으로 녹음된 오디오
-        const webmBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-      
+        const webmBlob = new Blob(audioChunksRef.current, {
+          type: 'audio/webm',
+        });
+
         try {
           // Blob 객체를 URL로 변환하여 재생 가능하도록 설정
           const url = URL.createObjectURL(webmBlob);
           setAudioUrl(url);
-      
-          console.log('녹음된 파일 타입:', webmBlob.type); // 'audio/webm' 출력
-      
+
+          console.log('녹음된 파일 타입:', webmBlob.type);
+
           setIsLoading(true);
-      
+
           try {
-            // API를 통해 webm 파일을 텍스트로 변환
+            // Whisper API를 통해 webm 파일을 텍스트로 변환
             const result = await voiceChangeApi.convertSpeechToText(webmBlob);
-      
-            console.log('STT 응답:', result);
-      
-            if (result && Object.keys(result).length > 0) {
-              setTranscribedText(result);
+
+            console.log('Whisper API 응답:', result);
+
+            if (result && result.text) {
+              setTranscribedText(result.text);
             } else {
-              console.warn('STT 응답이 비어있습니다:', result);
-              setTranscribedText('음성을 인식하지 못했습니다. 다시 시도해주세요.');
+              console.warn('Whisper API 응답이 비어있습니다:', result);
+              setTranscribedText(
+                '음성을 인식하지 못했습니다. 다시 시도해주세요.',
+              );
             }
           } catch (error) {
-            console.error('음성 변환 처리 오류:', error);
-            setTranscribedText('음성 변환 중 오류가 발생했습니다. 다시 시도해주세요.');
+            console.error('Whisper API 오류:', error);
+            setTranscribedText(
+              '음성 변환 중 오류가 발생했습니다. 다시 시도해주세요.',
+            );
           } finally {
             setIsLoading(false);
           }
         } catch (error) {
           console.error('webm 처리 오류:', error);
           setIsLoading(false);
-          setTranscribedText('오디오 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+          setTranscribedText(
+            '오디오 처리 중 오류가 발생했습니다. 다시 시도해주세요.',
+          );
         }
       });
-      
+
       mediaRecorderRef.current.start();
       setIsRecording(true);
     } catch (error) {
@@ -121,12 +133,17 @@ const VoiceChange = () => {
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== 'inactive'
+    ) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
+
       // 스트림 트랙 중지
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      mediaRecorderRef.current.stream
+        .getTracks()
+        .forEach(track => track.stop());
     }
   };
 
@@ -175,37 +192,50 @@ const VoiceChange = () => {
         <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center">
             <div className="w-1 h-8 bg-gradient-to-b from-green-400 to-green-600 mr-3 rounded-full"></div>
-            <h1 className="text-2xl font-bold text-green-600" style={{ fontFamily: "'HancomMalangMalang-Regular', sans-serif" }}>
+            <h1
+              className="text-2xl font-bold text-green-600"
+              style={{ fontFamily: "'HancomMalangMalang-Regular', sans-serif" }}
+            >
               음성 정확도 높이기
             </h1>
           </div>
-          
+
           {/* 서비스 상태 표시 */}
           <div className="flex items-center malang-font'">
-            <div className={`w-3 h-3 rounded-full mr-2 ${
-              serviceStatus.checking 
-                ? 'bg-yellow-400' 
-                : (serviceStatus.isAvailable ? 'bg-green-500' : 'bg-red-500')
-            }`}></div>
-            <span className="text-sm text-gray-600">{serviceStatus.checking 
-              ? '상태 확인 중...' 
-              : (serviceStatus.isAvailable ? '서비스 이용 가능' : '서비스 이용 불가')
-            }</span>
+            <div
+              className={`w-3 h-3 rounded-full mr-2 ${
+                serviceStatus.checking
+                  ? 'bg-yellow-400'
+                  : serviceStatus.isAvailable
+                    ? 'bg-green-500'
+                    : 'bg-red-500'
+              }`}
+            ></div>
+            <span className="text-sm text-gray-600">
+              {serviceStatus.checking
+                ? '상태 확인 중...'
+                : serviceStatus.isAvailable
+                  ? '서비스 이용 가능'
+                  : '서비스 이용 불가'}
+            </span>
           </div>
         </div>
       </header>
-  
+
       {/* 메인 콘텐츠 */}
       <main className="max-w-6xl mx-auto p-4 mt-6 malang-font">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* 왼쪽 사이드바 - 녹음 기능 */}
           <div className="md:col-span-1">
             <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">음성 녹음</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                음성 녹음
+              </h2>
               <div className="flex flex-col items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="24" height="24"
+                  width="24"
+                  height="24"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -225,7 +255,10 @@ const VoiceChange = () => {
                 </p>
                 {!serviceStatus.isAvailable && !serviceStatus.checking && (
                   <div className="text-red-500 text-center mb-4 p-2 bg-red-50 rounded-lg w-full">
-                    <p>현재 AI 음성 인식 서비스를 <br />이용할 수 없습니다.</p>
+                    <p>
+                      현재 AI 음성 인식 서비스를 <br />
+                      이용할 수 없습니다.
+                    </p>
                     <p className="text-sm mt-1">{serviceStatus.message}</p>
                   </div>
                 )}
@@ -233,25 +266,31 @@ const VoiceChange = () => {
                   className={`w-full py-3 rounded-lg transition duration-300 ${
                     isRecording
                       ? 'bg-red-600 text-white'
-                      : serviceStatus.isAvailable 
+                      : serviceStatus.isAvailable
                         ? 'bg-[#55BCA4] text-white hover:bg-[#55BCA6]'
                         : 'bg-gray-400 text-white cursor-not-allowed'
                   }`}
                   onClick={isRecording ? stopRecording : startRecording}
-                  disabled={isLoading || !serviceStatus.isAvailable || serviceStatus.checking}
+                  disabled={
+                    isLoading ||
+                    !serviceStatus.isAvailable ||
+                    serviceStatus.checking
+                  }
                 >
                   {isRecording ? '녹음 중지' : '녹음 시작'}
                 </button>
               </div>
             </div>
           </div>
-  
+
           {/* 오른쪽 메인 콘텐츠 - 변환된 텍스트 및 재생 */}
           <div className="md:col-span-2">
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="border-b border-gray-200">
                 <div className="px-6 py-4">
-                  <h2 className="text-xl font-semibold text-gray-800">변환된 텍스트</h2>
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    변환된 텍스트
+                  </h2>
                 </div>
               </div>
               <div className="p-6">
@@ -264,8 +303,8 @@ const VoiceChange = () => {
                     <p className="text-gray-700">{transcribedText}</p>
                   )}
                 </div>
-                
-              {/*}
+
+                {/*}
                 <div className="mt-6 flex items-center justify-between">
                   <div className="flex items-center">
                     <button
@@ -306,14 +345,19 @@ const VoiceChange = () => {
                 */}
               </div>
             </div>
-            
+
             {/* 추가 정보 섹션 */}
             <div className="mt-6 bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">음성 인식 도움말</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                음성 인식 도움말
+              </h2>
               <ul className="list-disc pl-5 text-gray-700 space-y-2">
-                <li>조용한 환경에서 녹음하면 더 정확한 결과를 얻을 수 있습니다.</li>
+                <li>
+                  조용한 환경에서 녹음하면 더 정확한 결과를 얻을 수 있습니다.
+                </li>
                 <li>마이크와 적당한 거리를 유지하고 명확하게 발음해 주세요.</li>
                 <li>녹음 후 텍스트 변환에는 몇 초가 소요될 수 있습니다.</li>
+                <li>한번 녹음시 최대 30초까지 가능합니다.</li>
               </ul>
             </div>
           </div>
@@ -321,6 +365,6 @@ const VoiceChange = () => {
       </main>
     </div>
   );
-}  
+};
 
 export default VoiceChange;

@@ -173,16 +173,16 @@ const Navbar = () => {
               /* 상담사가 아닌 경우에만 음성변환, 음성채널, 커뮤니티 메뉴 표시 */
               <>
                 <Link
-                  to="/sign-language"
-                  className="text-gray-800 hover:text-[#00a173]"
-                >
-                  수어 인식
-                </Link>
-                <Link
                   to="/self-diagnosis"
                   className="text-gray-800 hover:text-[#00a173]"
                 >
                   자가진단
+                </Link>
+                <Link
+                  to="/sign-language"
+                  className="text-gray-800 hover:text-[#00a173]"
+                >
+                  수어 인식
                 </Link>
                 <Link
                   to="/voice-change"
