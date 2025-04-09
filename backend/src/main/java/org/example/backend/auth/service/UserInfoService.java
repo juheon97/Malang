@@ -32,9 +32,9 @@ public class UserInfoService {
     }
 
     public String getUserProfileKey(Long userId) {
-        return userRepository.findById(userId)
-                .map(User::getProfileUrl) // ← 여기서 profile_url 컬럼 (S3 Key)을 가져옴
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        return user.getProfileUrl(); // ← 이건 null일 수도 있음 (정상)
     }
 
 
