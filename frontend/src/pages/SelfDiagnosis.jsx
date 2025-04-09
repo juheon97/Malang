@@ -227,11 +227,11 @@ const SelfDiagnosis = () => {
         const abnormalProbability = data['뇌 질환'];
         const normalProbability = data['정상'];
         
-        console.log("뇌 질환 확률:", abnormalProbability); // 새로운 데이터일 때만 로깅
-        console.log("정상 확률:", normalProbability); // 새로운 데이터일 때만 로깅
+        console.log("뇌 질환 확률1:", abnormalProbability); // 새로운 데이터일 때만 로깅
+        console.log("정상 확률1:", normalProbability); // 새로운 데이터일 때만 로깅
         
         // 뇌 질환 97% 이상 '그리고' 정상 1.5% 이하일 때 비정상으로 판단
-        return abnormalProbability >= 97 && normalProbability <= 1.5;
+        return abnormalProbability >= 99.97 && normalProbability <= 1.5;
       }
       
       // 문자열 형식으로 들어오는 경우 (이전 형식 지원)
@@ -246,11 +246,12 @@ const SelfDiagnosis = () => {
         const abnormalProbability = parseFloat(abnormalMatch[1]);
         const normalProbability = parseFloat(normalMatch[1]);
         
-        console.log("뇌 질환 확률(문자열):", abnormalProbability); // 새로운 데이터일 때만 로깅
-        console.log("정상 확률(문자열):", normalProbability); // 새로운 데이터일 때만 로깅
+        console.log("뇌 질환 확률(문자열1):", abnormalProbability); // 새로운 데이터일 때만 로깅
+        console.log("정상 확률(문자열1):", normalProbability); // 새로운 데이터일 때만 로깅
         
         // 뇌 질환 97% 이상 '그리고' 정상 1.5% 이하일 때 비정상으로 판단
-        return abnormalProbability >= 100 && normalProbability <= 1.5;
+        // 99.97 질환 이상이고 그리고 정상 범위가 1% 이하일 때 비정상상
+        return abnormalProbability >= 99.97 && normalProbability <= 1.5;
       }
       
       return false; // 처리할 수 없는 형식
@@ -269,7 +270,7 @@ const SelfDiagnosis = () => {
         const abnormalProbability = parseFloat(abnormalMatch[1]);
         const normalProbability = parseFloat(normalMatch[1]);
         
-        return abnormalProbability >= 97 && normalProbability <= 1.5;
+        return abnormalProbability >= 99.97 && normalProbability <= 1.5;
       }
       
       return false;
