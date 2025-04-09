@@ -9,6 +9,7 @@ import org.example.backend.auth.controller.CounselorProfileController;
 import org.example.backend.localllm.dto.request.SummaryRequest;
 import org.example.backend.localllm.dto.response.SummaryResponse;
 import org.example.backend.localllm.service.SummaryService;
+import org.example.backend.s3.S3Uploader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,10 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
 
@@ -40,6 +45,8 @@ public class ChannelWsService {
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final SummaryService summaryService;
+
+    private final S3Uploader s3Uploader;
 
 
     private static final Logger logger = LoggerFactory.getLogger(ChannelWsService.class);
@@ -186,6 +193,21 @@ public class ChannelWsService {
             summaryRequest.setChannelId(channelId);
             summaryRequest.setMessages((java.util.List<Map<String, String>>) summaryData.get("messages"));
 
+            // ========== S3에 JSON 원본 업로드 ==========
+            String timestamp = LocalDateTime.now().toString().replace(":", "-");
+            String jsonKey = "summarylogs/json/channel_" + channelId + "_" + timestamp + ".json.txt";
+            File jsonFile = File.createTempFile("summary_json_", ".txt");
+            Files.writeString(jsonFile.toPath(), summaryJson, StandardCharsets.UTF_8);
+            String jsonS3Url = s3Uploader.uploadFile(jsonFile, jsonKey);
+            logger.info("JSON 요약 데이터 S3 업로드 완료: {}", jsonS3Url);
+
+            // ========== 사람이 읽기 쉬운 텍스트로 포맷 후 업로드 ==========
+            String textKey = "summarylogs/text/channel_" + channelId + "_" + timestamp + ".txt";
+            File textFile = File.createTempFile("summary_human_", ".txt");
+            Files.writeString(textFile.toPath(), formatSummaryForText(summaryRequest), StandardCharsets.UTF_8);
+            String textS3Url = s3Uploader.uploadFile(textFile, textKey);
+            logger.info("포맷된 텍스트 요약 S3 업로드 완료: {}", textS3Url);
+
             // HTTP 요청 헤더 설정
 //      HttpHeaders headers = new HttpHeaders();
 //      headers.setContentType(MediaType.APPLICATION_JSON);
@@ -213,6 +235,26 @@ public class ChannelWsService {
             logger.error("요약 요청 처리 중 오류 발생: {}", e.getMessage());
         }
     }
+
+    /**
+     * Redis 파일 파싱해서 S3 에 TXT 파일 업로드(관리자 및 상담사용 다운용 파일)
+     */
+    private String formatSummaryForText(SummaryRequest request) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("사용자 ID: ").append(request.getUserId()).append("\n");
+        sb.append("상담사 ID: ").append(request.getCounselorId()).append("\n");
+        sb.append("채널 ID: ").append(request.getChannelId()).append("\n\n");
+        sb.append("채팅 내역:\n");
+
+        int index = 1;
+        for (Map<String, String> msg : request.getMessages()) {
+            String role = msg.get("role").equals("ROLE_USER") ? "사용자" : "상담사";
+            sb.append(String.format("%d. [%s] %s\n", index++, role, msg.get("content")));
+        }
+
+        return sb.toString();
+    }
+
 
 
     /**

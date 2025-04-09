@@ -73,6 +73,10 @@ dependencies {
 
     // openVidu
     implementation 'io.openvidu:openvidu-java-client:2.31.0'
+
+    // AWS S3
+    implementation platform("software.amazon.awssdk:bom:2.20.121")
+    implementation 'software.amazon.awssdk:s3'
 }
 
 tasks.named('test') {
