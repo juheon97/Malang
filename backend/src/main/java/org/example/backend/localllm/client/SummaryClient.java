@@ -74,8 +74,9 @@ public class SummaryClient {
         allMessages.add(systemMessage);
         allMessages.addAll(convertedMessages);
 
+        // kanana-nano-2.1b-instruct-abliterated-i1
         Map<String, Object> requestBody = Map.of(
-                "model", "kanana-nano-2.1b-instruct-abliterated-i1",
+                "model", "exaone-deep-7.8b",
                 "temperature", 0.3,
                 "max_tokens", 2000,
                 "messages", allMessages
