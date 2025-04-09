@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SignupNormal from '../../components/signup/SignupNormal';
 import SignupCounselor from '../../components/signup/SignupCounselor';
+import myProfile from '../../assets/image/mypage/Mypage_profile.svg';
 import authApi from '../../api/authApi';
 import {
   validatePassword,
@@ -14,6 +15,7 @@ import greenCircle from '../../assets/image/signup/signup_green_circle.svg';
 import redCircle from '../../assets/image/signup/signup_red_circle.svg';
 import yellowCircle from '../../assets/image/signup/signup_yellow_circle.svg';
 
+const profile_url = myProfile;
 const Signup = () => {
   const navigate = useNavigate();
   const [userType, setUserType] = useState('normal'); // 'normal' 또는 'counselor'
@@ -170,7 +172,7 @@ const Signup = () => {
               specialty: '', // API는 specialty를 사용하지만 UI는 speciality를 사용
               years: '0',
               bio: '',
-              profileUrl: 'src/assets/image/mypage/Mypage_profile.svg',
+              profileUrl: profile_url,
               hasCertification: hasCertification,
             };
 
@@ -196,7 +198,7 @@ const Signup = () => {
               rating_avg: 0,
               review_count: 0,
               status: 'available',
-              profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
+              profile_url: profile_url,
               satisfaction: '0%',
               gender: gender === '남' ? 'M' : 'F',
               birth_date: formattedBirthDate,

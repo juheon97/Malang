@@ -1,10 +1,11 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
+import myProfile from '../assets/image/mypage/Mypage_profile.svg';
 
 // 상담사 프로필 컨텍스트 생성
 const CounselorProfileContext = createContext();
-
+const profile_url = myProfile;
 // 상담사 프로필 컨텍스트 제공자 컴포넌트
 export const CounselorProfileProvider = ({ children }) => {
   const auth = useAuth();
@@ -14,7 +15,7 @@ export const CounselorProfileProvider = ({ children }) => {
     speciality: '',
     years: 0,
     bio: '',
-    profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
+    profile_url: profile_url,
     hasCertification: false,
   });
   const [userDetails, setUserDetails] = useState(null); // 추가: 사용자 기본 정보 저장
@@ -109,7 +110,7 @@ export const CounselorProfileProvider = ({ children }) => {
             speciality: '',
             years: 0,
             bio: '',
-            profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
+            profile_url: profile_url,
             hasCertification: false,
           });
         }
@@ -164,9 +165,7 @@ export const CounselorProfileProvider = ({ children }) => {
             speciality: response.data.specialty || '',
             years: yearsValue,
             bio: response.data.bio || '',
-            profile_url:
-              response.data.profileUrl ||
-              'src/assets/image/mypage/Mypage_profile.svg',
+            profile_url: response.data.profileUrl || profile_url,
             hasCertification: response.data.hasCertification || false,
           });
         }
@@ -437,7 +436,7 @@ export const CounselorProfileProvider = ({ children }) => {
         speciality: '',
         years: 0,
         bio: '',
-        profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
+        profile_url: profile_url,
         hasCertification: false,
       });
       setUserDetails(null);
