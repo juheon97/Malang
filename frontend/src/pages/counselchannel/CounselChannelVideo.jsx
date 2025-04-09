@@ -10,6 +10,7 @@ import axios from 'axios';
 import counselorChannel from '../../api/counselorChannel';
 import counselWebSocketService from '../../services/counselwebsocketService';
 import SessionStartModal from '../../components/modal/SessionStartModal';
+import NotificationModal from '../../components/modal/NotificationModal';
 
 function CounselChannelVideo() {
   // URL에서 파라미터 가져오기 (counselor_code)
@@ -39,6 +40,17 @@ function CounselChannelVideo() {
   const [requestUserInfo, setRequestUserInfo] = useState(null);
   const [isPageMoveActive, setIsPageMoveActive] = useState(false);
 
+  // 모달 관련 상태 추가
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [notificationModalContent, setNotificationModalContent] = useState({
+    title: '',
+    message: '',
+    type: 'info',
+    buttonText: '확인',
+  });
+  const [notificationRedirectPath, setNotificationRedirectPath] =
+    useState(null);
+
   // 초기화 여부 추적
   const hasJoined = useRef(false);
 
@@ -57,6 +69,17 @@ function CounselChannelVideo() {
     );
     console.log('구독 목록:', subscriptions.length ? subscriptions : '없음');
     console.log('===========================');
+  };
+
+  // 모달 닫기 함수
+  const handleNotificationClose = () => {
+    setIsNotificationModalOpen(false);
+
+    // 리다이렉트 경로가 있으면 이동
+    if (notificationRedirectPath) {
+      navigate(notificationRedirectPath);
+      setNotificationRedirectPath(null);
+    }
   };
 
   // 디버깅 정보 출력을 위한 useEffect
@@ -355,8 +378,15 @@ function CounselChannelVideo() {
             '[웹소켓] 일반 사용자로 확인됨, 알림 표시 및 리다이렉트 처리 시작',
           );
 
-          // 알림 표시
-          alert('상담사가 상담을 종료했습니다.');
+          // alert 대신 모달 사용
+          setNotificationModalContent({
+            title: '상담이 종료되었습니다',
+            message: '상담사가 상담을 종료했습니다.',
+            type: 'info',
+            buttonText: '확인',
+          });
+          setNotificationRedirectPath('/counsel-channel');
+          setIsNotificationModalOpen(true);
 
           // 웹소켓 연결 종료
           if (counselWebSocketService.isConnected) {
@@ -364,8 +394,7 @@ function CounselChannelVideo() {
             counselWebSocketService.stompClient.deactivate();
           }
 
-          // 상담 목록 페이지로 리다이렉트
-          navigate('/counsel-channel');
+          // navigate는 모달 닫을 때 실행됨
         } else {
           console.log('[웹소켓] 상담사로 확인됨, 리다이렉트하지 않음');
         }
@@ -476,7 +505,15 @@ function CounselChannelVideo() {
               );
               console.log('[웹소켓] 채널 정보 업데이트 완료:', channelInfo);
             }
-            alert('상담자가 상담방을 떠났습니다.');
+
+            // alert 대신 모달 사용
+            setNotificationModalContent({
+              title: '알림',
+              message: '상담자가 상담방을 떠났습니다.',
+              type: 'info',
+              buttonText: '확인',
+            });
+            setIsNotificationModalOpen(true);
             return;
           }
         } else if (event === 'join_con') {
@@ -766,10 +803,30 @@ function CounselChannelVideo() {
           alert('상담방 나가기에 실패했습니다.');
         }
       } else {
-        // 일반 사용자 처리 (기존 코드 유지)
+        // 일반 사용자 처리
         console.log('일반 사용자로서 방 나가기 처리');
 
-        // ... (기존 코드)
+        // 웹소켓으로 사용자 나가기 이벤트 전송
+        const success = counselWebSocketService.sendUserLeaveRequest(
+          counselorCode,
+          userId,
+        );
+
+        if (success) {
+          console.log('사용자 나가기 요청이 성공적으로 전송되었습니다.');
+
+          // 웹소켓 연결 종료
+          if (counselWebSocketService.isConnected) {
+            counselWebSocketService.stompClient.deactivate();
+          }
+
+          // 리스트 페이지로 이동
+          navigate('/counsel-channel');
+        } else {
+          console.error('사용자 나가기 요청 전송 실패');
+          // 실패해도 리스트 페이지로 이동
+          navigate('/counsel-channel');
+        }
       }
     } catch (error) {
       console.error('방 나가기 오류:', error);
@@ -1015,6 +1072,16 @@ function CounselChannelVideo() {
           </div>
         </div>
       )}
+
+      {/* 알림 모달 */}
+      <NotificationModal
+        isOpen={isNotificationModalOpen}
+        onClose={handleNotificationClose}
+        title={notificationModalContent.title}
+        message={notificationModalContent.message}
+        type={notificationModalContent.type}
+        buttonText={notificationModalContent.buttonText}
+      />
     </div>
   );
 }
