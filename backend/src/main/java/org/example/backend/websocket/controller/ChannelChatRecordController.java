@@ -29,8 +29,8 @@ public class ChannelChatRecordController {
             @DestinationVariable Long channel_id,
             ChannelChatRecordRequest request) {
 
-        logger.info("Received channel chat record: channel_id={}, user_id={}, event={}, nickname={},currentTime={}, role={}",
-                channel_id, request.user(), request.event(), request.nickname(), request.currentTime(), request.role());
+        logger.info("Received channel chat record: channel_id={}, user_id={}, event={}, nickname={},currentTime={}, role={}, content={}",
+                channel_id, request.user(), request.event(), request.nickname(), request.currentTime(), request.role(), request.content());
 
         logger.debug("Received channel chat record: channel_id={}, user_id={}, event={}",
                 channel_id, request.user(), request.event());
