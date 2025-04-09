@@ -49,8 +49,8 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                     <Route
-                    path="/community"
+                  <Route
+                    path="/community/*"
                     element={
                       <ProtectedRoute>
                         <Community />
@@ -113,7 +113,6 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-
                   <Route
                     path="/counsel-channel-video/:counselorCode"
                     element={
