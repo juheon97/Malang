@@ -26,7 +26,7 @@ public class User extends BaseTimeEntity {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "profile_url")
+    @Column(name = "profile_url", nullable = true)
     private String profileUrl;
 
     @Column(name = "role", nullable = false)
