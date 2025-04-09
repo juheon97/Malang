@@ -227,11 +227,11 @@ const SelfDiagnosis = () => {
         const abnormalProbability = data['뇌 질환'];
         const normalProbability = data['정상'];
         
-        console.log("뇌 질환 확률:", abnormalProbability); // 새로운 데이터일 때만 로깅
-        console.log("정상 확률:", normalProbability); // 새로운 데이터일 때만 로깅
+        console.log("뇌 질환 확률1:", abnormalProbability); // 새로운 데이터일 때만 로깅
+        console.log("정상 확률1:", normalProbability); // 새로운 데이터일 때만 로깅
         
-        // 뇌 질환 97% 이상 '그리고' 정상 1.5% 이하일 때 비정상으로 판단
-        return abnormalProbability >= 97 && normalProbability <= 1.5;
+        // 뇌 질환 99.97% 이상 '또는' 정상 1.5% 이하일 때 비정상으로 판단
+        return abnormalProbability >= 99.97 || normalProbability <= 1.5;
       }
       
       // 문자열 형식으로 들어오는 경우 (이전 형식 지원)
@@ -246,18 +246,19 @@ const SelfDiagnosis = () => {
         const abnormalProbability = parseFloat(abnormalMatch[1]);
         const normalProbability = parseFloat(normalMatch[1]);
         
-        console.log("뇌 질환 확률(문자열):", abnormalProbability); // 새로운 데이터일 때만 로깅
-        console.log("정상 확률(문자열):", normalProbability); // 새로운 데이터일 때만 로깅
+        console.log("뇌 질환 확률(문자열1):", abnormalProbability); // 새로운 데이터일 때만 로깅
+        console.log("정상 확률(문자열1):", normalProbability); // 새로운 데이터일 때만 로깅
         
-        // 뇌 질환 97% 이상 '그리고' 정상 1.5% 이하일 때 비정상으로 판단
-        return abnormalProbability >= 100 && normalProbability <= 1.5;
+        // OR 조건으로 변경
+        return abnormalProbability >= 99.97 || normalProbability <= 1.5;
       }
       
       return false; // 처리할 수 없는 형식
     } else {
       // 이전과 같은 데이터인 경우, 계산만 수행하고 로깅하지 않음
       if (data && typeof data === 'object' && '뇌 질환' in data && '정상' in data) {
-        return data['뇌 질환'] >= 97 && data['정상'] <= 1.5;
+        // 여기도 OR 조건으로 변경
+        return data['뇌 질환'] >= 99.97 || data['정상'] <= 1.5;
       }
       
       if (typeof data === 'string') {
@@ -269,7 +270,8 @@ const SelfDiagnosis = () => {
         const abnormalProbability = parseFloat(abnormalMatch[1]);
         const normalProbability = parseFloat(normalMatch[1]);
         
-        return abnormalProbability >= 97 && normalProbability <= 1.5;
+        // OR 조건으로 변경
+        return abnormalProbability >= 99.97 || normalProbability <= 1.5;
       }
       
       return false;
