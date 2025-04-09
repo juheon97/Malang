@@ -250,7 +250,7 @@ const SelfDiagnosis = () => {
         console.log("정상 확률(문자열):", normalProbability); // 새로운 데이터일 때만 로깅
         
         // 뇌 질환 97% 이상 '그리고' 정상 1.5% 이하일 때 비정상으로 판단
-        return abnormalProbability >= 97 && normalProbability <= 1.5;
+        return abnormalProbability >= 100 && normalProbability <= 1.5;
       }
       
       return false; // 처리할 수 없는 형식
