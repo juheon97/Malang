@@ -28,6 +28,7 @@ sonar {
     properties {
         property "sonar.projectKey", "malang_backend"
         property "sonar.projectName", "malang_backend"
+        property "sonar.exclusions", "**/application.yaml"
     }
 }
 
