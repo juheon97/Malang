@@ -33,18 +33,6 @@ pipeline {
                 }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonarqube-token') {
-                    sh """
-                        cd backend/  # Gradle 프로젝트 폴더로 이동
-                        chmod +x gradlew
-                        ./gradlew sonar
-                    """
-                }
-            }
-        }
-
         stage('secret download'){
             steps{
                 withCredentials([
@@ -72,11 +60,24 @@ pipeline {
             steps {
                 echo 'Building the Spring Boot application...'
                 dir('backend') { // 백엔드 코드가 있는 디렉토리로 변경
-                    sh 'gradle clean build -x test'
+                    sh """
+                	chmod +x gradlew
+                	./gradlew clean build -x test
+            		"""
                 }
             }
         }
 
+	stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube-token') {
+                    sh """
+                        cd backend/  # Gradle 프로젝트 폴더로 이동
+                        ./gradlew sonar
+                    """
+                }
+            }
+        }
 
         stage('Docker Build') {
             steps {
