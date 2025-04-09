@@ -104,9 +104,8 @@ const Login = () => {
       // AuthContext의 login 함수 사용
       await login(email, password);
 
-      // 로그인 후 이전 페이지나 홈으로 이동
-      const from = location.state?.from || '/';
-      navigate(from, { replace: true });
+      // 수정된 부분: 항상 메인 화면으로 리다이렉트
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('로그인 실패:', error);
 
