@@ -27,7 +27,7 @@ const SelfDiagnosis = () => {
   
   // 최소 녹음 시간 관련 상태 추가
   const [recordingTimer, setRecordingTimer] = useState(0);
-  const [minRecordingTime, setMinRecordingTime] = useState(6); // 최소 녹음 시간 6초
+  const [minRecordingTime, setMinRecordingTime] = useState(5); // 최소 녹음 시간 6초
   const [isMinRecordingTimeElapsed, setIsMinRecordingTimeElapsed] = useState(false);
   
   const mediaRecorderRef = useRef(null);
@@ -70,8 +70,8 @@ const SelfDiagnosis = () => {
 
     checkServiceHealth();
     
-    // 30초마다 서비스 상태 확인
-    const intervalId = setInterval(checkServiceHealth, 30000);
+    // 60초마다 서비스 상태 확인
+    const intervalId = setInterval(checkServiceHealth, 60000);
     
    // 저장된 타이머 상태 복원 - 수정된 부분
   const storedTimerValue = localStorage.getItem(TIMER_STORAGE_KEY);
@@ -231,7 +231,7 @@ const SelfDiagnosis = () => {
         console.log("정상 확률1:", normalProbability); // 새로운 데이터일 때만 로깅
         
         // 뇌 질환 99.97% 이상 '또는' 정상 1.5% 이하일 때 비정상으로 판단
-        return abnormalProbability >= 99.97 || normalProbability <= 1.5;
+        return abnormalProbability >= 99.97 || normalProbability <= 1;
       }
       
       // 문자열 형식으로 들어오는 경우 (이전 형식 지원)
@@ -258,7 +258,7 @@ const SelfDiagnosis = () => {
       // 이전과 같은 데이터인 경우, 계산만 수행하고 로깅하지 않음
       if (data && typeof data === 'object' && '뇌 질환' in data && '정상' in data) {
         // 여기도 OR 조건으로 변경
-        return data['뇌 질환'] >= 99.97 || data['정상'] <= 1.5;
+        return data['뇌 질환'] >= 99.97 || data['정상'] <= 1;
       }
       
       if (typeof data === 'string') {
@@ -271,7 +271,7 @@ const SelfDiagnosis = () => {
         const normalProbability = parseFloat(normalMatch[1]);
         
         // OR 조건으로 변경
-        return abnormalProbability >= 99.97 || normalProbability <= 1.5;
+        return abnormalProbability >= 99.97 || normalProbability <= 1;
       }
       
       return false;
@@ -1008,7 +1008,7 @@ const renderResultComponent = () => {
              <h2 className="text-lg font-semibold text-gray-800 mb-2">자가 진단 도움말</h2>
              <ul className="list-disc pl-5 text-sm text-gray-700 space-y-0.5">
                <li>조용한 환경에서 녹음하면 더 정확한 결과를 얻을 수 있습니다.</li>
-               <li>최소 6초 이상 녹음해야 분석이 가능합니다.</li>
+               <li>최소 5초 이상 녹음해야 분석이 가능합니다.</li>
                <li>이 자가진단은 전문의의 진단을 대체할 수 없으며, 참고용으로만 사용하세요.</li>
              </ul>
            </div>
