@@ -37,7 +37,6 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/Signup" element={<Signup />} />
-                  <Route path="/community/*" element={<Community />} />
                   <Route path="/voice-change" element={<VoiceChange />} />
                   <Route path="/self-diagnosis" element={<SelfDiagnosis />} />
                   <Route path="/sign-language" element={<SignLanguagePage />} />
@@ -47,6 +46,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <Mypage />
+                      </ProtectedRoute>
+                    }
+                  />
+                     <Route
+                    path="/community"
+                    element={
+                      <ProtectedRoute>
+                        <Community />
                       </ProtectedRoute>
                     }
                   />

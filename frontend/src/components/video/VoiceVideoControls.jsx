@@ -133,31 +133,45 @@ const VoiceVideoControls = ({
           </button>
 
           {/* 나가기 버튼 */}
-          <button
-            onClick={
-              onLeaveChannel ||
-              (() => {
-                leaveSession();
-                window.location.href = '/counsel-channel';
-              })
-            }
-            className="w-12 h-12 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-red-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
-          </button>
+          {/* 나가기 버튼 */}
+<button
+  onClick={() => {
+    // 버튼 중복 클릭 방지
+    const button = event.currentTarget;
+    button.disabled = true;
+    
+    console.log('화상 채팅방 나가기 버튼 클릭');
+    
+    // 콜백 함수가 있으면 호출, 아니면 기본 동작 수행
+    if (typeof onLeaveChannel === 'function') {
+      onLeaveChannel();
+    } else if (typeof leaveSession === 'function') {
+      leaveSession();
+      window.location.href = '/counsel-channel';
+    }
+    
+    // 0.5초 후 버튼 다시 활성화 (실수로 여러번 클릭해도 문제 없도록)
+    setTimeout(() => {
+      button.disabled = false;
+    }, 500);
+  }}
+  className="w-12 h-12 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-6 w-6 text-red-600"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+    />
+  </svg>
+</button>
         </div>
       </div>
     </div>
