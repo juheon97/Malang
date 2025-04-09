@@ -9,13 +9,13 @@ export default defineConfig({
     allowedHosts: ['j12d110.p.ssafy.io'],
   },
   server: {
-    // proxy: {
-    //   '/api': {
-    //     target: 'https://speech.takustory.site',
-    //     changeOrigin: true,
-    //     rewrite: (path) => path.replace(/^\/api/, '')
-    //   }
-    // },
+    proxy: {
+      '/api': {
+        target: 'https://speech.takustory.site',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    },
     allowedHosts: ['j12d110.p.ssafy.io', '3c49-59-151-219-8.ngrok-free.app'],
   },
 });
