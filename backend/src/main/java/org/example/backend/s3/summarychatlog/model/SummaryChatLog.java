@@ -24,6 +24,7 @@ public class SummaryChatLog {
 
     private String jsonS3Key;
     private String textS3Key;
+    private String maskedTextS3Key;
 
     private LocalDateTime uploadedAt;
 }

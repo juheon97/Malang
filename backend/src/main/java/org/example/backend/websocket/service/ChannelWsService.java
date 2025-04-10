@@ -250,14 +250,12 @@ public class ChannelWsService {
         String counselorName = userInfoService.getCounselorNameById(request.getCounselorId());
 
         StringBuilder sb = new StringBuilder();
-        sb.append("사용자 : ").append(request.getUserId()).append("\n");
-        sb.append("상담사 : ").append(request.getCounselorId()).append("\n");
-        sb.append("채팅 내역:\n");
+        sb.append("채팅 내역:\n\n");
 
         int index = 1;
         for (Map<String, String> msg : request.getMessages()) {
-            String name = msg.get("role").equals("ROLE_USER") ? userName : counselorName;
-            sb.append(String.format("%d. [%s] %s\n", index++, name, msg.get("content")));
+            String role = msg.get("role").equals("ROLE_USER") ? userName : counselorName;
+            sb.append(String.format("[%s] %s\n", role, msg.get("content")));
         }
 
         return sb.toString();

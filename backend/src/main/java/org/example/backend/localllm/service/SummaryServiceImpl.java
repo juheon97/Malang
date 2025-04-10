@@ -65,7 +65,7 @@ public class SummaryServiceImpl implements SummaryService {
 
     @Override
     public List<SummaryResponse> getAllSummariesByCounselorId(Long counselorId) {
-        List<Summary> summaries = summaryRepository.findAllByCounselor_Id(counselorId);
+        List<Summary> summaries = summaryRepository.findAllByCounselorId(counselorId);
         return summaries.stream()
                 .map(summary -> SummaryResponse.builder()
                         .summary_topic(summary.getSummaryTopic())
