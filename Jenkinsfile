@@ -79,7 +79,7 @@ pipeline {
                         docker pull ${DOCKER_IMAGE_NAME}:latest
                         docker stop frontend-app || true
                         docker rm frontend-app || true
-                        docker run -d -p 5176:5176 --name frontend-app --network app-network ${DOCKER_IMAGE_NAME}:latest
+                        docker run -d --name frontend-app --network app-network ${DOCKER_IMAGE_NAME}:latest
                     '
                     """
                 }

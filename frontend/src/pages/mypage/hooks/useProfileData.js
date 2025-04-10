@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import myProfile from '../../../assets/image/mypage/Mypage_profile.svg';
 
 /**
  * 상담사 프로필 데이터를 관리하는 커스텀 훅
  */
+const profile_url = myProfile;
 const useProfileData = currentUser => {
   // 환경 변수에서 API URL 가져오기
   const API_URL = import.meta.env.VITE_API_URL;
@@ -13,7 +15,7 @@ const useProfileData = currentUser => {
     specialty: '',
     years: 0,
     bio: '',
-    profile_url: 'src/assets/image/mypage/Mypage_profile.svg',
+    profile_url: profile_url,
     hasCertification: false,
   });
 
@@ -111,9 +113,7 @@ const useProfileData = currentUser => {
               specialty: specialtyValue,
               years: yearsValue,
               hasCertification: parsedProfile.hasCertification || false,
-              profile_url:
-                parsedProfile.profile_url ||
-                'src/assets/image/mypage/Mypage_profile.svg',
+              profile_url: parsedProfile.profile_url || profile_url,
             });
           }
         } else {
@@ -153,9 +153,7 @@ const useProfileData = currentUser => {
               specialty: specialtyValue,
               years: yearsValue,
               bio: response.data.bio || '',
-              profile_url:
-                response.data.profileUrl ||
-                'src/assets/image/mypage/Mypage_profile.svg',
+              profile_url: response.data.profileUrl || profile_url,
               hasCertification: response.data.hasCertification || false,
             });
 
