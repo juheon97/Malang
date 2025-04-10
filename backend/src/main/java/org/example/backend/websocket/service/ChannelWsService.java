@@ -57,6 +57,7 @@ public class ChannelWsService {
     @Autowired
     private UserInfoService userInfoService;
 
+    @Autowired
     private SummaryChatLogService summaryChatLogService;
 
     /**
