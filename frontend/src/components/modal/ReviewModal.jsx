@@ -221,83 +221,68 @@ const ReviewModal = ({
         </div>
 
         {contentType === 'bio' ? (
-          /* 상담사 소개 내용 */
-          <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-white to-gray-50">
-            <div className="flex flex-col md:flex-row items-center md:items-start mb-8">
-              <div className="w-28 h-28 rounded-full overflow-hidden mb-4 md:mb-0 md:mr-6 border-4 border-white shadow-lg relative">
-                {counselor.profile_url ? (
-                  <img
-                    src={counselor.profile_url}
-                    alt={counselor.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-green-100 to-green-300 flex items-center justify-center">
-                    <span className="text-green-700 text-2xl font-bold">
-                      {counselor.name.charAt(0)}
-                    </span>
-                  </div>
-                )}
-                <div className="absolute inset-0 ring-4 ring-white ring-opacity-50 rounded-full"></div>
-              </div>
-              <div className="text-center md:text-left">
-                <h3 className="text-2xl font-bold text-gray-800">
-                  {counselor.name}
-                </h3>
-                <p className="text-gray-600 mt-1 flex items-center justify-center md:justify-start">
-                  <span className="bg-green-50 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full mr-2">
-                    {counselor.title}
-                  </span>
-                  <span className="bg-blue-50 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full">
-                    경력 {counselor.personalHistory}
-                  </span>
-                </p>
-                <div className="flex items-center mt-3 justify-center md:justify-start space-x-3">
-                  <div className="flex items-center">
-                    <svg
-                      className="w-4 h-4 text-yellow-400 mr-1"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                    </svg>
-                    <span className="text-sm text-gray-600">
-                      {counselor.rating || 4.5}
-                    </span>
-                  </div>
-                  <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                  <div className="text-sm text-gray-600">
-                    만족도 {counselor.satisfaction || '95%'}
-                  </div>
-                </div>
-              </div>
-            </div>
+  /* 상담사 소개 내용 */
+  <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-white to-gray-50">
+    <div className="flex flex-col md:flex-row items-center md:items-start mb-8">
+      <div className="w-28 h-28 rounded-full overflow-hidden mt-5mb-4 md:mb-0 md:mr-6 border-4 border-white shadow-lg relative">
+        {counselor.profile_url ? (
+          <img
+            src={counselor.profile_url}
+            alt={counselor.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-green-100 to-green-300 flex items-center justify-center">
+            <span className="text-green-700 text-2xl font-bold m">
+              {counselor.name.charAt(0)}
+            </span>
+          </div>
+        )}
+        <div className="absolute inset-0 ring-4 ring-white ring-opacity-50 rounded-full"></div>
+      </div>
+      <div className="text-center mt-5 md:text-left">
+        <h3 className="text-2xl font-bold text-gray-800 mb-3">
+          {counselor.name}
+        </h3>
+        <p className="text-gray-600 mb-3 flex items-center justify-center md:justify-start">
+          <span className="bg-green-50 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full mr-2">
+            {counselor.title}
+          </span>
+          <span className="bg-blue-50 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full">
+            경력 {counselor.personalHistory}
+          </span>
+        </p>
+        <div className="flex items-center justify-center md:justify-start space-x-3">
+          {/* 이 공간은 유지하되 빈 상태로 둡니다 */}
+        </div>
+      </div>
+    </div>
 
-            <div className="mb-6">
-              <h4 className="text-lg font-semibold mb-3 flex items-center">
-                <span className="flex items-center justify-center w-7 h-7 mr-2 rounded-full bg-green-100 text-green-600">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                </span>
-                상담사 소개
-              </h4>
-              <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                <p className="text-gray-700 whitespace-pre-line leading-relaxed">
-                  {counselor.bio || '소개글이 없습니다.'}
-                </p>
-              </div>
-            </div>
+    <div className="mb-6">
+      <h4 className="text-lg font-semibold mb-3 flex items-center">
+        <span className="flex items-center justify-center w-7 h-7 mr-2 rounded-full bg-green-100 text-green-600">
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+        </span>
+        상담사 소개
+      </h4>
+      <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+        <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+          {counselor.bio || '소개글이 없습니다.'}
+        </p>
+      </div>
+    </div>
 
             <div className="mb-4">
               <h4 className="text-lg font-semibold mb-3 flex items-center">
