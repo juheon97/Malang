@@ -337,7 +337,8 @@ const useProfileData = currentUser => {
           speciality: profile.speciality,
           years: `${profile.years}년`,
           bio: profile.bio,
-          profileUrl: profile.profile_url,
+        
+          hasCertification: profile.hasCertification,
         };
 
         console.log(
