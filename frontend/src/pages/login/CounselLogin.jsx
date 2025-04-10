@@ -106,7 +106,7 @@ const CounselLogin = () => {
 
       // 로그인 후 이전 페이지나 홈으로 이동
       const from = location.state?.from || '/counsel-channel';
-      navigate(from, { replace: true });
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('로그인 실패:', error);
 
@@ -160,13 +160,12 @@ const CounselLogin = () => {
         </div>
       </div>
 
-    
       {/* 로그인 콘텐츠 */}
       <div className="w-full min-h-screen flex justify-center items-start pt-32 relative">
         {/* 로그인 카드 */}
         <div className="w-full max-w-lg py-14 px-10 bg-white border-t-4 border-mallang-green shadow-lg relative z-1">
           <h1 className="text-4xl font-bold text-mallang-green mb-10 text-left">
-            상담채널 이용시 <br/> 로그인이 필요합니다 
+            상담채널 이용시 <br /> 로그인이 필요합니다
           </h1>
 
           <form className="w-full" onSubmit={handleLogin} noValidate>
