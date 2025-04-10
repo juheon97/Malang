@@ -22,8 +22,13 @@ public class SummaryChatLog {
     private Long counselorId;
     private Long channelId;
 
+    @Column(name = "json_s3_key")
     private String jsonS3Key;
+
+    @Column(name = "text_s3_key")
     private String textS3Key;
+
+    @Column(name = "masked_text_s3_key")
     private String maskedTextS3Key;
 
     private LocalDateTime uploadedAt;
