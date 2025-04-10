@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { use, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import useProfileData from './hooks/useProfileData';
 import ProfileSidebar from './components/ProfileSidebar';

@@ -310,8 +310,8 @@ const useProfileData = currentUser => {
         // 업데이트할 프로필 데이터 준비
         const updatedProfile = {
           ...currentProfile,
-          speciality: profile.speciality,
-          specialty: profile.speciality,
+          //speciality: profile.speciality,
+          specialty: profile.specialty,
           years: profile.years,
           bio: profile.bio,
           profile_url: profile.profile_url,
