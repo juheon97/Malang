@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Hands } from '@mediapipe/hands';
 import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
 import { HandLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import KNN from 'ml-knn';
@@ -26,7 +25,7 @@ const gestureMap = {
   17: 'ㅐ',
   18: 'ㅔ',
   19: ' ',
-  20: '',
+  20: 'delete',
   21: 'next',
 };
 
@@ -64,6 +63,10 @@ const SignLanguageTranslator = ({
   const handLandmarkerRef = useRef(null);
   const processingRef = useRef(false);
   const frameIntervalRef = useRef(null);
+  const lastGestureTimeRef = useRef({});
+  const [completedSentences, setCompletedSentences] = useState([]);
+  const lastProcessedGestureTimeRef = useRef(0);
+  const currentGestureRef = useRef({ idx: null, count: 0 });
 
   // 상태 변수들을 먼저 선언
   const [sentence, setSentence] = useState('');
@@ -72,13 +75,6 @@ const SignLanguageTranslator = ({
   const [lastConsonantTime, setLastConsonantTime] = useState(0);
   const [knn, setKnn] = useState(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
-
-  // 이제 useEffect에서 sentence를 안전하게 참조할 수 있음
-  useEffect(() => {
-    if (sentence && onTranslationResult) {
-      onTranslationResult(sentence);
-    }
-  }, [sentence, onTranslationResult]);
 
   const doubleConsonantThreshold = 5000; // 3초
   const holdTime = 5000; // 3초
@@ -152,35 +148,54 @@ const SignLanguageTranslator = ({
           break;
         case 20:
           console.log('초기화 제스처 인식됨: 모든 텍스트 지움');
-          setSentence('');
-          setMergeJamo('');
+
+          setSentence(prevSentence => {
+            console.log('이전 sentence:', prevSentence);
+            return '';
+          });
+
+          setMergeJamo(prevMergeJamo => {
+            console.log('이전 mergeJamo:', prevMergeJamo);
+            return '';
+          });
+
           setLastConsonant(null);
           setLastConsonantTime(0);
-          // 즉시 상태 확인을 위한 로그 추가
+
+          // 완성된 문장들도 초기화
+          setCompletedSentences(prevCompletedSentences => {
+            console.log('이전 completedSentences:', prevCompletedSentences);
+            return [];
+          });
+
+          // 상태 업데이트 후 확인 (setTimeout 대신 콜백 사용)
+          console.log('초기화 명령 실행 완료');
+
+          // 실제 DOM 업데이트 확인을 위한 타이머 (필요시 유지)
           setTimeout(() => {
-            console.log('초기화 후 상태:', { sentence, mergeJamo });
+            console.log('DOM 업데이트 후 상태:', {
+              sentence,
+              mergeJamo,
+              completedSentences,
+            });
           }, 100);
           break;
+
         case 21: // next 제스처가 인식되었을 때
           const currentTime = Date.now();
-          // 최소 1초 간격으로만 next 제스처 처리
           if (currentTime - lastNextGestureTimeRef.current > 5000) {
             console.log("'next' 제스처 인식됨 - 메시지 전송");
 
-            setSentence(prev => {
-              const newSentence = prev + join_jamos(mergeJamo);
-              // onTranslationResult 콜백이 있으면 호출
-              if (onTranslationResult && newSentence.trim()) {
-                onTranslationResult(newSentence);
-              }
-              // 메시지 전송 후 문장 초기화
-              return ''; // 여기를 수정 - 빈 문자열 반환하여 초기화
-            });
+            const newSentence = sentence + join_jamos(mergeJamo);
 
-            setMergeJamo(''); // 조합 중인 자모도 초기화
+            // onTranslationResult 콜백이 있으면 호출 (setSentence 밖으로 이동)
+            if (onTranslationResult && newSentence.trim()) {
+              onTranslationResult(newSentence);
+            }
+
+            setSentence('');
+            setMergeJamo('');
             lastNextGestureTimeRef.current = currentTime;
-          } else {
-            console.log("'next' 제스처 무시됨 - 너무 빠른 반복");
           }
           break;
 
@@ -188,7 +203,7 @@ const SignLanguageTranslator = ({
           setMergeJamo(prev => prev + gestureMap[idx]);
       }
     },
-    [mergeJamo],
+    [mergeJamo, sentence, completedSentences],
   );
 
   const handleDoubleConsonant = useCallback(
@@ -224,6 +239,51 @@ const SignLanguageTranslator = ({
         '마지막 자음 시간으로부터 경과:',
         currentTime - lastConsonantTime,
       );
+
+      // 1. 전체 제스처 인식에 대한 디바운싱
+      // 마지막 처리된 제스처로부터 500ms 이내면 무시 (clear 제외)
+      if (
+        idx !== 20 &&
+        currentTime - lastProcessedGestureTimeRef.current < 1000
+      ) {
+        console.log('전체 제스처 디바운싱: 너무 빠른 제스처 변경 무시');
+        return;
+      }
+
+      // 2. 같은 제스처 반복에 대한 디바운싱 (기존 로직)
+      if (idx !== 20) {
+        const lastTimeForGesture = lastGestureTimeRef.current[idx] || 0;
+        if (currentTime - lastTimeForGesture < 2000) {
+          console.log('너무 빠른 제스처 반복 무시:', idx, gestureMap[idx]);
+          return;
+        }
+      }
+
+      // 3. 연속 인식 요구 로직
+      if (currentGestureRef.current.idx === idx) {
+        currentGestureRef.current.count++;
+      } else {
+        currentGestureRef.current.idx = idx;
+        currentGestureRef.current.count = 1;
+      }
+
+      // 같은 제스처가 최소 3번 연속으로 인식되어야 처리 (clear 제외)
+      if (idx !== 20 && currentGestureRef.current.count < 3) {
+        console.log(
+          '연속 인식 카운트:',
+          currentGestureRef.current.count,
+          '/',
+          3,
+          '- 더 많은 인식 필요',
+        );
+        return;
+      }
+
+      // 현재 제스처 시간 저장
+      lastGestureTimeRef.current[idx] = currentTime;
+      lastProcessedGestureTimeRef.current = currentTime;
+
+      // 제스처 처리 로직 (기존과 동일)
       if (gestureMap[idx] && currentTime - lastConsonantTime > holdTime) {
         if ([0, 2, 5, 6, 8].includes(idx)) {
           // 된소리 가능한 자음
@@ -232,6 +292,9 @@ const SignLanguageTranslator = ({
           // 모음이나 다른 제스처
           handleVowelsAndControls(idx);
         }
+
+        // 제스처 처리 후 카운트 초기화
+        currentGestureRef.current.count = 0;
       }
     },
     [
@@ -403,7 +466,7 @@ const SignLanguageTranslator = ({
       }
 
       // 100ms 간격으로 프레임 처리 (초당 10프레임)
-      frameIntervalRef.current = setInterval(processFrame, 16);
+      frameIntervalRef.current = setInterval(processFrame, 50);
 
       return () => {
         if (frameIntervalRef.current) {
@@ -561,7 +624,7 @@ const SignLanguageTranslator = ({
         className="text-overlay"
         style={{
           position: 'absolute',
-          bottom: '20px',
+          bottom: '60px',
           left: '20px',
           backgroundColor: 'rgba(0,0,0,0.5)',
           padding: '10px',

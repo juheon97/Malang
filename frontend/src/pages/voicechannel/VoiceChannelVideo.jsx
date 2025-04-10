@@ -7,6 +7,7 @@ import useChat from '../../hooks/useChat';
 import { useAuth } from '../../contexts/AuthContext';
 import websocketService from '../../services/websocketService';
 import VoiceVideoLayout from '../../components/video/VoiceVideoLayout';
+import VoiceComponent from '../../components/voice/VoiceComponent';
 
 function VoiceChannelVideo() {
   const { channelId } = useParams();
@@ -75,6 +76,42 @@ function VoiceChannelVideo() {
 
     addMessage(
       `[수어 번역] ${text}`,
+      currentUser?.username || 'Me',
+      currentUser?.id || 'guest',
+    );
+
+    // 마지막 전송 메시지 정보 업데이트
+    setLastSentMessage({ text, timestamp: currentTime });
+  };
+
+  const handleVoiceTranscriptionResult = text => {
+    if (!text || text.trim() === '' || !websocketService.isConnected) return;
+
+    const currentTime = Date.now();
+
+    // 동일한 메시지가 3초 이내에 다시 전송되는 것 방지
+    if (
+      lastSentMessage.text === text &&
+      currentTime - lastSentMessage.timestamp < 3000
+    ) {
+      console.log(
+        '중복 메시지 방지: 동일한 메시지가 3초 이내에 다시 전송되었습니다',
+      );
+      return;
+    }
+
+    const messagePayload = {
+      event: 'send',
+      content: `[음성 번역] ${text}`,
+      userId: currentUser?.id,
+      nickname: currentUser?.username,
+    };
+
+    console.log('📤 음성 번역 메시지 전송:', messagePayload);
+    websocketService.sendChatMessage(channelId, messagePayload);
+
+    addMessage(
+      `[음성 번역] ${text}`,
       currentUser?.username || 'Me',
       currentUser?.id || 'guest',
     );
@@ -280,6 +317,13 @@ function VoiceChannelVideo() {
         {/* 메인 컨텐츠 - 영상과 채팅 */}
         {/* 영상 영역 */}
         <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
+          {isVoiceTranslationOn && (
+            <div className="absolute bottom-24 right-4 z-10 w-64">
+              <VoiceComponent
+                onTranscriptionResult={handleVoiceTranscriptionResult}
+              />
+            </div>
+          )}
           <VoiceVideoLayout
             participants={participants}
             renderParticipantInfo={renderParticipantInfo}
