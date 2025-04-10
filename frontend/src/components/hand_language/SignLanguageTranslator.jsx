@@ -601,14 +601,24 @@ const SignLanguageTranslator = ({
   return (
     <div
       className="translator-container"
-      style={{ position: 'relative', width: '640px', height: '480px' }}
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        width: '100%',
+        height: '100%',
+        aspectRatio: '4/3',
+      }}
     >
       <video
         ref={videoRef}
         autoPlay
         playsInline
         muted
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+        }}
       />
       <canvas
         ref={canvasRef}
@@ -620,16 +630,21 @@ const SignLanguageTranslator = ({
           height: '100%',
         }}
       />
+
+      {/* 텍스트 오버레이를 비디오 컨테이너 내부로 다시 이동 */}
       <div
         className="text-overlay"
         style={{
-          position: 'absolute',
-          bottom: '60px',
+          position: 'absolute', // fixed에서 absolute로 변경
+          bottom: '40px', // top 대신 bottom 사용
           left: '20px',
           backgroundColor: 'rgba(0,0,0,0.5)',
           padding: '10px',
           borderRadius: '5px',
           color: 'white',
+          maxWidth: '90%',
+          wordWrap: 'break-word',
+          zIndex: 10, // 값 낮춤
         }}
       >
         <div
