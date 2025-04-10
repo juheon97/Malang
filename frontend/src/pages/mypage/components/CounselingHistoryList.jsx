@@ -112,6 +112,45 @@ const CounselingHistoryList = () => {
     setExpandedRowId(expandedRowId === index ? null : index);
   };
 
+  // 상담 기록 다운로드 처리
+  const handleDownload = (e, record) => {
+    e.stopPropagation(); // 버튼 클릭 시 행 확장 방지
+    
+    try {
+      // 다운로드할 데이터 준비
+      const data = {
+        주제: record.summary_topic || '미분류',
+        증상: record.symptoms || '증상 정보 없음',
+        치료방법: record.treatment || '치료 방법 정보 없음',
+        다음일정: formatDate(record.next_schedule),
+        상담사노트: record.counselor_note || '상담 노트가 없습니다.'
+      };
+      
+      // JSON 데이터를 문자열로 변환
+      const jsonData = JSON.stringify(data, null, 2);
+      
+      // Blob 생성
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      
+      // 다운로드 링크 생성 및 클릭
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `상담기록_${record.summary_topic || '미분류'}_${formatDate(record.next_schedule)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // 정리
+      URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      
+      console.log('상담 기록 다운로드 완료:', record.summary_topic);
+    } catch (err) {
+      console.error('다운로드 중 오류 발생:', err);
+      alert('다운로드 중 오류가 발생했습니다.');
+    }
+  };
+
   // 상담 주제에 따른 아이콘과 색상 지정
   const getTopicInfo = (topic) => {
     if (!topic) return { icon: "📝", color: "bg-gray-100" };
@@ -212,11 +251,22 @@ const CounselingHistoryList = () => {
                 </div>
                 
                 <div className="ml-4 flex-shrink-0">
-                  <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-4">
                     <div className="text-right">
                       <span className="text-xs text-gray-500 block">다음 일정</span>
                       <span className="text-sm font-medium text-gray-700">{formatDate(record.next_schedule)}</span>
                     </div>
+                    
+                    {/* 다운로드 버튼 추가 */}
+                    <button
+  onClick={(e) => handleDownload(e, record)}
+  className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-[#00a173] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00a173]"
+  title="상담 기록 다운로드"
+>
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+</button>
                     
                     <svg 
                       className={`w-5 h-5 text-gray-400 transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
