@@ -37,7 +37,7 @@ function VoiceChannelVideo() {
     renderParticipantInfo,
   } = useVoiceOpenVidu(channelId, currentUser?.username || 'Guest');
 
-  const { messages, newMessage, setNewMessage, handleKeyDown, addMessage } =
+  const { messages, newMessage, setNewMessage, handleKeyDown, addMessage,chatContainerRef  } =
     useChat(currentUser?.id || 'guest');
 
   // 마지막으로 전송된 메시지 내용과 시간을 저장할 상태 추가
@@ -296,7 +296,7 @@ function VoiceChannelVideo() {
           setNewMessage={setNewMessage}
           handleSendMessage={handleSendMessage}
           handleKeyDown={handleKeyDown}
-          chatContainerRef={null}
+          chatContainerRef={chatContainerRef}
           isConnected={isWebSocketConnected}
         />
       </div>

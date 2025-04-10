@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 
 const ChatBox = ({
   currentUserId,
@@ -14,16 +14,6 @@ const ChatBox = ({
   const user = JSON.parse(sessionStorage.getItem('user'));
   const userId = user?.id || currentUserId;
   const nickname = user?.username;
-  const messagesEndRef = useRef(null);
-  
-  // 메시지가 추가될 때마다 스크롤을 맨 아래로 이동
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden w-full lg:w-80 flex flex-col">
@@ -46,7 +36,7 @@ const ChatBox = ({
       <div
         ref={chatContainerRef}
         className="p-3 overflow-y-auto flex-1"
-        style={{ minheight: '350px', maxHeight: '350px' }}
+        style={{ minHeight: '350px', maxHeight: '350px' }}
       >
         {messages.map(message => {
           const displayName = message.nickname || message.sender || 'Unknown';
@@ -82,9 +72,6 @@ const ChatBox = ({
             <p className="text-gray-400 text-sm">메시지가 없습니다.</p>
           </div>
         )}
-        
-        {/* 이 요소는 항상 메시지 목록의 맨 마지막에 위치합니다 */}
-        <div ref={messagesEndRef} />
       </div>
 
       <div className="p-3 border-t border-gray-100 mt-auto">
