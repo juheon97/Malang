@@ -10,6 +10,7 @@ import axios from 'axios';
 import counselorChannel from '../../api/counselorChannel';
 import counselWebSocketService from '../../services/counselwebsocketService';
 import SessionStartModal from '../../components/modal/SessionStartModal';
+import VoiceComponent from '../../components/voice/VoiceComponent';
 
 function CounselChannelVideo() {
   // URL에서 파라미터 가져오기 (counselor_code)
@@ -778,6 +779,52 @@ function CounselChannelVideo() {
     }
   };
 
+  const handleTranslationResult = text => {
+    console.log('수화 번역 결과:', text);
+
+    if (text && text.trim() && counselWebSocketService.isConnected) {
+      // 웹소켓으로 메시지 전송
+      const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
+      const userId = userObj.id;
+      const userName = userObj.name || userObj.username || '사용자';
+
+      const success = counselWebSocketService.sendChatMessage(
+        counselorCode,
+        userId,
+        userName,
+        `[수화 번역] ${text}`,
+        userObj.role,
+      );
+
+      if (success) {
+        addMessage(`[수화 번역] ${text}`, userName, userId);
+      }
+    }
+  };
+
+  const handleVoiceTranscriptionResult = text => {
+    console.log('음성 번역 결과:', text);
+
+    if (text && text.trim() && counselWebSocketService.isConnected) {
+      // 웹소켓으로 메시지 전송
+      const userObj = JSON.parse(sessionStorage.getItem('user') || '{}');
+      const userId = userObj.id;
+      const userName = userObj.name || userObj.username || '사용자';
+
+      const success = counselWebSocketService.sendChatMessage(
+        counselorCode,
+        userId,
+        userName,
+        `[음성 번역] ${text}`,
+        userObj.role,
+      );
+
+      if (success) {
+        addMessage(`[음성 번역] ${text}`, userName, userId);
+      }
+    }
+  };
+
   return (
     <div
       className="flex flex-col h-full bg-[#f5fdf5]"
@@ -908,6 +955,13 @@ function CounselChannelVideo() {
       {/* 메인 컨텐츠 - 영상과 채팅 */}
       <div className="flex flex-1 overflow-hidden p-4 gap-4">
         <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
+          {isVoiceTranslationOn && (
+            <div className="absolute bottom-24 right-4 z-10 w-64">
+              <VoiceComponent
+                onTranscriptionResult={handleVoiceTranscriptionResult}
+              />
+            </div>
+          )}
           <VideoLayout
             participants={participants}
             renderParticipantInfo={participant => (
@@ -916,6 +970,8 @@ function CounselChannelVideo() {
                 {participant.isSelf && ' (나)'}
               </div>
             )}
+            isSignLanguageOn={isSignLanguageOn}
+            onTranslationResult={handleTranslationResult}
           />
         </div>
         <ChatBox

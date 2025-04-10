@@ -1,25 +1,43 @@
 // components/video/VideoLayout.jsx
 import React from 'react';
 import OpenViduVideoComponent from './OpenViduVideoComponent';
+import SignLanguageVideoComponent from './SignLanguageVideoComponent';
 
 // 참가자 비디오 렌더링 함수
-const ParticipantVideo = ({ participant, renderParticipantInfo }) => (
+const ParticipantVideo = ({
+  participant,
+  renderParticipantInfo,
+  isSignLanguageOn, // 추가
+  onTranslationResult, // 추가
+}) => (
   <div
     key={participant.id}
     className="relative bg-gray-100 rounded-lg overflow-hidden aspect-video"
   >
-    {participant.stream && (
-      <OpenViduVideoComponent
-        streamManager={participant.stream}
-        isSelf={participant.isSelf}
-      />
-    )}
+    {participant.stream &&
+      (participant.isSelf && isSignLanguageOn ? (
+        <SignLanguageVideoComponent
+          streamManager={participant.stream}
+          isSelf={participant.isSelf}
+          onTranslationResult={onTranslationResult}
+        />
+      ) : (
+        <OpenViduVideoComponent
+          streamManager={participant.stream}
+          isSelf={participant.isSelf}
+        />
+      ))}
     {renderParticipantInfo && renderParticipantInfo(participant)}
   </div>
 );
 
 // 비디오 레이아웃 컴포넌트
-const VideoLayout = ({ participants = [], renderParticipantInfo }) => {
+const VideoLayout = ({
+  participants = [],
+  renderParticipantInfo,
+  isSignLanguageOn = false,
+  onTranslationResult,
+}) => {
   // 참가자 배열이 없거나 비어있는 경우 메시지 표시
   if (!participants || participants.length === 0) {
     return (
@@ -38,12 +56,19 @@ const VideoLayout = ({ participants = [], renderParticipantInfo }) => {
     const participant = participants[0];
     return (
       <div className="w-full aspect-video bg-gray-100 rounded-lg overflow-hidden relative">
-        {participant.stream && (
-          <OpenViduVideoComponent
-            streamManager={participant.stream}
-            isSelf={participant.isSelf}
-          />
-        )}
+        {participant.stream &&
+          (participant.isSelf && isSignLanguageOn ? (
+            <SignLanguageVideoComponent
+              streamManager={participant.stream}
+              isSelf={participant.isSelf}
+              onTranslationResult={onTranslationResult}
+            />
+          ) : (
+            <OpenViduVideoComponent
+              streamManager={participant.stream}
+              isSelf={participant.isSelf}
+            />
+          ))}
         {renderParticipantInfo ? (
           renderParticipantInfo(participant)
         ) : (
@@ -65,6 +90,8 @@ const VideoLayout = ({ participants = [], renderParticipantInfo }) => {
               key={participant.id}
               participant={participant}
               renderParticipantInfo={renderParticipantInfo}
+              isSignLanguageOn={isSignLanguageOn}
+              onTranslationResult={onTranslationResult}
             />
           ))}
         </div>
@@ -72,6 +99,8 @@ const VideoLayout = ({ participants = [], renderParticipantInfo }) => {
           <ParticipantVideo
             participant={participants[2]}
             renderParticipantInfo={renderParticipantInfo}
+            isSignLanguageOn={isSignLanguageOn}
+            onTranslationResult={onTranslationResult}
           />
         </div>
       </>
@@ -87,6 +116,8 @@ const VideoLayout = ({ participants = [], renderParticipantInfo }) => {
               key={participant.id}
               participant={participant}
               renderParticipantInfo={renderParticipantInfo}
+              isSignLanguageOn={isSignLanguageOn}
+              onTranslationResult={onTranslationResult}
             />
           ))
         : null}
