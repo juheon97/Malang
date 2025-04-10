@@ -106,7 +106,7 @@ const Login = () => {
 
       // 로그인 후 이전 페이지나 홈으로 이동
       const from = location.state?.from || '/';
-      navigate(from, { replace: true });
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('로그인 실패:', error);
 
