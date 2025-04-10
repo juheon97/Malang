@@ -12,6 +12,7 @@ import org.example.backend.localllm.dto.request.SummaryRequest;
 import org.example.backend.localllm.dto.response.SummaryResponse;
 import org.example.backend.localllm.service.SummaryService;
 import org.example.backend.s3.S3Uploader;
+import org.example.backend.s3.summarychatlog.service.SummaryChatLogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,8 @@ public class ChannelWsService {
 
     @Autowired
     private UserInfoService userInfoService;
+
+    private SummaryChatLogService summaryChatLogService;
 
     /**
      * 사용자를 채널에 입장시킵니다.
@@ -213,6 +216,9 @@ public class ChannelWsService {
             Files.writeString(textFile.toPath(), formatSummaryForText(summaryRequest), StandardCharsets.UTF_8);
             String textS3Url = s3Uploader.uploadPrivateFile(textFile, textKey);
             logger.info("포맷된 텍스트 요약 S3 업로드 완료: {}", textS3Url);
+
+            // 3. 이제 DB에 로그 저장!
+            summaryChatLogService.saveLog(userId.longValue(), counselorId.longValue(), channelId, jsonKey, textKey);
 
             // HTTP 요청 헤더 설정
 //      HttpHeaders headers = new HttpHeaders();
