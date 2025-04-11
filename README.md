@@ -202,15 +202,15 @@ src
 
 ### 아키텍쳐 구상도
 
-![아키텍쳐 구상도](images/D110_infra.png)
+![아키텍쳐 구상도](image/D110_infra.png)
 
 ### ERD
 
-![ERD](images/erd.png)
+![ERD](image/erd.png)
 
 ### API 명세서
 
-![API 명세서](images/swagger.gif)
+![API 명세서](image/swagger.gif)
 
 ### Figma 디자인
 
