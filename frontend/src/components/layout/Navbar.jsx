@@ -182,7 +182,7 @@ const Navbar = () => {
                   to="/sign-language"
                   className="text-gray-800 hover:text-[#00a173]"
                 >
-                  수어 인식
+                  수어 번역
                 </Link>
                 <Link
                   to="/voice-change"
