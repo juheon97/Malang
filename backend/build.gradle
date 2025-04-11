@@ -1,0 +1,85 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id "org.sonarqube" version "6.0.1.5171"
+}
+
+group = 'org.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "malang_backend"
+        property "sonar.projectName", "malang_backend"
+        property "sonar.exclusions", "**/application.yaml"
+    }
+}
+
+dependencies {
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-web-services'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    implementation 'org.springframework.boot:spring-boot-starter-security' // Spring Security - JWT 인증을 구현하기 위해 필요한 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-validation' // Spring Security - JWT 인증을 구현하기 위해 필요한 의존성
+    testImplementation 'org.springframework.security:spring-security-test' // Spring Security - JWT 인증을 구현하기 위해 필요한 의존성
+//    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
+//    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+//    implementation 'org.springframework.boot:spring-boot-st
+//    arter-oauth2-resource-server'
+    // JWT 의존성 - 토큰 생성 및 검증을 위한 라이브러리
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    // Spring Data JPA - 사용자 정보 저장을 위한 ORM 라이브러리
+    // JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+
+    //add redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // websocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // springdoc-openapi 라이브러리 등록 - 스프링 부트 3.x.x 이상 호환 이슈로 사용
+    implementation 'org.springdoc:springdoc-openapi-starter-common:2.2.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+
+    // json parding 설정
+    implementation 'org.json:json:20231013'
+
+    // openVidu
+    implementation 'io.openvidu:openvidu-java-client:2.31.0'
+
+    // AWS S3
+    implementation platform("software.amazon.awssdk:bom:2.20.121")
+    implementation 'software.amazon.awssdk:s3'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
