@@ -1,0 +1,26 @@
+/* src/styles/fonts.css */
+@font-face {
+  font-family: 'HancomMalangMalang';
+  src: url('../assets/fonts/HancomMalangMalang-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'sans-font';
+  src: url('../assets/fonts/HancomSans-SemiBold_0.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 폰트가 기본 폰트로 적용되도록 설정 */
+.malang-font {
+  font-family: 'HancomMalangMalang', 'Noto Sans KR', sans-serif;
+}
+
+/* 말랑 앱의 모든 텍스트에 폰트 적용 */
+.home-container {
+  font-family: 'sans-font', 'Noto Sans KR', sans-serif;
+}

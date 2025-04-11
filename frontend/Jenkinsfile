@@ -1,0 +1,97 @@
+pipeline {
+
+    agent any
+    
+
+    environment {
+        SSH_KEY = credentials('SSH_KEY')
+        EC2_USER = credentials('EC2_USER')
+        EC2_IP = credentials('EC2_IP')
+  
+
+        // Docker 이미지 관련 환경 변수
+        DOCKER_HUB = credentials('dockerhub-credentials')
+        DOCKER_IMAGE_NAME = "${DOCKER_HUB_USR}/d110_jenkins_image_build_frontend"
+        DOCKER_IMAGE_TAG = "${BUILD_NUMBER}" // Jenkins 빌드 번호를 태그로 사용
+
+    }
+
+    tools {
+        nodejs 'nodejs'
+    }
+
+    stages {
+        stage('Clone Repository') {
+
+            steps {
+            echo 'Cloning the repository...'
+            git branch: 'frontend',
+                url: 'https://lab.ssafy.com/s12-ai-speech-sub1/S12P21D110.git',
+                credentialsId: 'JENKINS_PAT'
+                }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing dependencies...'
+                dir('frontend') {
+                    sh 'npm ci'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo 'Building react application..'
+                dir('frontend') {
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                echo 'Building Docker image...'
+                dir('frontend') { // Dockerfile이 있는 디렉토리로 변경
+                    sh "docker build -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} ."
+                    sh "docker tag ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} ${DOCKER_IMAGE_NAME}:latest"
+                }
+            }
+        }
+            
+        stage('Docker Push') {
+            steps {
+                echo 'Pushing Docker image to Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                    sh "echo ${DOCKER_HUB_PSW} | docker login -u ${DOCKER_HUB_USR} --password-stdin"
+                    sh "docker push ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
+                    sh "docker push ${DOCKER_IMAGE_NAME}:latest"
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying to EC2...'
+                sshagent(['SSH_KEY']) {
+                    sh """
+                    ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_IP} '
+                        docker pull ${DOCKER_IMAGE_NAME}:latest
+                        docker stop frontend-app || true
+                        docker rm frontend-app || true
+                        docker run -d --name frontend-app --network app-network ${DOCKER_IMAGE_NAME}:latest
+                    '
+                    """
+                }
+            }
+        }
+        
+    }
+
+    post {
+        always {
+            echo 'Cleaning up workspace...'
+            cleanWs()
+        }
+    }
+}
