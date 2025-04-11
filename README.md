@@ -76,6 +76,13 @@ DB
 - Redis 6.2
 - MySQL 8.0
 
+AI
+
+- AI hub brain_classification model (docker image)
+- Local LLM (kanana 2.1)
+- Mediapipe hands (수어) 
+- Whisper (STT)
+
 
 
 ### 프로젝트 구조
